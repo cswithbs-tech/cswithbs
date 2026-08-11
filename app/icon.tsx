@@ -28,9 +28,6 @@ export default function Icon() {
           color: "#ffffff",
         }}
       >
-        {/* Concept C: The Unified Path (Ribbon Evolution) 
-             Represents: "Knowledge makes life easy" - Complexity simplified into one elegant path.
-         */}
         <svg
           width="300"
           height="300"
@@ -38,12 +35,17 @@ export default function Icon() {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <path
-            d="M30 15 V 60 L 70 20 H 85 L 45 60 L 85 90 H 70 L 30 60 V 85 h -12 V 15 h 12 Z"
-            fill="white"
-          />
-          {/* Subtle fold line for depth */}
-          <path d="M30 60 L 45 60" stroke="#0d0d0d" strokeWidth="2" />
+          <text 
+            x="50" 
+            y="65" 
+            fontSize="42" 
+            fontWeight="bold" 
+            fill="#00ff9d" 
+            fontFamily="monospace" 
+            textAnchor="middle"
+          >
+            &lt;CS/&gt;
+          </text>
         </svg>
       </div>
     ),
