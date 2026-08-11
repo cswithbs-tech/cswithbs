@@ -1,0 +1,73 @@
+# ===========================
+# Dependencies
+# ===========================
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# ===========================
+# Next.js Build Output
+# ===========================
+/.next/
+/out/
+/build
+
+# ===========================
+# Environment Variables (NEVER commit these)
+# ===========================
+.env
+.env.*
+!.env.example
+
+# ===========================
+# Testing & Coverage
+# ===========================
+/coverage
+
+# ===========================
+# Debug Logs
+# ===========================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ===========================
+# OS & Editor Artifacts
+# ===========================
+.DS_Store
+Thumbs.db
+*.pem
+.vscode/
+.idea/
+
+# ===========================
+# TypeScript Build Cache
+# ===========================
+*.tsbuildinfo
+next-env.d.ts
+
+# ===========================
+# Vercel
+# ===========================
+.vercel
+
+# ===========================
+# One-off/scratch scripts (DO NOT commit)
+# ===========================
+refactor_roles.js
+refactor_roles_fix.js
+scratch_fix_roles.js
+seed-script.js
+
+# ===========================
+# Local dev folders not for production
+# ===========================
+docs/
+cswithbs_demo/
+scripts/

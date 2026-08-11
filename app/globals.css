@@ -1,0 +1,111 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  --background: #0d0d0d;
+  --foreground: #ffffff;
+  --card-bg: #1a1a1a;
+  --accent: #E2C6B9;
+  --accent-hover: #CBAA99;
+  --accent-muted: #4A3A34;
+  --accent-foreground: #000000;
+  --text-muted: #999999;
+  --border: #262626;
+
+  --font-inter: var(--font-inter);
+  --font-outfit: var(--font-outfit);
+  --font-mono: var(--font-mono);
+  --font-lora: var(--font-lora);
+}
+
+/* Custom Theme Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0d0d0d;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 5px;
+  border: 2px solid #0d0d0d;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-hover, #CBAA99);
+  opacity: 0.8;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #262626 #0d0d0d;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card-bg);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-muted: var(--accent-muted);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--text-muted);
+  --color-border: var(--border);
+
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-serif:
+    var(--font-lora), ui-serif, Georgia, Cambria, "Times New Roman", Times,
+    serif;
+  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  @keyframes shimmer {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  @keyframes slide-down {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Typography styles moved to app/styles/typography.css */
+
+@keyframes shimmer {
+  100% { transform: translateX(200%); }
+}
+
+@keyframes progress {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(300%); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes morph {
+  0% { border-radius: 20%; transform: rotate(0deg); }
+  50% { border-radius: 50%; transform: rotate(180deg); }
+  100% { border-radius: 20%; transform: rotate(360deg); }
+}

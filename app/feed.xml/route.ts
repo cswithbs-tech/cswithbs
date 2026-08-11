@@ -1,0 +1,75 @@
+import { Feed } from 'feed';
+import dbConnect from '@/lib/db';
+import Post from '@/models/Post';
+import Category from '@/models/Category';
+import User from '@/models/User';
+
+export async function GET() {
+  await dbConnect();
+
+  const now = new Date();
+  const publishedFilter = {
+      $or: [
+        { status: "published" },
+        { status: "scheduled", scheduledPublishDate: { $lte: now } },
+      ],
+  };
+
+  const posts = await Post.find({ 
+    ...publishedFilter,
+    noindex: { $ne: true } 
+  })
+  .sort({ createdAt: -1 })
+  .limit(20)
+  .populate({ path: 'author', model: User, select: 'name email link' })
+  .populate({ path: 'category', model: Category, select: 'name' })
+  .lean();
+
+  const feed = new Feed({
+    title: "CSWITHBS",
+    description: "Academic Portfolio & Study Materials",
+    id: "https://www.cswithbs.com/",
+    link: "https://www.cswithbs.com/",
+    language: "en", // optional, used only in RSS 2.0, possible values: http://www.w3.org/TR/REC-html40/struct/dirlang.html#langcodes
+    image: "https://www.cswithbs.com/icon.png",
+    favicon: "https://www.cswithbs.com/favicon.ico",
+    copyright: `All rights reserved ${new Date().getFullYear()}, CSWITHBS`,
+    updated: posts[0] ? new Date(posts[0].createdAt) : new Date(),
+    generator: "Feed for Node.js",
+    feedLinks: {
+      json: "https://www.cswithbs.com/api/feed/json",
+      atom: "https://www.cswithbs.com/feed.xml"
+    },
+    author: {
+      name: "CSWITHBS Team",
+      email: "support.cswithbs@gmail.com",
+      link: "https://www.cswithbs.com/about"
+    }
+  });
+
+  posts.forEach((post: any) => {
+    feed.addItem({
+      title: post.title,
+      id: `https://www.cswithbs.com/blog/${post.slug}`,
+      link: `https://www.cswithbs.com/blog/${post.slug}`,
+      description: post.excerpt,
+      content: post.content, // Ideally should be sanitized/rendered HTML, but raw string is often OK for basic readers or needs marked transform
+      author: [
+        {
+          name: post.author?.name || 'CSWITHBS Team',
+          email: post.author?.email,
+          link: post.author?.link
+        }
+      ],
+      date: new Date(post.createdAt),
+      image: post.image,
+      category: [{ name: post.category?.name || 'Uncategorized' }]
+    });
+  });
+
+  return new Response(feed.rss2(), {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+    },
+  });
+}
