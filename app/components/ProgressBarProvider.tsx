@@ -6,9 +6,9 @@ export default function ProgressBarProvider() {
   return (
     <NextTopLoader
       height={3}
-      color="#e2bdacff" // Matching the accent color
+      color="#E2C6B9"
       showSpinner={false}
-      shadow="0 0 10px #00FF9D,0 0 5px #00FF9D"
+      shadow="0 0 10px #E2C6B9,0 0 5px #E2C6B9"
     />
   );
 }
