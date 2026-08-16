@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Plus, Trash2, ListTree } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
+import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 
 interface Subject {
   _id: string;
@@ -34,6 +35,7 @@ export default function ChaptersPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const [form, setForm] = useState({ name: "", description: "", subject: "", order: 0 });
   const [showForm, setShowForm] = useState(false);
@@ -81,7 +83,6 @@ export default function ChaptersPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this chapter? Notes using it will lose their chapter reference.")) return;
     setDeleting(id);
     try {
       const res = await fetch(`/api/writers-hub/chapters/${id}`, { method: "DELETE" });
@@ -96,6 +97,7 @@ export default function ChaptersPage() {
       showToast("Failed to delete", "error");
     } finally {
       setDeleting(null);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -257,7 +259,7 @@ export default function ChaptersPage() {
                             </div>
                         </div>
                         <button
-                            onClick={() => handleDelete(chapter._id)}
+                            onClick={() => setConfirmDeleteId(chapter._id)}
                             disabled={deleting === chapter._id}
                             className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all shrink-0 disabled:opacity-40"
                             title="Delete chapter"
@@ -275,6 +277,15 @@ export default function ChaptersPage() {
             ))}
         </div>
       )}
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+        title="Delete Chapter?"
+        description="Are you sure you want to delete this chapter? Notes using it will lose their chapter reference."
+        variant="danger"
+        confirmText="Delete Chapter"
+      />
     </div>
   );
 }

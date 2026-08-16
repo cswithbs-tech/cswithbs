@@ -6,6 +6,7 @@ import { Editor } from "@/app/components/editor/Editor";
 import { useToast } from "@/app/context/ToastContext";
 import { Loader2, Plus, Send, Save, ArrowLeft, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 
 type Newsletter = {
   _id: string;
@@ -29,6 +30,8 @@ export default function NewsletterPage() {
   const [content, setContent] = useState(""); // This will be HTML from editor
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [confirmSend, setConfirmSend] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Fetch List
   useEffect(() => {
@@ -104,11 +107,11 @@ export default function NewsletterPage() {
       showToast("Please save draft first", "error");
       return;
     }
-    if (
-      !confirm("Are you sure you want to blast this email to ALL subscribers?")
-    )
-      return;
+    setConfirmSend(true);
+  };
 
+  const executeSend = async () => {
+    setConfirmSend(false);
     setIsSending(true);
     try {
       const res = await fetch(`/api/admin/newsletter/${draftId}/send`, {
@@ -132,9 +135,13 @@ export default function NewsletterPage() {
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Delete this newsletter?")) return;
+    setConfirmDeleteId(id);
+  };
+
+  const executeDelete = async () => {
+    if (!confirmDeleteId) return;
     try {
-      const res = await fetch(`/api/admin/newsletter/${id}`, {
+      const res = await fetch(`/api/admin/newsletter/${confirmDeleteId}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -143,6 +150,8 @@ export default function NewsletterPage() {
       }
     } catch (e) {
       showToast("Error", "error");
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -287,6 +296,24 @@ export default function NewsletterPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <ConfirmDialog
+        isOpen={confirmSend}
+        onClose={() => setConfirmSend(false)}
+        onConfirm={executeSend}
+        title="Blast Newsletter?"
+        description="Are you sure you want to blast this email to ALL subscribers? This action cannot be undone."
+        variant="danger"
+        confirmText="Blast to All Subscribers"
+      />
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={executeDelete}
+        title="Delete Newsletter?"
+        description="Are you sure you want to delete this newsletter?"
+        variant="danger"
+        confirmText="Delete"
+      />
     </div>
   );
 }

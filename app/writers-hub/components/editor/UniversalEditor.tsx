@@ -346,7 +346,9 @@ export default function UniversalEditor({
     fetch(`/api/writers-hub/subjects`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.subjects && Array.isArray(data.subjects)) {
+        if (Array.isArray(data)) {
+          setSubjects(data);
+        } else if (data.subjects && Array.isArray(data.subjects)) {
           setSubjects(data.subjects);
         }
       })
@@ -363,7 +365,9 @@ export default function UniversalEditor({
     fetch(`/api/writers-hub/chapters?subject=${formData.subject}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.chapters && Array.isArray(data.chapters)) {
+        if (Array.isArray(data)) {
+          setChapters(data);
+        } else if (data.chapters && Array.isArray(data.chapters)) {
           setChapters(data.chapters);
         }
       })
@@ -759,6 +763,7 @@ export default function UniversalEditor({
                 formData={formData}
                 handleChange={handleChange}
                 generateSlug={generateSlug}
+                contentType={contentType}
               />
 
               <RichTextEditor
@@ -776,6 +781,7 @@ export default function UniversalEditor({
                 formData={formData}
                 handleChange={handleChange}
                 openMediaModal={openMediaModal}
+                contentType={contentType}
               />
             </>
           ) : (

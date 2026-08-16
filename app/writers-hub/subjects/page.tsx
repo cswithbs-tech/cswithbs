@@ -4,12 +4,16 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Plus, Trash2, BookOpen } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
+import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 
 interface Subject {
   _id: string;
   name: string;
   slug: string;
   description?: string;
+  level?: string;
+  alignments?: string[];
+  coverImage?: string;
   createdAt: string;
 }
 
@@ -26,8 +30,9 @@ export default function SubjectsPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const [form, setForm] = useState({ name: "", description: "" });
+  const [form, setForm] = useState({ name: "", description: "", level: "All Levels", alignments: "", coverImage: "" });
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
@@ -46,10 +51,12 @@ export default function SubjectsPage() {
     }
     setCreating(true);
     try {
+      const alignmentsArray = form.alignments.split(",").map(s => s.trim()).filter(Boolean);
+      
       const res = await fetch("/api/writers-hub/subjects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, alignments: alignmentsArray }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -57,7 +64,7 @@ export default function SubjectsPage() {
         return;
       }
       setSubjects((prev) => [...prev, data]);
-      setForm({ name: "", description: "" });
+      setForm({ name: "", description: "", level: "All Levels", alignments: "", coverImage: "" });
       setShowForm(false);
       showToast("Subject created!", "success");
     } catch {
@@ -68,7 +75,6 @@ export default function SubjectsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this subject? Notes using it will lose their subject reference.")) return;
     setDeleting(id);
     try {
       const res = await fetch(`/api/writers-hub/subjects/${id}`, { method: "DELETE" });
@@ -80,6 +86,7 @@ export default function SubjectsPage() {
       showToast("Failed to delete", "error");
     } finally {
       setDeleting(null);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -142,6 +149,41 @@ export default function SubjectsPage() {
               className="w-full bg-black/40 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-accent/50 transition-colors resize-none"
             />
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-zinc-500 block mb-1.5">Level</label>
+              <select
+                value={form.level}
+                onChange={(e) => setForm((p) => ({ ...p, level: e.target.value }))}
+                className="w-full bg-black/40 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50 transition-colors"
+              >
+                <option value="All Levels">All Levels</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-zinc-500 block mb-1.5">Alignments (Tags)</label>
+              <input
+                type="text"
+                value={form.alignments}
+                onChange={(e) => setForm((p) => ({ ...p, alignments: e.target.value }))}
+                placeholder="e.g. VU 1st Sem, CU 4th Sem"
+                className="w-full bg-black/40 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-accent/50 transition-colors"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-zinc-500 block mb-1.5">Cover Image URL</label>
+            <input
+              type="text"
+              value={form.coverImage}
+              onChange={(e) => setForm((p) => ({ ...p, coverImage: e.target.value }))}
+              placeholder="https://..."
+              className="w-full bg-black/40 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-accent/50 transition-colors"
+            />
+          </div>
           <div className="flex justify-end gap-3">
             <button
               type="button"
@@ -184,8 +226,12 @@ export default function SubjectsPage() {
               className="bg-zinc-900/40 border border-white/5 rounded-xl p-5 flex items-start justify-between gap-4 hover:border-accent/20 transition-colors"
             >
               <div className="flex items-start gap-3 min-w-0">
-                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center shrink-0">
-                  <BookOpen className="w-5 h-5 text-accent" />
+                <div className="w-16 h-12 bg-accent/10 rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+                  {subject.coverImage ? (
+                    <img src={subject.coverImage} alt={subject.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <BookOpen className="w-5 h-5 text-accent" />
+                  )}
                 </div>
                 <div className="min-w-0">
                   <div className="font-semibold text-white truncate">{subject.name}</div>
@@ -194,13 +240,27 @@ export default function SubjectsPage() {
                       {subject.description}
                     </div>
                   )}
+                  
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {subject.level && subject.level !== "All Levels" && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent border border-accent/20">
+                        {subject.level}
+                      </span>
+                    )}
+                    {subject.alignments?.map((tag, i) => (
+                      <span key={i} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-zinc-800 text-zinc-300 border border-zinc-700">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
                   <div className="text-[10px] text-zinc-600 font-mono mt-1.5">
                     /{subject.slug}
                   </div>
                 </div>
               </div>
               <button
-                onClick={() => handleDelete(subject._id)}
+                onClick={() => setConfirmDeleteId(subject._id)}
                 disabled={deleting === subject._id}
                 className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all shrink-0 disabled:opacity-40"
                 title="Delete subject"
@@ -215,6 +275,15 @@ export default function SubjectsPage() {
           ))}
         </div>
       )}
+      <ConfirmDialog
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={() => confirmDeleteId && handleDelete(confirmDeleteId)}
+        title="Delete Subject?"
+        description="Are you sure you want to delete this subject? Notes using it will lose their subject reference."
+        variant="danger"
+        confirmText="Delete Subject"
+      />
     </div>
   );
 }

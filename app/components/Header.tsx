@@ -6,11 +6,12 @@ import {
   User,
   Crown,
   UserCog,
-  Star,
+  Gem,
   PenTool,
   LayoutDashboard,
   LogOut,
   ChevronDown,
+  Star,
 } from "lucide-react";
 import { Container } from "./ui/Container";
 import { Button } from "./ui/Button";
@@ -143,22 +144,16 @@ export const Header = () => {
                       {session.user?.name}
                     </span>
 
-                    {/* Minimalist Badges */}
-                    {(session.user as any).roles?.includes("SUPER_ADMIN") && (
+                    {/* Minimalist Badges (Priority: Super Admin > Admin > Writer > Premium) */}
+                    {(session.user as any).roles?.includes("SUPER_ADMIN") ? (
                       <Crown className="w-4 h-4 text-amber-400 drop-shadow-[0_0_5px_rgba(251,191,36,0.6)]" />
-                    )}
-                    {(session.user as any).roles?.includes("ADMIN") && !(session.user as any).roles?.includes("SUPER_ADMIN") && (
+                    ) : (session.user as any).roles?.includes("ADMIN") ? (
                       <UserCog className="w-4 h-4 text-blue-400 drop-shadow-[0_0_5px_rgba(96,165,250,0.6)]" />
-                    )}
-                    {(session.user as any).roles?.includes("WRITER") &&
-                      !(session.user as any).roles?.some((r: string) =>
-                        ["SUPER_ADMIN", "ADMIN"].includes(r),
-                      ) && (
-                        <PenTool className="w-4 h-4 text-accent drop-shadow-[0_0_5px_rgba(var(--color-accent),0.6)]" />
-                      )}
-                    {(session.user as any).isPremium && (
-                      <Star className="w-4 h-4 text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.6)]" />
-                    )}
+                    ) : (session.user as any).roles?.includes("WRITER") ? (
+                      <PenTool className="w-4 h-4 text-accent drop-shadow-[0_0_5px_rgba(var(--color-accent),0.6)]" />
+                    ) : (session.user as any).isPremium ? (
+                      <Gem className="w-4 h-4 text-fuchsia-400 drop-shadow-[0_0_5px_rgba(232,121,249,0.6)]" />
+                    ) : null}
 
                     <ChevronDown
                       className={`w-4 h-4 text-zinc-500 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""}`}
@@ -300,7 +295,11 @@ export const Header = () => {
                 <div className="flex items-center gap-4 mb-6 p-4 bg-white/5 rounded-2xl border border-white/10">
                   <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white/10 shrink-0">
                     {userImage ? (
-                      <img src={userImage} alt="User" className="w-full h-full object-cover" />
+                      <img
+                        src={userImage}
+                        alt="User"
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
                       <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-lg font-bold text-white uppercase">
                         {session.user?.name?.charAt(0)}
@@ -309,48 +308,77 @@ export const Header = () => {
                   </div>
                   <div className="flex flex-col text-left overflow-hidden">
                     <div className="flex items-center gap-2">
-                      <h4 className="text-base font-bold text-white truncate">{session.user?.name}</h4>
+                      <h4 className="text-base font-bold text-white truncate">
+                        {session.user?.name}
+                      </h4>
                       {/* Mobile Minimalist Badges */}
                       {(session.user as any).roles?.includes("SUPER_ADMIN") && (
                         <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                       )}
-                      {(session.user as any).roles?.includes("ADMIN") && !(session.user as any).roles?.includes("SUPER_ADMIN") && (
-                        <UserCog className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                      )}
-                      {(session.user as any).roles?.includes("WRITER") && !(session.user as any).roles?.some((r: string) => ["SUPER_ADMIN", "ADMIN"].includes(r)) && (
-                        <PenTool className="w-3.5 h-3.5 text-accent shrink-0" />
-                      )}
+                      {(session.user as any).roles?.includes("ADMIN") &&
+                        !(session.user as any).roles?.includes(
+                          "SUPER_ADMIN",
+                        ) && (
+                          <UserCog className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                        )}
+                      {(session.user as any).roles?.includes("WRITER") &&
+                        !(session.user as any).roles?.some((r: string) =>
+                          ["SUPER_ADMIN", "ADMIN"].includes(r),
+                        ) && (
+                          <PenTool className="w-3.5 h-3.5 text-accent shrink-0" />
+                        )}
                       {(session.user as any).isPremium && (
                         <Star className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
                       )}
                     </div>
-                    <p className="text-xs text-zinc-400 truncate">{session.user?.email}</p>
+                    <p className="text-xs text-zinc-400 truncate">
+                      {session.user?.email}
+                    </p>
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-2 w-full">
-                  {(session.user as any).roles?.some((r: string) => ["ADMIN", "SUPER_ADMIN"].includes(r)) && (
-                    <Link href="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white">
+                  {(session.user as any).roles?.some((r: string) =>
+                    ["ADMIN", "SUPER_ADMIN"].includes(r),
+                  ) && (
+                    <Link
+                      href="/admin/dashboard"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white"
+                    >
                       <LayoutDashboard className="w-5 h-5 text-zinc-400" />
                       <span className="font-medium">Admin Dashboard</span>
                     </Link>
                   )}
 
-                  {(session.user as any).roles?.some((r: string) => ["ADMIN", "SUPER_ADMIN", "WRITER"].includes(r)) && (
-                    <Link href="/writers-hub/posts/create" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white">
+                  {(session.user as any).roles?.some((r: string) =>
+                    ["ADMIN", "SUPER_ADMIN", "WRITER"].includes(r),
+                  ) && (
+                    <Link
+                      href="/writers-hub/posts/create"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white"
+                    >
                       <PenTool className="w-5 h-5 text-zinc-400" />
                       <span className="font-medium">Write New Post</span>
                     </Link>
                   )}
 
-                  <Link href={`/profile/${(session.user as any).id}`} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white">
+                  <Link
+                    href={`/profile/${(session.user as any).id}`}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white"
+                  >
                     <User className="w-5 h-5 text-zinc-400" />
                     <span className="font-medium">View Profile</span>
                   </Link>
 
                   <div className="h-px bg-white/10 my-2 w-full"></div>
 
-                  <button onClick={() => signOut()} className="flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 transition-colors text-red-400 w-full text-left">
+                  <button
+                    onClick={() => signOut()}
+                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 transition-colors text-red-400 w-full text-left"
+                  >
                     <LogOut className="w-5 h-5" />
                     <span className="font-medium">Sign Out</span>
                   </button>

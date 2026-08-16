@@ -10,6 +10,7 @@ export interface IMedia extends Document {
   height: number;
   folder: string;
   altText?: string;
+  uploadedBy?: mongoose.Types.ObjectId;
   createdAt: Date;
 }
 
@@ -24,6 +25,7 @@ const MediaSchema: Schema = new Schema(
     height: { type: Number },
     folder: { type: String, default: 'general' },
     altText: { type: String, default: '' },
+    uploadedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );

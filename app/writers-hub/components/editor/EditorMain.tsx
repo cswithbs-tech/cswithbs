@@ -4,12 +4,14 @@ interface EditorMainProps {
   formData: any;
   handleChange: (e: any) => void;
   generateSlug: () => void;
+  contentType?: 'post' | 'note';
 }
 
 export function EditorMain({
   formData,
   handleChange,
   generateSlug,
+  contentType = 'post',
 }: EditorMainProps) {
   return (
     <div className="space-y-6">
@@ -18,7 +20,7 @@ export function EditorMain({
         name="title"
         value={formData.title}
         onChange={handleChange}
-        placeholder="Post Title"
+        placeholder={contentType === 'note' ? "Lesson Title" : "Post Title"}
         className="w-full bg-transparent border-none px-0 py-2 font-black tracking-tight text-white placeholder:text-zinc-800 focus:outline-none focus:ring-0 focus:placeholder:text-zinc-700 transition-all font-sans text-4xl md:text-5xl"
       />
       <div className="flex flex-col gap-4 pl-1">
@@ -27,7 +29,7 @@ export function EditorMain({
           <span className="text-accent/50 group-hover:text-accent transition-colors">
             GET
           </span>
-          <span>/blog/</span>
+          <span>{contentType === 'note' ? '/courses/[course]/' : '/blog/'}</span>
           <div className="relative flex-1 max-w-md flex items-center gap-2">
             <input
               type="text"

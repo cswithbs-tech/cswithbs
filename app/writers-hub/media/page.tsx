@@ -10,7 +10,7 @@ import {
   FileImage,
   Search,
 } from "lucide-react";
-import { useToast } from "../../../context/ToastContext";
+import { useToast } from "@/app/context/ToastContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 

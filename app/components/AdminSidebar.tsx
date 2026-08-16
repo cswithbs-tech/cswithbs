@@ -181,9 +181,7 @@ const sidebarLinks = [
       </svg>
     ),
   },
-
 ];
-
 
 // ... (sidebarLinks array remains same)
 
@@ -202,9 +200,11 @@ export const AdminSidebar = ({
   const [unreadCount, setUnreadCount] = useState(0);
 
   const roles = (session?.user as any)?.roles || [];
-  const isSuperOrAdmin = Array.isArray(roles) 
-    ? roles.some(r => ["ADMIN", "SUPER_ADMIN", "admin", "super_admin"].includes(r))
-    : (roles === "admin" || roles === "super_admin");
+  const isSuperOrAdmin = Array.isArray(roles)
+    ? roles.some((r) =>
+        ["ADMIN", "SUPER_ADMIN", "admin", "super_admin"].includes(r),
+      )
+    : roles === "admin" || roles === "super_admin";
 
   useEffect(() => {
     const fetchUnread = async () => {
@@ -243,7 +243,9 @@ export const AdminSidebar = ({
       >
         <div className="h-20 flex items-center justify-between px-6 border-b border-white/10">
           <Link
-            href={isSuperOrAdmin ? "/admin/dashboard" : "/writers-hub/dashboard"}
+            href={
+              isSuperOrAdmin ? "/admin/dashboard" : "/writers-hub/dashboard"
+            }
             className="text-xl font-bold tracking-tight text-white flex items-center gap-2"
           >
             <span className="text-xl font-bold text-white tracking-tight">
@@ -277,7 +279,7 @@ export const AdminSidebar = ({
           </button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto pb-6 pt-1 px-4 space-y-1">
           {sidebarLinks
             .filter((link) => {
               if (
@@ -409,7 +411,7 @@ export const AdminSidebar = ({
                       roles.includes("super_admin");
                     const isAdmin =
                       roles.includes("ADMIN") || roles.includes("admin");
-                    
+
                     if (isSuper) {
                       return (
                         <span className="flex items-center gap-1.5 text-[9px] uppercase tracking-widest font-bold text-amber-500">

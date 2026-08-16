@@ -6,6 +6,9 @@ export interface ISubject extends Document {
   description?: string;
   icon?: string;
   color?: string;
+  level?: string;
+  alignments?: string[];
+  coverImage?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -17,6 +20,9 @@ const SubjectSchema: Schema = new Schema(
     description: { type: String },
     icon: { type: String },
     color: { type: String },
+    level: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced', 'All Levels'], default: 'All Levels' },
+    alignments: { type: [String], default: [] },
+    coverImage: { type: String, default: "" },
   },
   { timestamps: true }
 );

@@ -3,7 +3,17 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
-import { BookOpen, FileText, UserCog, LogOut, LayoutDashboard, Crown, FolderOpen, ListTree } from "lucide-react";
+import {
+  BookOpen,
+  FileText,
+  UserCog,
+  LogOut,
+  LayoutDashboard,
+  Crown,
+  FolderOpen,
+  ListTree,
+  Image as ImageIcon,
+} from "lucide-react";
 
 const sidebarLinks = [
   {
@@ -17,7 +27,22 @@ const sidebarLinks = [
     header: "Content",
     label: "Write",
     href: "/writers-hub/write",
-    icon: <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>,
+    icon: (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth={1.5}
+        stroke="currentColor"
+        className="w-5 h-5"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M12 4.5v15m7.5-7.5h-15"
+        />
+      </svg>
+    ),
   },
   {
     label: "Academic Notes",
@@ -28,6 +53,11 @@ const sidebarLinks = [
     label: "Blog Posts",
     href: "/writers-hub/posts",
     icon: <FileText className="w-5 h-5" />,
+  },
+  {
+    label: "Media Library",
+    href: "/writers-hub/media",
+    icon: <ImageIcon className="w-5 h-5" />,
   },
 ];
 
@@ -57,9 +87,10 @@ export const WritersSidebar = ({
   const pathname = usePathname();
   const { data: session } = useSession();
 
-  const userRole = (session?.user as any)?.roles?.[0] || "WRITER";
+  const roles = (session?.user as any)?.roles || [];
+  const userRole = roles.includes("SUPER_ADMIN") ? "SUPER ADMIN" : roles.includes("ADMIN") ? "ADMIN" : roles.includes("WRITER") ? "WRITER" : roles[0] || "WRITER";
   const isSuperOrAdmin = (session?.user as any)?.roles?.some((r: string) =>
-    ["ADMIN", "SUPER_ADMIN"].includes(r)
+    ["ADMIN", "SUPER_ADMIN"].includes(r),
   );
   const isSuperAdmin = (session?.user as any)?.roles?.includes("SUPER_ADMIN");
 
@@ -80,7 +111,10 @@ export const WritersSidebar = ({
       >
         {/* Logo/Brand */}
         <div className="h-20 flex items-center px-6 border-b border-white/5">
-          <Link href="/writers-hub/dashboard" className="flex items-center gap-3">
+          <Link
+            href="/writers-hub/dashboard"
+            className="flex items-center gap-3"
+          >
             <div className="w-8 h-8 rounded bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center font-bold text-black">
               W
             </div>
@@ -92,42 +126,43 @@ export const WritersSidebar = ({
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-6 px-4 space-y-1 no-scrollbar">
-          {[...sidebarLinks, ...(isSuperOrAdmin ? adminOnlyLinks : [])].map((item, idx) => {
-            const isActive = (item as any).exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href);
-            return (
-              <div key={idx}>
-                {item.header && (
-                  <div className="px-3 mb-2 mt-5 first:mt-0 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                    {item.header}
-                  </div>
-                )}
-                <Link
-                  href={item.href}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
-                    isActive
-                      ? "bg-accent/10 text-accent font-medium"
-                      : "text-zinc-400 hover:text-white hover:bg-white/5"
-                  }`}
-                  onClick={() => onClose && onClose()}
-                >
-                  <div
-                    className={`${
+          {[...sidebarLinks, ...(isSuperOrAdmin ? adminOnlyLinks : [])].map(
+            (item, idx) => {
+              const isActive = (item as any).exact
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
+              return (
+                <div key={idx}>
+                  {item.header && (
+                    <div className="px-3 mb-2 mt-5 first:mt-0 text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                      {item.header}
+                    </div>
+                  )}
+                  <Link
+                    href={item.href}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
                       isActive
-                        ? "text-accent"
-                        : "text-zinc-500 group-hover:text-white transition-colors"
+                        ? "bg-accent/10 text-accent font-medium"
+                        : "text-zinc-400 hover:text-white hover:bg-white/5"
                     }`}
+                    onClick={() => onClose && onClose()}
                   >
-                    {item.icon}
-                  </div>
-                  <span>{item.label}</span>
-                </Link>
-              </div>
-            );
-          })}
+                    <div
+                      className={`${
+                        isActive
+                          ? "text-accent"
+                          : "text-zinc-500 group-hover:text-white transition-colors"
+                      }`}
+                    >
+                      {item.icon}
+                    </div>
+                    <span>{item.label}</span>
+                  </Link>
+                </div>
+              );
+            },
+          )}
         </nav>
-
 
         {/* Premium Footer Structure */}
         <div className="border-t border-white/5 mt-auto bg-[#0A0A0A]">
@@ -197,9 +232,7 @@ export const WritersSidebar = ({
                   ) : null}
                 </div>
                 <div className="text-xs text-zinc-500 font-medium tracking-wide flex items-center gap-2">
-                  <span className="truncate">
-                    {userRole.replace("_", " ")}
-                  </span>
+                  <span className="truncate">{userRole.replace("_", " ")}</span>
                 </div>
               </div>
 

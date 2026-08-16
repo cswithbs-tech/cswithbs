@@ -2,9 +2,17 @@ import { NextResponse } from 'next/server';
 import cloudinary from '@/lib/cloudinary';
 import dbConnect from '@/lib/db';
 import Media from '@/models/Media';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function POST(request: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    const user = session?.user as any;
+    
+    if (!session || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const folderName = (formData.get('folder') as string) || 'general'; // Default to 'general'
@@ -53,7 +61,8 @@ export async function POST(request: Request) {
         width: result.width,
         height: result.height,
         folder: folderName,
-        altText: ''
+        altText: '',
+        uploadedBy: user.id
     });
 
     return NextResponse.json({ 

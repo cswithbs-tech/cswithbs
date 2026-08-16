@@ -1,11 +1,22 @@
-import { Container } from "@/app/components/ui/Container";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Share2, Bookmark, CheckCircle2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Share2,
+  Bookmark,
+  Clock,
+  Eye,
+  Tag,
+  CheckCircle2,
+  BookOpen,
+} from "lucide-react";
 import dbConnect from "@/lib/db";
 import Subject from "@/models/Subject";
 import Chapter from "@/models/Chapter";
 import Note from "@/models/Note";
 import { notFound } from "next/navigation";
+import { Container } from "@/app/components/ui/Container";
+import { LessonActions } from "./LessonActions";
 
 export const revalidate = 60;
 
@@ -15,120 +26,181 @@ async function getNoteData(subjectSlug: string, noteSlug: string) {
   const subject = await Subject.findOne({ slug: subjectSlug }).lean();
   if (!subject) return null;
 
-  const currentNote = await Note.findOne({ 
-      subject: subject._id, 
-      slug: noteSlug 
-  }).populate("chapter").lean();
-
-  if (!currentNote) return null;
-
-  // Find previous and next notes based on order
-  // This logic is simplified: it looks for notes in the same subject, ordered by chapter order then note order.
-  // A robust implementation would require a complex aggregation, but we'll fetch all notes and find neighbors.
-  const allNotes = await Note.find({ subject: subject._id })
+  const currentNote = await Note.findOne({
+    subject: subject._id,
+    slug: noteSlug,
+  })
     .populate("chapter")
     .lean();
 
-  // Sort notes: First by Chapter order (if exists), then by Note order
+  if (!currentNote) return null;
+
+  // Fetch all published notes sorted by chapter order then note order
+  const allNotes = await Note.find({
+    subject: subject._id,
+    $or: [
+      { status: "published" },
+      { status: "scheduled", scheduledPublishDate: { $lte: new Date() } },
+    ],
+  })
+    .populate("chapter")
+    .lean();
+
   allNotes.sort((a: any, b: any) => {
-      const chapterOrderA = a.chapter?.order ?? 9999;
-      const chapterOrderB = b.chapter?.order ?? 9999;
-      if (chapterOrderA !== chapterOrderB) return chapterOrderA - chapterOrderB;
-      return (a.order ?? 9999) - (b.order ?? 9999);
+    const chA = a.chapter?.order ?? 9999;
+    const chB = b.chapter?.order ?? 9999;
+    if (chA !== chB) return chA - chB;
+    return (a.order ?? 9999) - (b.order ?? 9999);
   });
 
-  const currentIndex = allNotes.findIndex((n: any) => n._id.toString() === currentNote._id.toString());
-  
-  const prevNote = currentIndex > 0 ? allNotes[currentIndex - 1] : null;
-  const nextNote = currentIndex < allNotes.length - 1 ? allNotes[currentIndex + 1] : null;
+  const currentIndex = allNotes.findIndex(
+    (n: any) => n._id.toString() === (currentNote as any)._id.toString()
+  );
 
-  return {
+  return JSON.parse(
+    JSON.stringify({
       subject,
       currentNote,
-      prevNote,
-      nextNote
-  };
+      prevNote: currentIndex > 0 ? allNotes[currentIndex - 1] : null,
+      nextNote: currentIndex < allNotes.length - 1 ? allNotes[currentIndex + 1] : null,
+      totalNotes: allNotes.length,
+      currentIndex,
+    })
+  );
 }
 
-export default async function LessonPage({ params }: { params: Promise<{ courseSlug: string, lessonSlug: string }> }) {
+export default async function LessonPage({
+  params,
+}: {
+  params: Promise<{ courseSlug: string; lessonSlug: string }>;
+}) {
   const { courseSlug, lessonSlug } = await params;
-  
   const data = await getNoteData(courseSlug, lessonSlug);
-  
-  if (!data) {
-      notFound();
-  }
 
-  const { subject, currentNote, prevNote, nextNote } = data;
+  if (!data) notFound();
+
+  const { subject, currentNote, prevNote, nextNote, totalNotes, currentIndex } = data;
+  const accentColor = subject.color || "#E2C6B9";
 
   return (
-    <div className="py-10 md:py-16">
+    <div className="min-h-screen py-10 md:py-14">
       <Container className="max-w-4xl mx-auto">
-        {/* Top Breadcrumbs & Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-10 pb-6 border-b border-white/10">
-          <div className="flex items-center gap-2 text-sm text-zinc-500 font-medium">
-            <Link href="/courses" className="hover:text-white transition-colors">Courses</Link>
-            <ChevronRight className="w-4 h-4" />
-            <Link href={`/courses/${courseSlug}`} className="hover:text-white transition-colors">{subject.name}</Link>
-            {currentNote.chapter && (
-                <>
-                    <ChevronRight className="w-4 h-4" />
-                    <span className="text-zinc-400">Chapter {currentNote.chapter.order}</span>
-                </>
-            )}
-          </div>
-          <div className="flex items-center gap-3">
-             <button className="flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-               <Bookmark className="w-4 h-4" /> Save
-             </button>
-             <button className="flex items-center gap-2 text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-               <Share2 className="w-4 h-4" /> Share
-             </button>
-          </div>
+
+        {/* ── Top bar: actions only ───────────────────── */}
+        <div className="flex flex-wrap items-center justify-end gap-4 mb-10 pb-6 border-b border-white/10">
+          <LessonActions />
         </div>
 
-        {/* Lesson Title */}
-        <h1 className="text-4xl md:text-5xl font-black text-white leading-tight font-display tracking-tight mb-10">
+        {/* ── Metadata bar ─────────────────────────────────────── */}
+        <div className="flex flex-wrap items-center gap-3 mb-8">
+          {/* Chapter badge */}
+          {currentNote.chapter && (
+            <span
+              className="px-3 py-1 rounded-full text-xs font-bold border"
+              style={{
+                backgroundColor: `${accentColor}12`,
+                borderColor: `${accentColor}25`,
+                color: accentColor,
+              }}
+            >
+              {currentNote.chapter.name}
+            </span>
+          )}
+          {/* Last Updated */}
+          <span className="flex items-center gap-1.5 text-xs font-mono text-zinc-600">
+            <Clock className="w-3.5 h-3.5" />
+            Last Updated: {new Date(currentNote.updatedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+          </span>
+          {/* Tags */}
+          {currentNote.tags && currentNote.tags.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {currentNote.tags.slice(0, 4).map((tag: string, i: number) => (
+                <span
+                  key={i}
+                  className="flex items-center gap-1 px-2.5 py-0.5 bg-white/5 border border-white/10 text-zinc-400 text-xs rounded-full"
+                >
+                  <Tag className="w-2.5 h-2.5" />
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Lesson title ─────────────────────────────────────── */}
+        <h1 className="text-3xl md:text-5xl font-black text-white leading-tight font-display tracking-tight mb-10">
           {currentNote.title}
         </h1>
 
-        {/* Lesson Content Rendered from HTML */}
-        <div 
-          className="prose prose-invert prose-lg max-w-none prose-headings:font-display prose-headings:font-bold prose-a:text-accent hover:prose-a:text-accent/80 prose-img:rounded-2xl"
+        {/* ── Note image (if available) ─────────────────────────── */}
+        {currentNote.image && (
+          <div className="w-full rounded-2xl overflow-hidden border border-white/10 mb-10">
+            <img
+              src={currentNote.image}
+              alt={currentNote.title}
+              className="w-full object-cover"
+            />
+          </div>
+        )}
+
+        {/* ── Main Content ─────────────────────────────────────── */}
+        <div
+          className="prose prose-invert prose-lg max-w-none
+            prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight
+            prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
+            prose-a:text-accent hover:prose-a:text-accent/80 prose-a:no-underline hover:prose-a:underline
+            prose-code:text-accent/90 prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:before:content-none prose-code:after:content-none
+            prose-pre:bg-[#0a0a0a] prose-pre:border prose-pre:border-white/10 prose-pre:rounded-2xl
+            prose-blockquote:border-l-accent prose-blockquote:text-zinc-400
+            prose-img:rounded-2xl prose-img:border prose-img:border-white/10
+            prose-hr:border-white/10
+            prose-strong:text-white"
           dangerouslySetInnerHTML={{ __html: currentNote.content || "" }}
         />
 
-        {/* Completion & Navigation */}
+        {/* ── Bottom section ────────────────────────────────────── */}
         <div className="mt-20 pt-10 border-t border-white/10">
-          
-          <div className="flex items-center justify-center mb-12">
-            <button className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 rounded-full text-white font-medium hover:bg-white/10 hover:border-accent/50 hover:text-accent transition-all group">
-              <CheckCircle2 className="w-5 h-5 group-hover:scale-110 transition-transform" />
-              Mark as Completed
-            </button>
-          </div>
 
+          {/* Prev / Next navigation */}
           <div className="grid grid-cols-2 gap-4">
             {prevNote ? (
-                <Link href={`/courses/${courseSlug}/${prevNote.slug}`} className="flex flex-col gap-1 p-4 md:p-6 border border-white/10 rounded-2xl hover:bg-white/5 transition-colors group text-left">
-                <span className="text-xs text-zinc-500 font-medium uppercase tracking-wider flex items-center gap-1 group-hover:text-white transition-colors">
-                    <ChevronLeft className="w-4 h-4" /> Previous Lesson
+              <Link
+                href={`/courses/${courseSlug}/${prevNote.slug}`}
+                className="flex flex-col gap-1.5 p-5 border border-white/10 rounded-2xl hover:bg-white/[0.03] hover:border-white/20 transition-all group text-left"
+              >
+                <span className="flex items-center gap-1.5 text-xs text-zinc-600 font-medium uppercase tracking-wider group-hover:text-zinc-400 transition-colors">
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
                 </span>
-                <span className="text-sm md:text-lg font-bold text-white truncate">{prevNote.title}</span>
-                </Link>
+                <span className="text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-accent transition-colors">
+                  {prevNote.title}
+                </span>
+              </Link>
             ) : (
-                <div></div>
+              <div />
             )}
-            
+
             {nextNote ? (
-                <Link href={`/courses/${courseSlug}/${nextNote.slug}`} className="flex flex-col gap-1 p-4 md:p-6 border border-white/10 rounded-2xl hover:bg-white/5 transition-colors group text-right">
-                <span className="text-xs text-zinc-500 font-medium uppercase tracking-wider flex items-center justify-end gap-1 group-hover:text-white transition-colors">
-                    Next Lesson <ChevronRight className="w-4 h-4" />
+              <Link
+                href={`/courses/${courseSlug}/${nextNote.slug}`}
+                className="flex flex-col gap-1.5 p-5 border border-white/10 rounded-2xl hover:bg-white/[0.03] hover:border-white/20 transition-all group text-right"
+              >
+                <span className="flex items-center justify-end gap-1.5 text-xs text-zinc-600 font-medium uppercase tracking-wider group-hover:text-zinc-400 transition-colors">
+                  Next
+                  <ChevronRight className="w-4 h-4" />
                 </span>
-                <span className="text-sm md:text-lg font-bold text-white truncate">{nextNote.title}</span>
-                </Link>
+                <span className="text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-accent transition-colors">
+                  {nextNote.title}
+                </span>
+              </Link>
             ) : (
-                <div></div>
+              <div className="flex flex-col gap-1.5 p-5 border border-white/5 rounded-2xl text-right opacity-50">
+                <span className="flex items-center justify-end gap-1.5 text-xs text-zinc-600 font-medium uppercase tracking-wider">
+                  You&apos;re done!
+                  <BookOpen className="w-4 h-4" />
+                </span>
+                <span className="text-sm text-zinc-600">End of course</span>
+              </div>
             )}
           </div>
 

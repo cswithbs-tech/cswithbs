@@ -99,7 +99,7 @@ export function EditorSidebar({
 
   return (
     <div className="space-y-6 sticky top-24 h-fit">
-      <TableOfContents editor={editorInstance} floating={false} />
+      {contentType !== 'note' && <TableOfContents editor={editorInstance} floating={false} />}
       <div className="bg-card border border-white/5 rounded-xl p-4 space-y-4">
         <div>
           <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
@@ -150,7 +150,7 @@ export function EditorSidebar({
             ) : (
               <div>
                 <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
-                  Subject
+                  Course
                 </label>
                 <select
                   name="subject"
@@ -159,7 +159,7 @@ export function EditorSidebar({
                   className="w-full bg-[#121212] border border-white/10 rounded-md px-3 py-1.5 text-white text-[13px] focus:outline-none focus:border-accent/50 transition-colors"
                 >
                   <option value="" disabled>
-                    Select Subject
+                    Select Course
                   </option>
                   {loadingSubjects ? (
                     <option disabled>Loading...</option>
@@ -178,7 +178,7 @@ export function EditorSidebar({
               <>
                 <div>
                   <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
-                    Chapter
+                    Module
                   </label>
                   <select
                     name="chapter"
@@ -187,9 +187,8 @@ export function EditorSidebar({
                     className="w-full bg-[#121212] border border-white/10 rounded-md px-3 py-1.5 text-white text-[13px] focus:outline-none focus:border-accent/50 transition-colors"
                   >
                     <option value="" disabled>
-                      Select Chapter
+                      Select Module
                     </option>
-                    <option value="">No Chapter</option>
                     {loadingChapters ? (
                       <option disabled>Loading...</option>
                     ) : (
@@ -203,7 +202,7 @@ export function EditorSidebar({
                 </div>
                 <div>
                   <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
-                    Order in Chapter
+                    Order in Module
                   </label>
                   <input
                     type="number"
@@ -216,8 +215,8 @@ export function EditorSidebar({
               </>
             )}
 
-            {/* Author Assignment - Super Admin Only */}
-            {isSuperAdmin && (
+            {/* Author Assignment - Super Admin Only (Hidden for Notes) */}
+            {isSuperAdmin && contentType !== 'note' && (
               <div>
                 <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                   Author (Admin)
@@ -244,15 +243,9 @@ export function EditorSidebar({
               <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                 Language
               </label>
-              <select
-                name="language"
-                value={(formData as any).language || "English"}
-                onChange={handleChange}
-                className="w-full bg-[#121212] border border-white/10 rounded-md px-3 py-1.5 text-white text-[13px] focus:outline-none focus:border-accent/50 transition-colors"
-              >
-                <option value="English">English</option>
-                <option value="Bengali">Bengali</option>
-              </select>
+              <div className="w-full bg-[#121212] border border-white/10 rounded-md px-3 py-1.5 text-zinc-400 text-[13px] cursor-not-allowed">
+                English
+              </div>
             </div>
             <div>
               <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
@@ -297,27 +290,30 @@ export function EditorSidebar({
                 Press Enter or Comma to add tag
               </p>
             </div>
-            <div className="flex items-center gap-2 pt-2">
-              <input
-                type="checkbox"
-                id="featured"
-                checked={formData.featured}
-                onChange={(e) => {
-                  setFormData((p) => ({
-                    ...p,
-                    featured: e.target.checked,
-                  }));
-                  setIsDirty(true);
-                }}
-                className="rounded bg-[#121212] border-white/10"
-              />
-              <label htmlFor="featured" className="text-sm text-zinc-300">
-                Featured Post
-              </label>
-            </div>
+            {contentType !== 'note' && (
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="featured"
+                  checked={formData.featured}
+                  onChange={(e) => {
+                    setFormData((p) => ({
+                      ...p,
+                      featured: e.target.checked,
+                    }));
+                    setIsDirty(true);
+                  }}
+                  className="rounded bg-[#121212] border-white/10"
+                />
+                <label htmlFor="featured" className="text-sm text-zinc-300">
+                  Featured Post
+                </label>
+              </div>
+            )}
           </div>
         </div>
 
+        {contentType !== 'note' && (
         <div className="pt-4 border-t border-white/5">
           <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">
             Featured Asset
@@ -350,8 +346,10 @@ export function EditorSidebar({
             </div>
           </div>
         </div>
+        )}
       </div>
 
+      {contentType !== 'note' && (
       <div className="bg-card border border-white/5 rounded-xl p-6">
         <div
           className="flex items-center justify-between cursor-pointer"
@@ -388,6 +386,7 @@ export function EditorSidebar({
           </div>
         )}
       </div>
+      )}
 
       {/* CATEGORY MODAL - Black & Yellow Theme */}
       {isCatModalOpen && typeof document !== "undefined"

@@ -147,26 +147,30 @@ export function EditorHeader({
           </span>
         </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowGuide(true)}
-          className="text-zinc-400 hover:text-accent flex items-center gap-2"
-        >
-          <BookOpen size={18} />
-          <span className="hidden md:inline">Guide</span>
-        </Button>
+        {contentType !== 'note' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowGuide(true)}
+            className="text-zinc-400 hover:text-accent flex items-center gap-2"
+          >
+            <BookOpen size={18} />
+            <span className="hidden md:inline">Guide</span>
+          </Button>
+        )}
 
-        <div className="h-6 w-px bg-white/10 mx-1"></div>
+        {contentType !== 'note' && <div className="h-6 w-px bg-white/10 mx-1"></div>}
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="hidden md:flex gap-2"
-          onClick={onPreview}
-        >
-          <Globe size={16} /> Preview
-        </Button>
+        {contentType !== 'note' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="hidden md:flex gap-2"
+            onClick={onPreview}
+          >
+            <Globe size={16} /> Preview
+          </Button>
+        )}
 
         <Button
           variant="outline"

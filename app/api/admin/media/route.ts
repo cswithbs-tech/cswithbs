@@ -16,7 +16,15 @@ export async function GET(request: Request) {
 
     await dbConnect();
     
-    const media = await Media.find({ folder: { $ne: 'avatars' } }).sort({ createdAt: -1 }); // Future: pagination
+    let query: any = { folder: { $ne: 'avatars' } };
+    
+    // If user is ONLY a writer (not admin/super_admin), only show their own uploads
+    const isSuperOrAdmin = Array.isArray(userRoles) ? userRoles.some(r => ['ADMIN', 'SUPER_ADMIN', 'admin', 'super_admin'].includes(r)) : ['admin', 'super_admin'].includes(userRoles);
+    if (!isSuperOrAdmin) {
+      query.uploadedBy = (session.user as any).id;
+    }
+
+    const media = await Media.find(query).sort({ createdAt: -1 });
     
     return NextResponse.json(media);
   } catch (error) {
@@ -46,6 +54,12 @@ export async function DELETE(request: Request) {
     const media = await Media.findById(id);
     if (!media) {
         return NextResponse.json({ error: "Media not found" }, { status: 404 });
+    }
+
+    // Check permissions
+    const isSuperOrAdmin = Array.isArray(userRoles) ? userRoles.some(r => ['ADMIN', 'SUPER_ADMIN', 'admin', 'super_admin'].includes(r)) : ['admin', 'super_admin'].includes(userRoles);
+    if (!isSuperOrAdmin && media.uploadedBy?.toString() !== (session.user as any).id) {
+        return NextResponse.json({ error: 'Unauthorized to delete this media' }, { status: 403 });
     }
 
     // Delete from Cloudinary

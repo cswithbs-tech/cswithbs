@@ -7,12 +7,14 @@ interface EditorSEOProps {
   formData: any;
   handleChange: (e: any) => void;
   openMediaModal: (field: "image" | "ogImage" | "content") => void;
+  contentType?: 'post' | 'note';
 }
 
 export function EditorSEO({
   formData,
   handleChange,
   openMediaModal,
+  contentType = 'post',
 }: EditorSEOProps) {
   return (
     <div className="bg-[#1A1A1A] border border-white/5 rounded-xl p-8 space-y-6 shadow-2xl shadow-accent/10 hover:border-accent/30 transition-all duration-300">
@@ -30,7 +32,7 @@ export function EditorSEO({
             name="seoTitle"
             value={formData.seoTitle}
             onChange={handleChange}
-            placeholder={formData.title || "Default: Post Title"}
+            placeholder={formData.title || (contentType === 'note' ? "Default: Lesson Title" : "Default: Post Title")}
             className="w-full bg-[#121212] border border-white/10 rounded-lg px-4 py-3 text-zinc-300 text-sm focus:outline-none focus:border-accent/50"
           />
         </div>
@@ -46,7 +48,9 @@ export function EditorSEO({
             onChange={handleChange}
             placeholder={
               formData.slug
-                ? `https://cswithbs.com/blog/${formData.slug}`
+                ? (contentType === 'note' 
+                    ? `https://cswithbs.com/courses/.../${formData.slug}`
+                    : `https://cswithbs.com/blog/${formData.slug}`)
                 : "https://..."
             }
             className="w-full bg-[#121212] border border-white/10 rounded-lg px-4 py-3 text-zinc-300 text-sm focus:outline-none focus:border-accent/50"
@@ -63,7 +67,7 @@ export function EditorSEO({
           value={formData.seoDescription}
           onChange={handleChange}
           rows={2}
-          placeholder={formData.excerpt || "Default: Post Excerpt"}
+          placeholder={formData.excerpt || (contentType === 'note' ? "Default: Lesson Excerpt" : "Default: Post Excerpt")}
           className="w-full bg-[#121212] border border-white/10 rounded-lg p-4 text-zinc-300 text-sm focus:outline-none focus:border-accent/50 resize-none"
         ></textarea>
       </div>
