@@ -46,6 +46,7 @@ export default async function UnifiedEditorPage(props: {
           _id: note._id.toString(),
           author: note.author ? note.author.toString() : "",
           subject: note.subject ? note.subject.toString() : "",
+          chapter: note.chapter ? note.chapter.toString() : "",
           createdAt: note.createdAt?.toISOString(),
           updatedAt: note.updatedAt?.toISOString(),
         };
@@ -65,6 +66,8 @@ export default async function UnifiedEditorPage(props: {
       }
     }
   }
+
+
 
   return (
     <UniversalEditor

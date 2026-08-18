@@ -158,7 +158,7 @@ export default function AboutPage() {
                 {/* Main Image */}
                 <div className="relative w-full h-full rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-zinc-950">
                   <Image
-                    src="/images/buddhadev_sasmal.jpg"
+                    src="/images/buddhadev_sasmal.jpeg"
                     alt="Professor Buddhadev Sasmal"
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-110"

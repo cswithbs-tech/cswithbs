@@ -16,6 +16,9 @@
   --font-outfit: var(--font-outfit);
   --font-mono: var(--font-mono);
   --font-lora: var(--font-lora);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-lora), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 }
 
 /* Custom Theme Scrollbar */
@@ -90,6 +93,7 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  scrollbar-gutter: stable;
 }
 
 /* Typography styles moved to app/styles/typography.css */

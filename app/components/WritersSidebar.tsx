@@ -13,6 +13,7 @@ import {
   FolderOpen,
   ListTree,
   Image as ImageIcon,
+  Library,
 } from "lucide-react";
 
 const sidebarLinks = [
@@ -64,15 +65,10 @@ const sidebarLinks = [
 const adminOnlyLinks = [
   {
     header: "Admin",
-    label: "Subjects",
-    href: "/writers-hub/subjects",
-    icon: <FolderOpen className="w-5 h-5" />,
-  },
-  {
-    label: "Chapters",
-    href: "/writers-hub/chapters",
-    icon: <ListTree className="w-5 h-5" />,
-  },
+    label: "Curriculum",
+    href: "/writers-hub/curriculum",
+    icon: <Library className="w-5 h-5" />,
+  }
 ];
 
 interface WritersSidebarProps {

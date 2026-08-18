@@ -17,6 +17,7 @@ import { ToolbarMinimal } from "./components/ToolbarMinimal";
 import { TableMenu } from "./components/TableMenu";
 import { CMSEditorLayout } from "./cms-ui/CMSEditorLayout";
 import { twMerge } from "tailwind-merge";
+import { EDITOR_PROSE_STYLES } from "./editorStyles";
 import "./editor.css";
 
 interface EditorProps {
@@ -59,24 +60,20 @@ export const Editor = forwardRef<any, EditorProps>(
     const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
 
     // Optimistic Image Upload Handler
-    const handleImageFile = async (file: File): Promise<string> => {
-      if (!onImageUpload || !editor) return "";
+    const handleImageFile = async (file: File, overrideView?: any): Promise<string> => {
+      const view = overrideView || editor?.view;
+      if (!onImageUpload || !view) return "";
 
       // 1. Create temporary preview
       const blobUrl = URL.createObjectURL(file);
-      // const uniqueId = `img-upload-${Date.now()}`;
 
       // 2. Insert image immediately with "uploading" state
-      editor.commands.command(({ tr, dispatch }) => {
-        if (dispatch) {
-          const node = editor.schema.nodes.image.create({
-            src: blobUrl,
-            class: "is-uploading", // Defined in editor.css
-          });
-          tr.replaceSelectionWith(node);
-        }
-        return true;
+      const node = view.state.schema.nodes.image.create({
+        src: blobUrl,
+        class: "is-uploading",
       });
+      const tr = view.state.tr.replaceSelectionWith(node);
+      view.dispatch(tr);
 
       try {
         // 3. Perform actual upload
@@ -84,15 +81,14 @@ export const Editor = forwardRef<any, EditorProps>(
 
         if (url) {
           // 4. Swap blob with real URL and remove class
-          // We need to find the specific node.
-          editor.view.state.doc.descendants((node, pos) => {
+          view.state.doc.descendants((node: any, pos: number) => {
             if (node.type.name === "image" && node.attrs.src === blobUrl) {
-              const tr = editor.view.state.tr.setNodeMarkup(pos, undefined, {
+              const trUpdate = view.state.tr.setNodeMarkup(pos, undefined, {
                 ...node.attrs,
                 src: url,
-                class: null, // Remove the class
+                class: null,
               });
-              editor.view.dispatch(tr);
+              view.dispatch(trUpdate);
               return false; // Stop iteration
             }
             return true;
@@ -102,10 +98,10 @@ export const Editor = forwardRef<any, EditorProps>(
       } catch (error) {
         console.error("Image upload failed", error);
         // Remove the failed image
-        editor.view.state.doc.descendants((node, pos) => {
+        view.state.doc.descendants((node: any, pos: number) => {
           if (node.type.name === "image" && node.attrs.src === blobUrl) {
-            const tr = editor.view.state.tr.delete(pos, pos + node.nodeSize);
-            editor.view.dispatch(tr);
+            const trDelete = view.state.tr.delete(pos, pos + node.nodeSize);
+            view.dispatch(trDelete);
             return false;
           }
           return true;
@@ -117,11 +113,11 @@ export const Editor = forwardRef<any, EditorProps>(
     const editor = useEditor({
       extensions: editorExtensions,
       content: value,
-      immediatelyRender: false,
+      immediatelyRender: true,
       editorProps: {
         attributes: {
           class: twMerge(
-            "prose prose-invert prose-xl max-w-none outline-none min-h-[500px] px-8 py-6",
+            `${EDITOR_PROSE_STYLES} outline-none min-h-[500px] px-8 py-6`,
             className,
           ),
         },
@@ -135,7 +131,7 @@ export const Editor = forwardRef<any, EditorProps>(
             const file = imageItem.getAsFile();
             if (file) {
               event.preventDefault();
-              handleImageFile(file); // Use optimistic handler
+              handleImageFile(file, view); // Use optimistic handler with fresh view
               return true;
             }
           }
@@ -231,31 +227,26 @@ export const Editor = forwardRef<any, EditorProps>(
       },
       onCreate: ({ editor }) => {
         if (onEditorReady) {
-          onEditorReady(editor);
+          // Defer the state update to avoid React's "update during render" warning
+          setTimeout(() => onEditorReady(editor), 0);
         }
       },
     });
 
     // Handle external value changes (e.g. initial load, restore draft, or reset)
     useEffect(() => {
-      if (!editor) return;
+      if (!editor || !value) return;
 
       const currentContent = editor.getHTML();
 
-      // SMART SYNC:
-      // Only update content if it's truly different.
-      // This prevents cursor jumping when the parent state updates (even if identical/normalized).
-      // We removed the `editor.isEmpty` check because "Restore Draft" needs to overwrite
-      // the default empty paragraph `<p></p>`.
-      if (value && value !== currentContent) {
-        // Additional check:
-        // Tiptap might produce slightly different HTML than what was passed in due to normalization.
-        // However, since `value` primarily comes FROM the editor (via onChange), they usually match.
-        // In cases like "Restore Draft", `value` is completely different, so this triggers safely.
-        editor.commands.setContent(value);
+      // SMART SYNC: Only initialize content if editor is empty or pristine.
+      // This eliminates cursor jumping issues when parent updates.
+      if (value !== currentContent) {
+        if (editor.isEmpty || currentContent === "<p></p>") {
+          editor.commands.setContent(value, { emitUpdate: false });
+        }
       }
     }, [value, editor]);
-
     // Track the ref if provided
     useEffect(() => {
       if (ref) {
@@ -267,39 +258,22 @@ export const Editor = forwardRef<any, EditorProps>(
       }
     }, [editor, ref]);
 
-    // Event Listeners for Modals (dispatched by Toolbar/Components)
-    useEffect(() => {
+    // Modal Handlers
+    const handleOpenLinkModal = () => {
       if (!editor) return;
+      let initialText = "";
+      let initialUrl = "";
+      const { from, to } = editor.state.selection;
+      initialText = editor.state.doc.textBetween(from, to, " ");
+      if (editor.isActive("link")) {
+        initialUrl = editor.getAttributes("link").href;
+      }
+      setLinkModalData({ text: initialText, url: initialUrl });
+      setIsLinkModalOpen(true);
+    };
 
-      const handleOpenLinkModal = () => {
-        let initialText = "";
-        let initialUrl = "";
-        const { from, to } = editor.state.selection;
-        initialText = editor.state.doc.textBetween(from, to, " ");
-        if (editor.isActive("link")) {
-          initialUrl = editor.getAttributes("link").href;
-        }
-        setLinkModalData({ text: initialText, url: initialUrl });
-        setIsLinkModalOpen(true);
-      };
-
-      const handleOpenYoutubeModal = () => setIsYoutubeModalOpen(true);
-      const handleOpenStatsModal = () => setIsStatsModalOpen(true);
-
-      window.addEventListener("open-link-modal", handleOpenLinkModal);
-      window.addEventListener("open-youtube-modal", handleOpenYoutubeModal);
-      window.addEventListener("open-stats-modal", handleOpenStatsModal);
-
-      return () => {
-        window.removeEventListener("open-link-modal", handleOpenLinkModal);
-        window.removeEventListener(
-          "open-youtube-modal",
-          handleOpenYoutubeModal,
-        );
-        window.removeEventListener("open-stats-modal", handleOpenStatsModal);
-      };
-    }, [editor]);
-
+    const handleOpenYoutubeModal = () => setIsYoutubeModalOpen(true);
+    const handleOpenStatsModal = () => setIsStatsModalOpen(true);
     if (!editor) {
       return null;
     }
@@ -319,11 +293,13 @@ export const Editor = forwardRef<any, EditorProps>(
             link: {
               isOpen: isLinkModalOpen,
               onClose: () => setIsLinkModalOpen(false),
+              onOpen: handleOpenLinkModal,
               data: linkModalData,
             },
             youtube: {
               isOpen: isYoutubeModalOpen,
               onClose: () => setIsYoutubeModalOpen(false),
+              onOpen: handleOpenYoutubeModal,
             },
             stats: {
               isOpen: isStatsModalOpen,
@@ -354,6 +330,7 @@ export const Editor = forwardRef<any, EditorProps>(
               onSave={onSave}
               saveStatus={saveStatus}
               onImageUpload={handleImageFile}
+              onOpenLinkModal={handleOpenLinkModal}
             />
           </div>
 
@@ -367,12 +344,12 @@ export const Editor = forwardRef<any, EditorProps>(
             }}
           >
             <div className="max-w-4xl mx-auto min-h-full">
-              <BubbleMenu editor={editor} />
+              <BubbleMenu editor={editor} onOpenLinkModal={handleOpenLinkModal} />
               <TableMenu editor={editor} />
 
               <EditorContent
                 editor={editor}
-                className="prose prose-invert prose-lg max-w-none outline-none pb-20"
+                className={`${EDITOR_PROSE_STYLES} cswithbs-components outline-none pb-20`}
               />
             </div>
           </div>

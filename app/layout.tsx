@@ -11,6 +11,7 @@ import Setting from "@/models/Setting";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { GlobalNotificationObserver } from "./components/GlobalNotificationObserver";
 import ProgressBarProvider from "./components/ProgressBarProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -90,6 +91,7 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable} ${lora.variable} antialiased font-sans bg-background text-white`}
       >
+        <Analytics />
         {gaId && <GoogleAnalytics gaId={gaId} />}
         <ProgressBarProvider />
         <AuthProvider>

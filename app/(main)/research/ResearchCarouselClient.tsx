@@ -13,8 +13,9 @@ const SLIDES = [
     subtitle:
       "Exploring nature-inspired optimization: from Artificial Hummingbird to Reptile Search Algorithms.",
     cta: "Explore Research",
-    href: "#publications",
-    image: "", 
+    href: "",
+    image: "/images/Research/R_Carousel_3.png", 
+    hideText: true,
     gradient: "from-[#1a0a00] via-[#0d0d0d] to-[#0d0d0d]",
     orb1: "bg-[#E2C6B9]/20",
     orb2: "bg-amber-600/10",
@@ -28,13 +29,19 @@ const SLIDES = [
     subtitle:
       "Deep learning models for early detection and classification of crop diseases.",
     cta: "View Papers",
-    href: "#publications",
-    image: "", 
+    href: "",
+    image: "/images/Research/R_Carousel_2.png",
+    hideText: false,
+    features: [
+      { label: "Disease Detection", desc: "Identifying blights early" },
+      { label: "Drone Imagery", desc: "Capturing spectral data" },
+      { label: "Yield Prediction", desc: "Optimizing harvest metrics" }
+    ],
     gradient: "from-[#060d1a] via-[#0d0d0d] to-[#0d0d0d]",
     orb1: "bg-green-500/15",
     orb2: "bg-emerald-500/10",
-    accentColor: "#34d399",
-    badgeColor: "bg-green-500/10 border-green-500/20 text-green-400",
+    accentColor: "#10b981", // Emerald green to match the image
+    badgeColor: "bg-green-500/10 border border-green-500/30 text-green-400",
   },
   {
     id: 3,
@@ -43,8 +50,9 @@ const SLIDES = [
     subtitle:
       "Advanced segmentation and classification techniques for robust medical diagnosis.",
     cta: "Learn More",
-    href: "#publications",
-    image: "", 
+    href: "",
+    image: "/images/Research/R_Carousel_4.png", 
+    hideText: true,
     gradient: "from-[#0d0619] via-[#0d0d0d] to-[#0d0d0d]",
     orb1: "bg-purple-500/15",
     orb2: "bg-violet-600/10",
@@ -59,12 +67,9 @@ export function ResearchCarouselClient() {
 
   const goTo = useCallback(
     (index: number) => {
-      if (isAnimating) return;
-      setIsAnimating(true);
       setCurrent(index);
-      setTimeout(() => setIsAnimating(false), 600);
     },
-    [isAnimating]
+    []
   );
 
   const goNext = useCallback(() => {
@@ -87,17 +92,37 @@ export function ResearchCarouselClient() {
       {/* Background layer */}
       <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out">
         {slide.image ? (
-          <>
-            <Image
-              src={slide.image}
-              alt={slide.title}
-              fill
-              className="object-cover opacity-60"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/60 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0d0d0d] via-[#0d0d0d]/40 to-transparent" />
-          </>
+          (() => {
+            const ImageContent = (
+              <>
+                <Image
+                  src={slide.image}
+                  alt={slide.title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                {/* @ts-ignore */}
+                {!slide.hideText && (
+                  <div
+                    className="absolute inset-y-0 left-0 pointer-events-none"
+                    style={{ width: '55%', background: 'linear-gradient(to right, rgba(3,0,10,0.95) 0%, rgba(3,0,10,0.85) 60%, transparent 100%)' }}
+                  />
+                )}
+              </>
+            );
+
+            return slide.href ? (
+              // @ts-ignore
+              <Link href={slide.href} className={`block w-full h-full relative z-0 ${slide.hideText ? 'cursor-pointer' : ''}`}>
+                {ImageContent}
+              </Link>
+            ) : (
+              <div className="block w-full h-full relative z-0">
+                {ImageContent}
+              </div>
+            );
+          })()
         ) : (
           <>
             <div className={`absolute inset-0 bg-gradient-to-br ${slide.gradient} transition-all duration-700`} />
@@ -114,44 +139,77 @@ export function ResearchCarouselClient() {
           </>
         )}
       </div>
-
       {/* Content */}
-      <div
-        className={`relative z-10 flex flex-col justify-center h-full px-10 md:px-20 py-16 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          isAnimating ? "opacity-0 translate-y-8 blur-sm scale-95" : "opacity-100 translate-y-0 blur-0 scale-100"
-        }`}
-      >
-        <div className="max-w-3xl">
-          {/* Tag badge */}
-          <div
-            className={`inline-flex items-center self-start px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border mb-6 ${slide.badgeColor}`}
-          >
-            {slide.tag}
+      {/* @ts-ignore */}
+      {!slide.hideText && (
+        <div className="absolute inset-0 z-10 flex flex-col justify-center px-10 md:px-12 py-14">
+          {/* Strictly lock to 28% width so we don't overlap R_Carousel_2's diagrams */}
+          <div style={{ maxWidth: '28%' }}>
+            {/* Tag badge */}
+            <div
+              className={`inline-flex items-center gap-2 self-start px-3.5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-[0.2em] mb-5 ${slide.badgeColor}`}
+            >
+              {slide.tag}
+            </div>
+
+            <h2
+              className="font-black text-white leading-[1.02] tracking-tight mb-4"
+              style={{ fontSize: 'clamp(2.4rem, 5vw, 4.5rem)', letterSpacing: '-0.02em' }}
+            >
+              {slide.title}
+            </h2>
+            
+            <p 
+              className="text-white/60 leading-relaxed mb-6 font-medium"
+              style={{ fontSize: 'clamp(0.85rem, 1.4vw, 1.1rem)' }}
+            >
+              {slide.subtitle}
+            </p>
+
+            {/* Features (Optional) */}
+            {/* @ts-ignore */}
+            {slide.features && (
+              <div className="flex flex-col gap-4 mb-6 border-t border-white/10 pt-6">
+                {/* @ts-ignore */}
+                {slide.features.map((feat, idx) => (
+                  <div key={idx}>
+                    <div style={{ color: slide.accentColor }} className="font-bold text-sm mb-1">{feat.label}</div>
+                    <div className="text-white/40 text-xs leading-snug pr-2">{feat.desc}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Technologies (Optional) */}
+            {/* @ts-ignore */}
+            {slide.technologies && (
+              <div className="flex flex-wrap items-center gap-2 mb-8">
+                {/* @ts-ignore */}
+                {slide.technologies.map((tech, idx) => (
+                  <div key={idx} className="px-3 py-1 rounded border border-white/10 bg-white/5 text-xs text-white/70 font-medium whitespace-nowrap">
+                    {tech}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {slide.href && (
+              <Link
+                href={slide.href}
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-bold text-sm transition-all duration-300 hover:gap-3.5 hover:scale-105 active:scale-95"
+                style={{
+                  backgroundColor: slide.accentColor,
+                  color: "#fff",
+                  boxShadow: `0 0 30px ${slide.accentColor}60`,
+                }}
+              >
+                {slide.cta}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
           </div>
-
-          <h2
-            className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] font-display tracking-tight mb-6"
-            style={{ textShadow: slide.image ? "0 4px 20px rgba(0,0,0,0.8)" : "none" }}
-          >
-            {slide.title}
-          </h2>
-          
-          <p 
-            className="text-zinc-300 text-lg md:text-xl leading-relaxed mb-10 max-w-2xl font-medium"
-            style={{ textShadow: slide.image ? "0 2px 10px rgba(0,0,0,0.8)" : "none" }}
-          >
-            {slide.subtitle}
-          </p>
-
-          <Link
-            href={slide.href}
-            className="group/btn inline-flex items-center gap-3 bg-white text-black px-8 py-4 rounded-full font-bold text-sm hover:bg-zinc-200 transition-all active:scale-95"
-          >
-            {slide.cta}
-            <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-          </Link>
         </div>
-      </div>
+      )}
 
       {/* Controls */}
       <div className="absolute bottom-10 right-10 flex items-center gap-4 z-20">

@@ -27,6 +27,8 @@ import {
   Eye,
   FileText,
   Globe,
+  BookOpen,
+  GraduationCap,
   HardDrive,
   LayoutDashboard,
   MessageSquare,
@@ -128,6 +130,13 @@ export default function NewDashboardPage() {
     const blogCount = paths.filter((p: string) => p.includes("/blog/")).length;
     if (blogCount >= paths.length / 2) return "Blog Posts";
     return "Main Site";
+  }, [data]);
+
+  const trendingContent = useMemo(() => {
+    if (!data) return [];
+    const posts = (data.topPosts || []).map((p: any) => ({ ...p, type: 'Blog', views: p.views || 0 }));
+    const lessons = (data.topLessons || []).map((l: any) => ({ ...l, type: 'Lesson', views: l.views || 0 }));
+    return [...posts, ...lessons].sort((a, b) => b.views - a.views).slice(0, 5);
   }, [data]);
 
   if (loading) {
@@ -320,32 +329,46 @@ export default function NewDashboardPage() {
             </div>
           </div>
 
-          {/* Secondary Stats Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <StatMiniCard
-              label="Total Posts"
-              value={data?.metrics?.posts}
-              icon={FileText}
-              color="text-blue-400"
-            />
-            <StatMiniCard
-              label="Subscribers"
-              value={data?.metrics?.subscribers}
-              icon={Users}
-              color="text-pink-400"
-            />
-            <StatMiniCard
-              label="Comments"
-              value={data?.metrics?.comments}
-              icon={MessageSquare}
-              color="text-accent"
-            />
-            <StatMiniCard
-              label="Total Page Views"
-              value={data?.metrics?.visitors}
-              icon={Eye}
-              color="text-teal-400"
-            />
+          {/* Stat Cards (Secondary Row) */}
+          <div className="w-full">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <StatMiniCard
+                label="Total Posts"
+                value={data?.metrics?.posts}
+                icon={FileText}
+                color="text-blue-400"
+              />
+              <StatMiniCard
+                label="Subscribers"
+                value={data?.metrics?.subscribers}
+                icon={Users}
+                color="text-pink-400"
+              />
+              <StatMiniCard
+                label="Comments"
+                value={data?.metrics?.comments}
+                icon={MessageSquare}
+                color="text-accent"
+              />
+              <StatMiniCard
+                label="Total Page Views"
+                value={data?.metrics?.visitors}
+                icon={Eye}
+                color="text-teal-400"
+              />
+              <StatMiniCard
+                label="Total Courses"
+                value={data?.metrics?.courses}
+                icon={BookOpen}
+                color="text-indigo-400"
+              />
+              <StatMiniCard
+                label="Total Lessons"
+                value={data?.metrics?.lessons}
+                icon={GraduationCap}
+                color="text-violet-400"
+              />
+            </div>
           </div>
 
           {/* Demographics Row (New) */}
@@ -411,9 +434,11 @@ export default function NewDashboardPage() {
                         data={[
                           {
                             name: "Visitors",
-                            value:
+                            value: Math.max(
+                              0,
                               (data?.totalVisitors || 0) -
-                              (data?.metrics?.users || 0),
+                                (data?.metrics?.users || 0)
+                            ),
                           },
                           { name: "Users", value: data?.metrics?.users || 0 },
                           {
@@ -472,7 +497,7 @@ export default function NewDashboardPage() {
                       <span className="text-zinc-400">Visitors</span>
                     </div>
                     <span className="font-mono text-zinc-200">
-                      {(data?.totalVisitors || 0) - (data?.metrics?.users || 0)}
+                      {Math.max(0, (data?.totalVisitors || 0) - (data?.metrics?.users || 0))}
                     </span>
                   </div>
                   <div className="flex justify-between items-center text-xs">
@@ -565,31 +590,34 @@ export default function NewDashboardPage() {
               Trending Content
             </h3>
             <div className="space-y-5">
-              {data?.topPosts?.map((post: any, i: number) => (
+              {trendingContent.map((item: any, i: number) => (
                 <div key={i} className="group">
                   <div className="flex justify-between items-start text-sm mb-1">
                     <Link
-                      href={`/writers-hub/posts/${post._id}`}
-                      className="font-medium text-zinc-300 group-hover:text-accent transition-colors line-clamp-1"
+                      href={item.type === 'Blog' ? `/writers-hub/posts/${item._id}` : `/writers-hub/notes/${item._id}`}
+                      className="font-medium text-zinc-300 group-hover:text-accent transition-colors line-clamp-1 flex items-center gap-2"
                     >
-                      {post.title}
+                      {item.title}
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
+                        {item.type}
+                      </span>
                     </Link>
                     <span className="font-mono text-xs text-zinc-500">
-                      {post.views.toLocaleString()}
+                      {item.views.toLocaleString()}
                     </span>
                   </div>
                   <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-accent/50 rounded-full group-hover:bg-accent transition-colors"
                       style={{
-                        width: `${(post.views / (data.topPosts[0].views || 1)) * 100}%`,
+                        width: `${(item.views / (trendingContent[0]?.views || 1)) * 100}%`,
                       }}
                     ></div>
                   </div>
                 </div>
               ))}
-              {(!data?.topPosts || data.topPosts.length === 0) && (
-                <p className="text-zinc-600 text-xs">No posts available.</p>
+              {trendingContent.length === 0 && (
+                <p className="text-zinc-600 text-xs">No trending content available.</p>
               )}
             </div>
             <Link

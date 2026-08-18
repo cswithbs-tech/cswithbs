@@ -14,6 +14,7 @@ import { twMerge } from "tailwind-merge";
 
 interface BubbleMenuProps {
   editor: Editor | null;
+  onOpenLinkModal?: () => void;
 }
 
 const BubbleBtn = ({
@@ -36,11 +37,16 @@ const BubbleBtn = ({
   </button>
 );
 
-export const BubbleMenu = ({ editor }: BubbleMenuProps) => {
+export const BubbleMenu = ({ editor, onOpenLinkModal }: BubbleMenuProps) => {
   if (!editor) return null;
 
   const setLink = () => {
-    window.dispatchEvent(new Event("open-link-modal"));
+    if (onOpenLinkModal) {
+      onOpenLinkModal();
+    } else {
+      // Fallback just in case
+      window.dispatchEvent(new Event("open-link-modal"));
+    }
   };
 
   return (

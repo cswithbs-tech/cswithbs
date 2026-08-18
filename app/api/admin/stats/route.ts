@@ -8,6 +8,8 @@ import Settings from '@/models/Settings';
 import Visitor from '@/models/Visitor';
 import PageView from '@/models/PageView';
 import Contact from '@/models/Contact';
+import Subject from '@/models/Subject';
+import Note from '@/models/Note';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import mongoose from 'mongoose';
@@ -47,7 +49,10 @@ export async function GET() {
       referrerStats,
       unreadCount,
       totalComments,
-      settings
+      settings,
+      totalCourses,
+      totalLessons,
+      topLessons
     ] = await Promise.all([
       User.countDocuments({}),
       Post.countDocuments({}),
@@ -91,7 +96,12 @@ export async function GET() {
       // Unread Messages
       Contact.countDocuments({ read: false }),
       Comment.countDocuments({}),
-      Settings.findOne()
+      Settings.findOne(),
+
+      // New Education Metrics
+      Subject.countDocuments({}),
+      Note.countDocuments({}),
+      Note.find().sort({ views: -1 }).limit(5).select('title views subject chapter').lean()
     ]);
 
     // Chart Data (Page Views Last 7 Days)
@@ -135,13 +145,16 @@ export async function GET() {
             posts: totalPosts,
             subscribers: totalSubscribers,
             visitors: totalPageViews,
-            comments: totalComments
+            comments: totalComments,
+            courses: totalCourses,
+            lessons: totalLessons
         },
         
         totalVisitors: totalUniqueVisitors, 
         activeUsers,
         recentVisits,
         topPosts,
+        topLessons,
         deviceStats,
         browserStats,
         osStats,

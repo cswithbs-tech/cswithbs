@@ -4,26 +4,27 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
-import { HtmlRenderer } from "./HtmlRenderer";
-import { EDITOR_PROSE_STYLES } from "../editor/editorStyles";
-import "./blog.css"; // Isolated styles for the blog
+import { NoteHtmlRenderer } from "./NoteHtmlRenderer";
+import { NoteJsonRenderer } from "./NoteJsonRenderer";
+import { NOTE_PROSE_STYLES } from "./noteStyles";
+import "./note.css"; // Isolated styles for notes
 
-interface ArticleContentProps {
+interface NoteContentProps {
   content: string; // HTML Fallback
   contentJson?: any; // Kept for compatibility but ignored for rendering
   showHeadingAnchors?: boolean;
 }
 
-export const ArticleContent = ({
+export const NoteContent = ({
   content,
   contentJson,
   showHeadingAnchors = true,
-}: ArticleContentProps) => {
+}: NoteContentProps) => {
   /* ---------------------------------------------------------------------------
    * TYPOGRAPHY SYSTEM (Medium-Style Editorial Theme)
-   * Now handled centrally via EDITOR_PROSE_STYLES and editor.css
+   * Now handled centrally via NOTE_PROSE_STYLES and editor.css
    * --------------------------------------------------------------------------- */
-  const PROSE_STYLES = EDITOR_PROSE_STYLES;
+  const PROSE_STYLES = NOTE_PROSE_STYLES;
 
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
@@ -37,12 +38,21 @@ export const ArticleContent = ({
   return (
     <>
       <div className={PROSE_STYLES}>
-        <HtmlRenderer
-          content={content}
-          className="cswithbs-components outline-none"
-          onImageClick={handleImageClick}
-          showHeadingAnchors={showHeadingAnchors}
-        />
+        {contentJson ? (
+          <div className="cswithbs-components outline-none">
+            <NoteJsonRenderer 
+              content={contentJson} 
+              onImageClick={handleImageClick} 
+            />
+          </div>
+        ) : (
+          <NoteHtmlRenderer
+            content={content}
+            className="cswithbs-components outline-none"
+            onImageClick={handleImageClick}
+            showHeadingAnchors={showHeadingAnchors}
+          />
+        )}
       </div>
 
       {/* Shared Image Zoom Modal */}

@@ -130,14 +130,15 @@ export default function UniversalEditor({
   const [chapters, setChapters] = useState<any[]>([]);
   const [loadingChapters, setLoadingChapters] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     title: "",
     slug: "",
     excerpt: "",
     content: "",
     category: "",
-    subject: "",
-    chapter: "",
+    // Pre-fill subject/chapter from URL query params for new notes
+    subject: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('subject') || "" : "",
+    chapter: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('chapter') || "" : "",
     order: 0,
     language: "English",
     author: "",
@@ -152,17 +153,20 @@ export default function UniversalEditor({
     noindex: false,
     scheduledPublishDate: "",
     contentJson: null as any,
-  });
+  }));
+
+  const hasInitializedRef = useRef(false);
 
   useEffect(() => {
     let storageKey = "";
     if (initialData?._id) {
-      storageKey = `post_draft_${initialData._id}`;
+      storageKey = `${contentType}_draft_${initialData._id}`;
     } else if (tempDraftId) {
-      storageKey = `post_draft_${tempDraftId}`;
+      storageKey = `${contentType}_draft_${tempDraftId}`;
     }
 
-    if (initialData) {
+    if (initialData && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
       setFormData({
         title: initialData.title || "",
         slug: initialData.slug || "",
@@ -285,9 +289,9 @@ export default function UniversalEditor({
     if (!isDirty) return;
     let storageKey = "";
     if (initialData?._id) {
-      storageKey = `post_draft_${initialData._id}`;
+      storageKey = `${contentType}_draft_${initialData._id}`;
     } else if (tempDraftId) {
-      storageKey = `post_draft_${tempDraftId}`;
+      storageKey = `${contentType}_draft_${tempDraftId}`;
     } else {
       return;
     }
@@ -310,7 +314,7 @@ export default function UniversalEditor({
   const discardRestore = () => {
     setShowRestorePrompt(false);
     let storageKey = "";
-    if (initialData?._id) storageKey = `post_draft_${initialData._id}`;
+    if (initialData?._id) storageKey = `${contentType}_draft_${initialData._id}`;
     if (storageKey) localStorage.removeItem(storageKey);
     showToast("Local draft discarded", "info");
   };
@@ -456,7 +460,7 @@ export default function UniversalEditor({
       return;
     }
     const finalStatus = targetStatus || currentData.status;
-    if (finalStatus === "published") {
+    if (finalStatus === "published" && contentType === "post") {
       if (!currentData.image) {
         showToast("Cover Image is missing", "error");
         return;
@@ -501,18 +505,20 @@ export default function UniversalEditor({
         const data = await res.json();
         setIsDirty(false);
         setFormData((prev) => ({ ...prev, status: finalStatus }));
-        const storageKey = `post_draft_${isEdit ? initialData?._id : "new"}`;
+        const storageKey = `${contentType}_draft_${isEdit ? initialData?._id : tempDraftId || "new"}`;
         localStorage.removeItem(storageKey);
+        const listPath = contentType === 'note' ? '/writers-hub/notes' : '/writers-hub/posts';
+        const editPath = `/writers-hub/editor?id=${data._id}&type=${contentType}`;
         showToast(
-          `Post ${finalStatus === "published" ? "Published" : "Saved"} successfully!`,
+          `${contentType === 'note' ? 'Note' : 'Post'} ${finalStatus === "published" ? "Published" : "Saved"} successfully!`,
           "success",
         );
         if (finalStatus === "published") {
-          router.push("/writers-hub/posts");
+          router.push(listPath);
           router.refresh();
         } else {
           if (!isEdit && data._id) {
-            router.replace(`/writers-hub/posts/${data._id}/edit`);
+            router.replace(editPath);
           }
           router.refresh();
         }
@@ -724,11 +730,11 @@ export default function UniversalEditor({
             showToast("Slug is missing", "error");
             return false;
           }
-          if (!formData.image) {
+          if (contentType === "post" && !formData.image) {
             showToast("Cover Image is missing", "error");
             return false;
           }
-          if (!formData.excerpt) {
+          if (contentType === "post" && !formData.excerpt) {
             showToast("Excerpt is missing", "error");
             return false;
           }

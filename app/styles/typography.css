@@ -83,8 +83,8 @@
 
 /* Blockquote Styles */
 .prose-article blockquote, .ProseMirror blockquote {
-  border-left: 3px solid var(--accent-primary);
-  color: var(--text-secondary);
+  border-left: 3px solid var(--accent, #3b82f6);
+  color: var(--text-muted, #a1a1aa);
   background: rgba(250, 204, 21, 0.05);
   padding: 0.5rem 0 0.5rem 1rem;
   font-style: italic;
@@ -98,6 +98,11 @@
   font-style: normal;
 }
 
+/* Remove paragraph margins inside callouts for flex alignment */
+.prose-article blockquote[class*="callout"] p, .ProseMirror blockquote[class*="callout"] p {
+  margin: 0;
+}
+
 /* Callout Icons */
 .prose-article blockquote[class*="callout"]::before, .ProseMirror blockquote[class*="callout"]::before {
   content: "";
@@ -107,7 +112,7 @@
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  margin-top: 1em; /* Matches paragraph margin for alignment */
+  margin-top: 0.1em; /* Slight tweak for optical alignment with text */
 }
 
 .prose-article blockquote.callout-info, .ProseMirror blockquote.callout-info {

@@ -27,6 +27,7 @@ export const CodeBlockComponent = ({
     "c",
     "cpp",
     "bash",
+    "shell",
     "sql",
   ];
 

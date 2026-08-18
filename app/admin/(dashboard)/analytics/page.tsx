@@ -35,6 +35,9 @@ import {
   UserPlus,
   TrendingUp,
   Mail,
+  BookOpen,
+  GraduationCap,
+  Download,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -48,6 +51,7 @@ interface AnalyticsData {
   referrers: { _id: string; count: number }[];
   devices: { _id: string; count: number }[];
   os: { _id: string; count: number }[];
+  browsers: { _id: string; count: number }[];
   countries: { _id: string; count: number }[];
   stats: {
     total: number; // Unique Visitors (Range)
@@ -61,6 +65,8 @@ interface AnalyticsData {
     totalLikes: number;
     totalSubscribers: number;
     totalVisitorsAllTime: number; // Total Visitor DB Count
+    totalCourses: number;
+    totalLessons: number;
     conversionRate: string; // "2.50"
   };
 }
@@ -104,6 +110,39 @@ export default function InsightsPage() {
     };
     fetchData();
   }, [range]);
+
+  const exportToCSV = () => {
+    if (!data) return;
+    
+    // Core metrics
+    const headers = ["Metric", "Value"];
+    const rows = [
+      ["Total Visitors", data.stats.totalVisitorsAllTime],
+      ["Visitors (Period)", data.stats.total],
+      ["New Users (Period)", data.stats.new],
+      ["Returning Users (Period)", data.stats.returning],
+      ["Live Users", data.stats.live],
+      ["Avg Session Duration (s)", data.stats.avgDuration],
+      ["Total Users", data.stats.totalUsers],
+      ["Total Subscribers", data.stats.totalSubscribers],
+      ["Total Courses", data.stats.totalCourses],
+      ["Total Lessons", data.stats.totalLessons],
+      ["Total Comments", data.stats.totalComments],
+      ["Total Likes", data.stats.totalLikes],
+    ];
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + headers.join(",") + "\n"
+      + rows.map(e => e.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `analytics_report_${range}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   // --- Process Chart Data ---
   const chartData = useMemo(() => {
@@ -228,6 +267,15 @@ export default function InsightsPage() {
               </button>
             ))}
           </div>
+          
+          {/* Export Button */}
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-2 px-4 py-1.5 bg-accent/10 text-accent border border-accent/20 rounded-lg text-xs font-medium hover:bg-accent hover:text-white transition-all"
+          >
+            <Download size={14} />
+            <span className="hidden md:inline">Export CSV</span>
+          </button>
         </div>
       </div>
 
@@ -601,9 +649,11 @@ export default function InsightsPage() {
                           data={[
                             {
                               name: "Unknown Visitors",
-                              value:
+                              value: Math.max(
+                                0,
                                 (data?.stats.totalVisitorsAllTime || 0) -
-                                (data?.stats.totalUsers || 0),
+                                  (data?.stats.totalUsers || 0)
+                              ),
                             },
                             {
                               name: "Registered Users",
@@ -669,9 +719,10 @@ export default function InsightsPage() {
                         </span>
                       </div>
                       <span className="font-mono text-zinc-200">
-                        {(
+                        {Math.max(
+                          0,
                           (data?.stats.totalVisitorsAllTime || 0) -
-                          (data?.stats.totalUsers || 0)
+                            (data?.stats.totalUsers || 0)
                         ).toLocaleString()}
                       </span>
                     </div>
@@ -804,8 +855,8 @@ export default function InsightsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 backdrop-blur-sm">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 backdrop-blur-sm lg:col-span-1">
                   <h3 className="text-sm font-bold text-zinc-300 mb-4">
                     Location Breakdown
                   </h3>
@@ -848,6 +899,66 @@ export default function InsightsPage() {
                     ))}
                   </div>
                 </div>
+
+                {/* Device Breakdown */}
+                <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 backdrop-blur-sm flex flex-col">
+                  <h3 className="text-sm font-bold text-zinc-300 mb-4">Device Distribution</h3>
+                  <div className="h-[250px] w-full flex-grow relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={data?.devices || []}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={2}
+                          dataKey="count"
+                          nameKey="_id"
+                        >
+                          {(data?.devices || []).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(0,0,0,0.5)" />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px", fontSize: "12px" }}
+                          itemStyle={{ color: "#e4e4e7" }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: "12px", color: "#a1a1aa" }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Browser Breakdown */}
+                <div className="bg-zinc-900/40 border border-zinc-800 rounded-xl p-6 backdrop-blur-sm flex flex-col">
+                  <h3 className="text-sm font-bold text-zinc-300 mb-4">Browser Distribution</h3>
+                  <div className="h-[250px] w-full flex-grow relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={data?.browsers || []}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          paddingAngle={2}
+                          dataKey="count"
+                          nameKey="_id"
+                        >
+                          {(data?.browsers || []).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[(index + 3) % COLORS.length]} stroke="rgba(0,0,0,0.5)" />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{ backgroundColor: "#18181b", borderColor: "#27272a", borderRadius: "8px", fontSize: "12px" }}
+                          itemStyle={{ color: "#e4e4e7" }}
+                        />
+                        <Legend wrapperStyle={{ fontSize: "12px", color: "#a1a1aa" }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -859,18 +970,30 @@ export default function InsightsPage() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <KPICard
-                  label="Total Comments (All Time)"
+                  label="Total Comments"
                   value={data?.stats.totalComments}
                   icon={MessageSquare}
                   color="text-accent"
                 />
                 <KPICard
-                  label="Total Likes (All Time)"
+                  label="Total Likes"
                   value={data?.stats.totalLikes}
                   icon={Heart}
                   color="text-pink-400"
+                />
+                <KPICard
+                  label="Total Courses"
+                  value={data?.stats.totalCourses}
+                  icon={BookOpen}
+                  color="text-indigo-400"
+                />
+                <KPICard
+                  label="Total Lessons"
+                  value={data?.stats.totalLessons}
+                  icon={GraduationCap}
+                  color="text-violet-400"
                 />
               </div>
 

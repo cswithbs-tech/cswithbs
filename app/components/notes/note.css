@@ -290,6 +290,16 @@
 :is(.ProseMirror, .cswithbs-components) ul.list-circle > li { list-style-type: circle; }
 :is(.ProseMirror, .cswithbs-components) ul.list-square > li { list-style-type: square; }
 
+/* Fix List Spacing (Industry Standard) */
+:is(.ProseMirror, .cswithbs-components) li p {
+  margin-top: 0.25em !important;
+  margin-bottom: 0.25em !important;
+}
+:is(.ProseMirror, .cswithbs-components) li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
 /* Bengali List Support */
 @counter-style bengali-alpha {
   system: fixed;

@@ -24,6 +24,7 @@ interface ToolbarMinimalProps {
   onSave?: () => void;
   saveStatus?: "saved" | "saving" | "unsaved";
   onImageUpload?: (file: File) => Promise<string>;
+  onOpenLinkModal?: () => void;
 }
 
 const ToolbarButton = ({
@@ -64,6 +65,7 @@ export const ToolbarMinimal = ({
   onSave,
   saveStatus,
   onImageUpload,
+  onOpenLinkModal,
 }: ToolbarMinimalProps) => {
   if (!editor) return null;
 
@@ -86,13 +88,11 @@ export const ToolbarMinimal = ({
   };
 
   const setLink = () => {
-    // Dispatch event to existing link modal handler in App.tsx
-    // Or simpler: just standard prompt if we wanted to be vastly simpler,
-    // but preserving the modal event is cleaner if App.tsx is wrapping this.
-    // Since user said "do not need to link anywhere", I assume they mean "don't wire it up to App.tsx"
-    // BUT usually a toolbar lives inside the App context.
-    // I will use the same event dispatch pattern as it's the established way in this codebase.
-    window.dispatchEvent(new Event("open-link-modal"));
+    if (onOpenLinkModal) {
+      onOpenLinkModal();
+    } else {
+      window.dispatchEvent(new Event("open-link-modal"));
+    }
   };
 
   return (

@@ -21,7 +21,7 @@ export default function WritersHubLayout({
       {/* Auto Refresh Data every 30 seconds */}
       <AdminAutoRefresher interval={30000} />
 
-      <main className="flex-1 lg:ml-64 transition-all duration-300 min-w-0">
+      <main className="flex-1 lg:ml-64 transition-all duration-300 min-w-0 h-screen overflow-y-scroll">
         {/* Mobile Header */}
         <div className="lg:hidden h-16 border-b border-white/10 flex items-center px-4 justify-between bg-[#0A0A0A] sticky top-0 z-30">
           <div className="font-bold text-white flex items-center gap-2">

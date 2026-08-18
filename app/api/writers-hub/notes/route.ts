@@ -89,6 +89,10 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Title, Slug, and Subject are required.' }, { status: 400 });
         }
 
+        // Content and excerpt are not required for drafts
+        if (!body.content) body.content = '';
+        if (!body.excerpt) body.excerpt = '';
+
         // Calculate read time
         let plainText = '';
         if (body.contentJson) {

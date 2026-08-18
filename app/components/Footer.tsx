@@ -173,30 +173,26 @@ export const Footer = async () => {
           </div>
 
           <div>
-            <h4 className="font-bold text-white mb-6">Topics</h4>
+            <h4 className="font-bold text-white mb-6">Popular Tags</h4>
             <ul className="flex flex-col gap-3 text-sm text-muted">
               <li>
-                <Link
-                  href="/study/algorithms"
-                  className="hover:text-accent transition-colors"
-                >
+                <Link href="/courses?tag=Programming" className="hover:text-accent transition-colors">
+                  Programming
+                </Link>
+              </li>
+              <li>
+                <Link href="/courses?tag=BCA" className="hover:text-accent transition-colors">
+                  BCA
+                </Link>
+              </li>
+              <li>
+                <Link href="/courses?tag=1st+Semester" className="hover:text-accent transition-colors">
+                  1st Semester
+                </Link>
+              </li>
+              <li>
+                <Link href="/courses?tag=Algorithms" className="hover:text-accent transition-colors">
                   Algorithms
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/study/system-design"
-                  className="hover:text-accent transition-colors"
-                >
-                  System Design
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/study/math"
-                  className="hover:text-accent transition-colors"
-                >
-                  Mathematics
                 </Link>
               </li>
             </ul>
@@ -234,7 +230,7 @@ export const Footer = async () => {
                   href="/terms"
                   className="hover:text-accent transition-colors"
                 >
-                  Terms of Use
+                  Terms of Service
                 </Link>
               </li>
               <li>

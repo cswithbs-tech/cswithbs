@@ -6,6 +6,8 @@ import User from '@/models/User';
 import Comment from '@/models/Comment';
 import Post from '@/models/Post';
 import Subscriber from '@/models/Subscriber';
+import Subject from '@/models/Subject';
+import Note from '@/models/Note';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
@@ -226,12 +228,19 @@ export async function GET(request: Request) {
     const totalComments = await Comment.countDocuments({});
     const totalSubscribers = await Subscriber.countDocuments({});
     const totalVisitorsAllTime = await Visitor.countDocuments({}); // All time unique visitors
+    const totalCourses = await Subject.countDocuments({});
+    const totalLessons = await Note.countDocuments({});
 
-    // Aggregate absolute total likes from all posts
+    // Aggregate absolute total likes from all posts and notes
     const likesAggregation = await Post.aggregate([
         { $group: { _id: null, totalLikes: { $sum: "$likes" } } }
     ]);
-    const totalLikes = likesAggregation.length > 0 ? likesAggregation[0].totalLikes : 0;
+    const noteLikesAggregation = await Note.aggregate([
+        { $group: { _id: null, totalLikes: { $sum: "$likes" } } }
+    ]);
+    const postLikes = likesAggregation.length > 0 ? likesAggregation[0].totalLikes : 0;
+    const noteLikes = noteLikesAggregation.length > 0 ? noteLikesAggregation[0].totalLikes : 0;
+    const totalLikes = postLikes + noteLikes;
 
     return NextResponse.json({
         history: historyVisitors, // Visitors
@@ -253,6 +262,8 @@ export async function GET(request: Request) {
             totalLikes,
             totalSubscribers,
             totalVisitorsAllTime,
+            totalCourses,
+            totalLessons,
             // Calculate a simple conversion rate for the period (Signups / Unique Visitors)
             conversionRate: totalInRange > 0 
                 ? ((historySignups.reduce((acc, curr) => acc + curr.count, 0) / totalInRange) * 100).toFixed(2) 

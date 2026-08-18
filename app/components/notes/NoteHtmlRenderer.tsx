@@ -20,19 +20,19 @@ if (typeof window !== "undefined") {
   }
 }
 
-interface HtmlRendererProps {
+interface NoteHtmlRendererProps {
   content: string;
   className?: string;
   onImageClick?: (src: string) => void;
   showHeadingAnchors?: boolean;
 }
 
-export const HtmlRenderer = ({
+export const NoteHtmlRenderer = ({
   content,
   className,
   onImageClick,
   showHeadingAnchors = true,
-}: HtmlRendererProps) => {
+}: NoteHtmlRendererProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

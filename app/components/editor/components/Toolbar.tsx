@@ -40,6 +40,7 @@ import {
   Save,
   Loader2,
   X,
+  Lightbulb,
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { ColorSelector } from "./ColorSelector";
@@ -51,6 +52,8 @@ interface ToolbarProps {
   onSave?: () => void;
   saveStatus?: "saved" | "saving" | "unsaved";
   onExitZenMode?: () => void;
+  onOpenLinkModal?: () => void;
+  onOpenYoutubeModal?: () => void;
 }
 
 const ToolbarButton = ({
@@ -297,7 +300,7 @@ const CalloutDropdown = ({ editor }: { editor: Editor }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const setCallout = (type: "info" | "warning" | "danger" | "success") => {
+  const setCallout = (type: "info" | "warning" | "danger" | "success" | "tip") => {
     // Ensure we are in a blockquote first
     if (!editor.isActive("blockquote")) {
       editor.chain().focus().setBlockquote().run();
@@ -335,6 +338,12 @@ const CalloutDropdown = ({ editor }: { editor: Editor }) => {
             className="flex items-center gap-2 px-3 py-2 text-sm text-left rounded-lg hover:bg-white/10 text-blue-400 hover:text-blue-300 transition-colors"
           >
             <Info size={16} /> Info
+          </button>
+          <button
+            onClick={() => setCallout("tip")}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-left rounded-lg hover:bg-white/10 text-purple-400 hover:text-purple-300 transition-colors"
+          >
+            <Lightbulb size={16} /> Tip
           </button>
           <button
             onClick={() => setCallout("success")}
@@ -628,6 +637,8 @@ export const Toolbar = ({
   saveStatus,
   onExitZenMode,
   onImageUpload,
+  onOpenLinkModal,
+  onOpenYoutubeModal,
 }: ToolbarProps & { onImageUpload?: (file: File) => Promise<string> }) => {
   if (!editor) return null;
 
@@ -664,11 +675,19 @@ export const Toolbar = ({
   }, []);
 
   const setLink = () => {
-    window.dispatchEvent(new Event("open-link-modal"));
+    if (onOpenLinkModal) {
+      onOpenLinkModal();
+    } else {
+      window.dispatchEvent(new Event("open-link-modal"));
+    }
   };
 
   const addYoutubeVideo = () => {
-    window.dispatchEvent(new Event("open-youtube-modal"));
+    if (onOpenYoutubeModal) {
+      onOpenYoutubeModal();
+    } else {
+      window.dispatchEvent(new Event("open-youtube-modal"));
+    }
   };
 
   return (

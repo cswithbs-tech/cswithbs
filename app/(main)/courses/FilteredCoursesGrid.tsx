@@ -60,7 +60,7 @@ function CourseCard({ course }: CourseCardProps) {
         />
 
         {/* Cover image or gradient placeholder */}
-        <div className="relative w-full h-44 shrink-0 overflow-hidden">
+        <div className="relative w-full aspect-[16/9] shrink-0 overflow-hidden bg-[#0d0d0d]">
           {course.coverImage ? (
             <img
               src={course.coverImage}

@@ -13,6 +13,7 @@ import { SearchReplace } from "../components/SearchReplace";
 import { twMerge } from "tailwind-merge";
 import { Loader2, CheckCircle2, Columns, Info } from "lucide-react";
 import "../editor.css";
+import { EDITOR_PROSE_STYLES } from "../editorStyles";
 
 interface CMSEditorLayoutProps {
   editor: Editor;
@@ -27,11 +28,13 @@ interface CMSEditorLayoutProps {
     link: {
       isOpen: boolean;
       onClose: () => void;
+      onOpen: () => void;
       data: { text: string; url: string };
     };
     youtube: {
       isOpen: boolean;
       onClose: () => void;
+      onOpen: () => void;
     };
     stats: {
       isOpen: boolean;
@@ -96,6 +99,8 @@ export const CMSEditorLayout = ({
           saveStatus={saveStatus}
           onExitZenMode={onToggleZenMode}
           onImageUpload={onImageUpload}
+          onOpenLinkModal={modals.link.onOpen}
+          onOpenYoutubeModal={modals.youtube.onOpen}
         />
 
         <main className="flex-1 w-full flex justify-center p-4 md:p-8 pb-32 overflow-y-auto">
@@ -132,7 +137,7 @@ export const CMSEditorLayout = ({
 
               <SearchReplace editor={editor} />
 
-              <div className="prose prose-invert prose-lg max-w-none">
+              <div className={`${EDITOR_PROSE_STYLES} cswithbs-components`}>
                 <EditorContent editor={editor} />
               </div>
             </div>

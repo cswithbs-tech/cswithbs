@@ -69,7 +69,7 @@ export function SidebarClient({
       </div>
 
       {/* Chapter nav — scrollable */}
-      <nav className="flex-1 overflow-y-auto p-4 space-y-1">
+      <nav className="flex-1 overflow-y-auto p-4 space-y-2 pb-32 custom-scrollbar">
         {chapters.length > 0 ? (
           chapters.map((chapter: any, idx: number) => {
             const isOpen = !!openChapters[idx];

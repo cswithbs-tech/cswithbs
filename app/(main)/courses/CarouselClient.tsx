@@ -14,8 +14,12 @@ const SLIDES = [
     subtitle:
       "From arrays to graphs — build the problem-solving intuition every CS student needs.",
     cta: "Start Learning",
-    href: "/courses/data-structures-and-algorithms",
-    image: "", // Add premium image URL here later (e.g. "/images/carousel/dsa.jpg")
+    // NOTE: Leave href empty ("") if the course page is not ready yet. 
+    // This will prevent the slide from being clickable. Change to actual URL (e.g., "/courses/dsa") when ready.
+    href: "", 
+    // NOTE: Change this to your custom image path. If your image already contains text natively (like carousel_1), keep hideText: true.
+    image: "/images/courses/carousel_1.png", 
+    hideText: true,
     gradient: "from-[#1a0a00] via-[#0d0d0d] to-[#0d0d0d]",
     orb1: "bg-[#E2C6B9]/20",
     orb2: "bg-amber-600/10",
@@ -25,17 +29,30 @@ const SLIDES = [
   {
     id: 2,
     tag: "Core Fundamentals",
-    title: "Operating Systems",
+    title: "C Programming",
     subtitle:
-      "Understand how your computer actually works — processes, memory, scheduling, and more.",
+      "Master the foundational language of systems programming and logic.",
     cta: "Explore Course",
-    href: "/courses/operating-systems",
-    image: "", // Add premium image URL here later
+    // Link to the course page
+    href: "/courses/c-programming",
+    // NOTE: If hideText is false, the HTML text (title, subtitle, features) will be rendered over the left side of the image.
+    image: "/images/courses/carousel_4.png",
+    hideText: false,
+    
+    // NOTE: You can add features here to display below the subtitle. Remove or leave empty if not needed.
+    features: [
+      { label: "Memory Management", desc: "Master pointers & avoid leaks" },
+      { label: "Data Structures", desc: "Build linked lists from scratch" },
+      { label: "System Level", desc: "Interact directly with hardware" }
+    ],
+    // NOTE: Add technology tags here. Remove or leave empty if not needed.
+    technologies: ["C", "GCC", "Make", "GDB"],
+    
     gradient: "from-[#060d1a] via-[#0d0d0d] to-[#0d0d0d]",
     orb1: "bg-blue-500/15",
     orb2: "bg-cyan-500/10",
-    accentColor: "#60a5fa",
-    badgeColor: "bg-blue-500/10 border-blue-500/20 text-blue-400",
+    accentColor: "#a855f7",
+    badgeColor: "bg-purple-500/10 border border-purple-400/40 text-purple-300",
   },
   {
     id: 3,
@@ -44,13 +61,23 @@ const SLIDES = [
     subtitle:
       "From linear regression to deep learning — the complete journey with Professor Sasmal.",
     cta: "Dive In",
-    href: "/courses",
-    image: "", // Add premium image URL here later
+    href: "/courses/machine-learning",
+    image: "/images/courses/Carousel_5.png",
+    hideText: false,
+
+    features: [
+      { label: "Deep Learning", desc: "Build neural networks & CNNs" },
+      { label: "Data Science", desc: "Predictive modeling & analytics" },
+      { label: "Real World", desc: "Train models on live datasets" }
+    ],
+    technologies: ["Python", "TensorFlow", "PyTorch", "Scikit-Learn"],
+
     gradient: "from-[#0d0619] via-[#0d0d0d] to-[#0d0d0d]",
     orb1: "bg-purple-500/15",
     orb2: "bg-violet-600/10",
-    accentColor: "#a78bfa",
-    badgeColor: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+    // Cyan to match the glowing AI brain
+    accentColor: "#06b6d4",
+    badgeColor: "bg-cyan-500/10 border border-cyan-400/40 text-cyan-300",
   },
 ];
 
@@ -60,12 +87,9 @@ export function CarouselClient() {
 
   const goTo = useCallback(
     (index: number) => {
-      if (isAnimating) return;
-      setIsAnimating(true);
       setCurrent(index);
-      setTimeout(() => setIsAnimating(false), 600);
     },
-    [isAnimating]
+    []
   );
 
   const goNext = useCallback(() => {
@@ -89,18 +113,38 @@ export function CarouselClient() {
       {/* Background layer: Either Image or Gradient */}
       <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out">
         {slide.image ? (
-          <>
-            <Image
-              src={slide.image}
-              alt={slide.title}
-              fill
-              className="object-cover opacity-60" // Lower opacity to make text readable
-              priority
-            />
-            {/* Gradient overlay for text readability over image */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-[#0d0d0d]/60 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#0d0d0d] via-[#0d0d0d]/40 to-transparent" />
-          </>
+          (() => {
+            const ImageContent = (
+              <>
+                <Image
+                  src={slide.image}
+                  alt={slide.title}
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                {!slide.hideText && (
+                  <>
+                    {/* Very minimal left gradient — only the extreme-left edge to blend HTML text seamlessly. */}
+                    <div
+                      className="absolute inset-y-0 left-0 pointer-events-none"
+                      style={{ width: '45%', background: 'linear-gradient(to right, rgba(3,0,10,0.92) 0%, rgba(3,0,10,0.75) 50%, transparent 100%)' }}
+                    />
+                  </>
+                )}
+              </>
+            );
+
+            return slide.href ? (
+              <Link href={slide.href} className={`block w-full h-full relative z-0 ${slide.hideText ? 'cursor-pointer' : ''}`}>
+                {ImageContent}
+              </Link>
+            ) : (
+              <div className={`block w-full h-full relative z-0`}>
+                {ImageContent}
+              </div>
+            );
+          })()
         ) : (
           <>
             <div className={`absolute inset-0 bg-gradient-to-br ${slide.gradient} transition-all duration-700`} />
@@ -119,46 +163,77 @@ export function CarouselClient() {
       </div>
 
       {/* Content */}
-      <div
-        className={`relative z-10 flex flex-col justify-center h-full px-10 md:px-20 py-16 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-          isAnimating ? "opacity-0 translate-y-8 blur-sm scale-95" : "opacity-100 translate-y-0 blur-0 scale-100"
-        }`}
-      >
-        <div className="max-w-3xl">
-          {/* Tag badge */}
-          <div
-            className={`inline-flex items-center self-start px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest border mb-6 ${slide.badgeColor}`}
-          >
-            {slide.tag}
+      {!slide.hideText && (
+        <div className="absolute inset-0 z-10 flex flex-col justify-center px-10 md:px-16 py-14">
+          <div className="w-full lg:max-w-3xl">
+            {/* Tag badge — styled to match the image's color palette */}
+            <div
+              className={`inline-flex items-center gap-2 self-start px-3.5 py-1.5 rounded-md text-[10px] font-black uppercase tracking-[0.2em] mb-5 ${slide.badgeColor}`}
+            >
+              {slide.tag}
+            </div>
+
+            {/* Large title — same weight and impact as carousel_1's baked-in text */}
+            <h2
+              className="font-black text-white leading-[1.02] tracking-tight mb-4 whitespace-nowrap"
+              style={{ fontSize: 'clamp(2.4rem, 5vw, 4.5rem)', letterSpacing: '-0.02em' }}
+            >
+              {slide.title}
+            </h2>
+
+            {/* Subtitle — lighter, slightly muted */}
+            <p
+              className="text-white/60 leading-relaxed mb-6 font-medium"
+              style={{ fontSize: 'clamp(0.85rem, 1.4vw, 1.1rem)' }}
+            >
+              {slide.subtitle}
+            </p>
+
+            {/* Features Columns (Optional) */}
+            {/* @ts-ignore - Temporary bypass for TS since we added features ad-hoc */}
+            {slide.features && (
+              <div className="flex items-start gap-4 mb-6 border-t border-white/10 pt-6">
+                {/* @ts-ignore */}
+                {slide.features.map((feat, idx) => (
+                  <div key={idx} className="flex-1">
+                    <div style={{ color: slide.accentColor }} className="font-bold text-sm mb-1">{feat.label}</div>
+                    <div className="text-white/40 text-xs leading-snug pr-2">{feat.desc}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Technologies Pills (Optional) */}
+            {/* @ts-ignore */}
+            {slide.technologies && (
+              <div className="flex items-center gap-2 mb-8">
+                {/* @ts-ignore */}
+                {slide.technologies.map((tech, idx) => (
+                  <div key={idx} className="px-3 py-1 rounded border border-white/10 bg-white/5 text-xs text-white/70 font-medium">
+                    {tech}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* CTA Button */}
+            {slide.href && (
+              <Link
+                href={slide.href}
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full font-bold text-sm transition-all duration-300 hover:gap-3.5 hover:scale-105 active:scale-95"
+                style={{
+                  backgroundColor: slide.accentColor,
+                  color: '#fff',
+                  boxShadow: `0 0 30px ${slide.accentColor}60`,
+                }}
+              >
+                {slide.cta}
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            )}
           </div>
-
-          <h2
-            className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1.05] font-display tracking-tight mb-6"
-            style={{ textShadow: slide.image ? "0 4px 20px rgba(0,0,0,0.8)" : "none" }}
-          >
-            {slide.title}
-          </h2>
-          
-          <p 
-            className="text-zinc-300 text-lg md:text-xl leading-relaxed mb-10 max-w-2xl font-medium"
-            style={{ textShadow: slide.image ? "0 2px 10px rgba(0,0,0,0.8)" : "none" }}
-          >
-            {slide.subtitle}
-          </p>
-
-          <Link
-            href={slide.href}
-            className="inline-flex items-center gap-2 self-start px-8 py-4 rounded-full font-bold text-base transition-all hover:gap-4 hover:opacity-90 active:scale-95 hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
-            style={{
-              backgroundColor: slide.accentColor,
-              color: "#000",
-            }}
-          >
-            {slide.cta}
-            <ArrowRight className="w-5 h-5" />
-          </Link>
         </div>
-      </div>
+      )}
 
       {/* Prev / Next buttons */}
       <button

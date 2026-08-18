@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { NOTE_PROSE_STYLES } from "@/app/components/notes/noteStyles";
+import { NoteContent } from "@/app/components/notes/NoteContent";
 import {
   ChevronLeft,
   ChevronRight,
@@ -17,6 +19,7 @@ import Note from "@/models/Note";
 import { notFound } from "next/navigation";
 import { Container } from "@/app/components/ui/Container";
 import { LessonActions } from "./LessonActions";
+import { NoteTracker } from "../../components/NoteTracker";
 
 export const revalidate = 60;
 
@@ -83,11 +86,12 @@ export default async function LessonPage({
   const accentColor = subject.color || "#E2C6B9";
 
   return (
-    <div className="min-h-screen py-10 md:py-14">
+    <div className="min-h-screen pt-4 pb-32 md:pt-6 md:pb-48">
       <Container className="max-w-4xl mx-auto">
+        <NoteTracker noteId={currentNote._id} />
 
         {/* ── Top bar: actions only ───────────────────── */}
-        <div className="flex flex-wrap items-center justify-end gap-4 mb-10 pb-6 border-b border-white/10">
+        <div className="flex flex-wrap items-center justify-end gap-4 mb-6 pb-4 border-b border-white/10">
           <LessonActions />
         </div>
 
@@ -127,8 +131,7 @@ export default async function LessonPage({
           )}
         </div>
 
-        {/* ── Lesson title ─────────────────────────────────────── */}
-        <h1 className="text-3xl md:text-5xl font-black text-white leading-tight font-display tracking-tight mb-10">
+        <h1 className="text-3xl md:text-5xl font-black text-white leading-tight font-display tracking-wide mb-10">
           {currentNote.title}
         </h1>
 
@@ -144,22 +147,14 @@ export default async function LessonPage({
         )}
 
         {/* ── Main Content ─────────────────────────────────────── */}
-        <div
-          className="prose prose-invert prose-lg max-w-none
-            prose-headings:font-display prose-headings:font-bold prose-headings:tracking-tight
-            prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl
-            prose-a:text-accent hover:prose-a:text-accent/80 prose-a:no-underline hover:prose-a:underline
-            prose-code:text-accent/90 prose-code:bg-white/5 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-sm prose-code:before:content-none prose-code:after:content-none
-            prose-pre:bg-[#0a0a0a] prose-pre:border prose-pre:border-white/10 prose-pre:rounded-2xl
-            prose-blockquote:border-l-accent prose-blockquote:text-zinc-400
-            prose-img:rounded-2xl prose-img:border prose-img:border-white/10
-            prose-hr:border-white/10
-            prose-strong:text-white"
-          dangerouslySetInnerHTML={{ __html: currentNote.content || "" }}
+        <NoteContent
+          content={currentNote.content || ""}
+          contentJson={currentNote.contentJson}
+          showHeadingAnchors={false}
         />
 
         {/* ── Bottom section ────────────────────────────────────── */}
-        <div className="mt-20 pt-10 border-t border-white/10">
+        <div className="mt-32 pt-12 border-t border-white/10">
 
           {/* Prev / Next navigation */}
           <div className="grid grid-cols-2 gap-4">

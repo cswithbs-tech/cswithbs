@@ -33,8 +33,8 @@ const NoteSchema: Schema = new Schema(
   {
     title: { type: String, required: true },
     slug: { type: String, required: true, unique: true },
-    excerpt: { type: String, required: true },
-    content: { type: String, required: true },
+    excerpt: { type: String, default: '' },
+    content: { type: String, default: '' },
     contentJson: { type: Schema.Types.Mixed },
     subject: { type: Schema.Types.ObjectId, ref: "Subject", required: true },
     chapter: { type: Schema.Types.ObjectId, ref: "Chapter" },

@@ -14,6 +14,7 @@ import {
   Minus,
   AlertCircle,
   Sigma,
+  Lightbulb,
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 
@@ -33,6 +34,7 @@ const icons: Record<string, any> = {
   Minus,
   AlertCircle,
   Sigma,
+  Lightbulb,
 };
 
 export const CommandList = forwardRef((props: any, ref) => {
