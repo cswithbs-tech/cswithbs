@@ -20,6 +20,54 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const revalidate = 60;
+export const dynamicParams = true; // Allow new courses to be accessed dynamically
+
+import type { Metadata } from "next";
+
+export async function generateStaticParams() {
+  await dbConnect();
+  const subjects = await Subject.find({}).select("slug").lean();
+  return subjects.map((subject: any) => ({
+    courseSlug: subject.slug,
+  }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ courseSlug: string }>;
+}): Promise<Metadata> {
+  const { courseSlug } = await params;
+  await dbConnect();
+  const subject = await Subject.findOne({ slug: courseSlug }).lean();
+
+  if (!subject) {
+    return {
+      title: "Course Not Found",
+      description: "The requested course could not be found.",
+    };
+  }
+
+  const title = `${subject.name} Course | CSWITHBS`;
+  const description = subject.description || `Master ${subject.name} with structured chapters and comprehensive notes.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      images: subject.coverImage ? [subject.coverImage] : [],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: subject.coverImage ? [subject.coverImage] : [],
+    },
+  };
+}
 
 async function getCourseData(courseSlug: string) {
   await dbConnect();

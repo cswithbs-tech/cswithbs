@@ -2,8 +2,7 @@
 import { MetadataRoute } from 'next';
 import dbConnect from '@/lib/db';
 import Post from '@/models/Post';
-
-
+import Subject from '@/models/Subject';
 
 const BASE_URL = 'https://www.cswithbs.com'; // Production URL
 
@@ -27,6 +26,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
 
+  // Fetch Courses (Subjects)
+  const subjects = await Subject.find({}).select('slug updatedAt').lean();
+
+  const courseEntries: MetadataRoute.Sitemap = subjects.map((subject: any) => ({
+    url: `${BASE_URL}/courses/${subject.slug}`,
+    lastModified: new Date(subject.updatedAt || new Date()),
+    changeFrequency: 'weekly',
+    priority: 0.9,
+  }));
 
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -86,5 +94,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   ];
 
-  return [...staticPages, ...blogEntries];
+  return [...staticPages, ...blogEntries, ...courseEntries];
 }
