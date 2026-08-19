@@ -103,7 +103,7 @@ export const Header = () => {
             className="z-50 relative flex items-center"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <Image src="/images/logo.svg" alt="CSWITHBS Logo" width={160} height={40} className="h-10 w-auto object-contain" priority />
+            <Image src="/images/logo.svg" alt="CSWITHBS Logo" width={160} height={40} className="h-8 md:h-9 w-auto object-contain" priority />
           </Link>
 
           {/* Desktop Navigation */}

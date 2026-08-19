@@ -47,7 +47,7 @@ export const Footer = async () => {
               href="/"
               className="mb-2 flex items-center"
             >
-              <Image src="/images/logo.svg" alt="CSWITHBS Logo" width={160} height={40} className="h-10 w-auto object-contain" />
+              <Image src="/images/logo.svg" alt="CSWITHBS Logo" width={160} height={40} className="h-8 md:h-9 w-auto object-contain" />
             </Link>
             <p className="text-sm text-muted leading-relaxed">{siteTagline}</p>
             <div className="flex gap-4 mt-2">
