@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Container } from "./ui/Container";
 import dbConnect from "@/lib/db";
 import Setting from "@/models/Setting";
@@ -44,9 +45,9 @@ export const Footer = async () => {
           <div className="flex flex-col gap-4">
             <Link
               href="/"
-              className="text-2xl font-serif font-bold tracking-tight text-white mb-2"
+              className="mb-2 flex items-center"
             >
-              {siteTitle}
+              <Image src="/images/logo.svg" alt="CSWITHBS Logo" width={160} height={40} className="h-10 w-auto object-contain" />
             </Link>
             <p className="text-sm text-muted leading-relaxed">{siteTagline}</p>
             <div className="flex gap-4 mt-2">

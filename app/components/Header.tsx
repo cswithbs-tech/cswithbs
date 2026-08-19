@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   User,
   Crown,
@@ -99,10 +100,10 @@ export const Header = () => {
           {/* Logo */}
           <Link
             href="/"
-            className="text-2xl font-serif font-bold tracking-tight text-white z-50 relative"
+            className="z-50 relative flex items-center"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            {siteTitle}
+            <Image src="/images/logo.svg" alt="CSWITHBS Logo" width={160} height={40} className="h-10 w-auto object-contain" priority />
           </Link>
 
           {/* Desktop Navigation */}
