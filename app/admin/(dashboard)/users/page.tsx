@@ -258,10 +258,15 @@ export default async function UsersPage(props: {
                             .map((r: string) => r.toUpperCase() === 'EDITOR' ? 'WRITER' : r.toUpperCase());
                           
                           let validRoles = Array.from(new Set(mappedRoles));
-                          if (validRoles.length > 1) {
-                            validRoles = validRoles.filter(r => r !== 'USER');
+                          if (validRoles.includes('SUPER_ADMIN')) {
+                            validRoles = ['SUPER_ADMIN'];
+                          } else if (validRoles.includes('ADMIN')) {
+                            validRoles = ['ADMIN'];
+                          } else if (validRoles.includes('WRITER')) {
+                            validRoles = ['WRITER'];
+                          } else {
+                            validRoles = ['USER'];
                           }
-                          if (validRoles.length === 0) validRoles = ['USER'];
 
                           return validRoles.map((role: any) => (
                             <span
@@ -270,7 +275,7 @@ export default async function UsersPage(props: {
                                 role === 'SUPER_ADMIN'
                                   ? "bg-red-500/10 text-red-500 border-red-500/20"
                                   : role === 'ADMIN'
-                                    ? "bg-accent/10 text-accent border-accent/20"
+                                    ? "bg-purple-500/10 text-purple-400 border-purple-500/20"
                                     : role === 'WRITER'
                                       ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
                                       : "bg-zinc-800 text-zinc-400 border-zinc-700/50"

@@ -19,6 +19,7 @@ export interface INote extends Document {
   featured: boolean;
   status: "draft" | "published" | "archived" | "scheduled";
   scheduledPublishDate?: Date;
+  isFreePreview: boolean;
   // SEO Metadata
   seoTitle?: string;
   seoDescription?: string;
@@ -57,6 +58,7 @@ const NoteSchema: Schema = new Schema(
       default: "draft",
     },
     scheduledPublishDate: { type: Date },
+    isFreePreview: { type: Boolean, default: false },
     seoTitle: { type: String },
     seoDescription: { type: String },
     canonicalUrl: { type: String },

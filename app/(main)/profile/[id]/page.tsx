@@ -219,11 +219,7 @@ export default function UserProfilePage({
                     size="sm"
                     className="w-full md:w-auto cursor-pointer"
                     onClick={() => {
-                      if (user.roles?.some((r: string) => ["ADMIN", "SUPER_ADMIN", "WRITER"].includes(r))) {
-                        router.push("/writers-hub/dashboard");
-                      } else {
-                        router.push("/profile");
-                      }
+                      router.push("/profile");
                     }}
                   >
                     View Dashboard
@@ -249,10 +245,12 @@ export default function UserProfilePage({
               </p>
 
               <div className="flex flex-wrap gap-6 text-sm text-zinc-500">
-                <div className="flex items-center gap-2">
-                  <Calendar size={16} />
-                  <span>Joined {new Date(user.createdAt).getFullYear()}</span>
-                </div>
+                {user.createdAt && (
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} />
+                    <span>Joined {new Date(user.createdAt).getFullYear()}</span>
+                  </div>
+                )}
                 {user.location && (
                   <div className="flex items-center gap-2">
                     <MapPin size={16} />

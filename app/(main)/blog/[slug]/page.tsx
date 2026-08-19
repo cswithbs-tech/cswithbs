@@ -201,6 +201,7 @@ import { ReadingProgress } from "@/app/components/blog/ReadingProgress";
 import { AuthorBio } from "@/app/components/blog/AuthorBio";
 import { ArticleContent } from "@/app/components/blog/ArticleContent";
 import { JoinCommunityCard } from "@/app/components/blog/JoinCommunityCard";
+import { AuthWallOverlay } from "@/app/components/ui/AuthWallOverlay";
 
 export default async function BlogPostPage({
   params,
@@ -379,10 +380,35 @@ export default async function BlogPostPage({
                 {post.excerpt}
               </p>
 
-              <ArticleContent
-                content={post.content}
-                contentJson={post.contentJson}
-              />
+              {!post.isFreePreview && !session ? (
+                <div className="relative">
+                  <div className="max-h-[300px] overflow-hidden relative">
+                    <ArticleContent
+                      content="" // Don't pass full HTML to avoid unclosed tags
+                      contentJson={
+                        post.contentJson?.content
+                          ? {
+                              ...post.contentJson,
+                              content: post.contentJson.content.slice(0, 3), // First 3 blocks
+                            }
+                          : { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: post.excerpt || "Unlock the full article to read more." }] }] }
+                      }
+                    />
+                    <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+                  </div>
+                  <div className="-mt-16 relative z-10">
+                    <AuthWallOverlay
+                      title="Unlock Full Article"
+                      message="Join CSWITHBS for free to unlock this full article, engage with the community, and access premium resources."
+                    />
+                  </div>
+                </div>
+              ) : (
+                <ArticleContent
+                  content={post.content}
+                  contentJson={post.contentJson}
+                />
+              )}
 
               <div className="mt-32">
                 <AuthorBio author={post.author} authorPosts={authorPosts} />

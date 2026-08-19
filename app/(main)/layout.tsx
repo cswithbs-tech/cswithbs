@@ -1,5 +1,6 @@
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
+import { FeedbackCard } from "../components/ui/FeedbackCard";
 
 export default function MainLayout({
   children,
@@ -13,6 +14,7 @@ export default function MainLayout({
         {children}
       </main>
       <Footer />
+      <FeedbackCard />
     </>
   );
 }

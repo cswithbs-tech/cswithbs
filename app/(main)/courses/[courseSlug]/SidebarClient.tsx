@@ -16,10 +16,12 @@ export function SidebarClient({
   courseSlug,
   subject,
   chapters,
+  hasSession,
 }: {
   courseSlug: string;
   subject: any;
   chapters: any[];
+  hasSession: boolean;
 }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -77,8 +79,10 @@ export function SidebarClient({
               pathname.includes(`/courses/${courseSlug}/${n.slug}`)
             );
 
+            const isLockedTeaser = !hasSession && idx >= 2;
+
             return (
-              <div key={chapter._id}>
+              <div key={chapter._id} className={isLockedTeaser ? "opacity-40 grayscale pointer-events-none select-none blur-[1px]" : ""}>
                 {/* Chapter header button */}
                 <button
                   onClick={() => toggleChapter(idx)}

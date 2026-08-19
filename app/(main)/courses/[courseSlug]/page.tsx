@@ -8,6 +8,7 @@ import {
   Layers,
   GraduationCap,
   Tag,
+  Lock,
 } from "lucide-react";
 import dbConnect from "@/lib/db";
 import Subject from "@/models/Subject";
@@ -15,6 +16,8 @@ import Chapter from "@/models/Chapter";
 import Note from "@/models/Note";
 import { notFound } from "next/navigation";
 import { Container } from "@/app/components/ui/Container";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const revalidate = 60;
 
@@ -69,6 +72,7 @@ export default async function CourseIndexPage({
 }) {
   const { courseSlug } = await params;
   const courseData = await getCourseData(courseSlug);
+  const session = await getServerSession(authOptions);
 
   if (!courseData) notFound();
 
@@ -171,12 +175,17 @@ export default async function CourseIndexPage({
 
             {chapters.length > 0 ? (
               <div className="space-y-4">
-                {chapters.map((chapter: any, idx: number) => (
-                  <details
-                    key={chapter._id}
-                    className="group border border-white/10 rounded-2xl bg-white/[0.02] overflow-hidden open:border-white/20 transition-all"
-                    open={idx === 0}
-                  >
+                {chapters.map((chapter: any, idx: number) => {
+                  const isLockedTeaser = !session && idx >= 2;
+                  
+                  return (
+                    <details
+                      key={chapter._id}
+                      className={`group border border-white/10 rounded-2xl bg-white/[0.02] overflow-hidden transition-all ${
+                        isLockedTeaser ? "opacity-40 grayscale pointer-events-none select-none blur-[1px]" : "open:border-white/20"
+                      }`}
+                      open={idx === 0}
+                    >
                     {/* Chapter summary (toggle) */}
                     <summary className="flex items-center justify-between px-6 py-5 cursor-pointer select-none list-none">
                       <div className="flex items-center gap-4">
@@ -244,9 +253,14 @@ export default async function CourseIndexPage({
                                   </p>
                                 )}
                                 {note.readTime && (
-                                  <div className="flex items-center gap-1 mt-2 text-[10px] font-mono text-zinc-700">
-                                    <Clock className="w-3 h-3" />
-                                    {note.readTime}
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <div className="flex items-center gap-1 text-[10px] font-mono text-zinc-700">
+                                      <Clock className="w-3 h-3" />
+                                      {note.readTime}
+                                    </div>
+                                    {!session && !note.isFreePreview && (
+                                      <Lock className="w-3 h-3 text-zinc-600" />
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -260,7 +274,8 @@ export default async function CourseIndexPage({
                       )}
                     </div>
                   </details>
-                ))}
+                );
+                })}
               </div>
             ) : (
               <div className="py-24 text-center border border-dashed border-white/10 rounded-2xl flex flex-col items-center gap-4">

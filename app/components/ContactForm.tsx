@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/Button";
 
+import { useSession } from "next-auth/react";
 import { useToast } from "../context/ToastContext";
 
 export const ContactForm = () => {
   const { showToast } = useToast();
+  const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+  
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -15,6 +18,20 @@ export const ContactForm = () => {
     subject: "",
     message: "",
   });
+
+  // Auto-fill logged in user info
+  useEffect(() => {
+    if (session?.user) {
+      const user = session.user as any;
+      const nameParts = (user.name || "").split(" ");
+      setFormData(prev => ({
+        ...prev,
+        firstName: prev.firstName || nameParts[0] || "",
+        lastName: prev.lastName || nameParts.slice(1).join(" ") || "",
+        email: prev.email || user.email || "",
+      }));
+    }
+  }, [session]);
 
   const handleChange = (
     e: React.ChangeEvent<

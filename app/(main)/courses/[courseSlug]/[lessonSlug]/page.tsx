@@ -20,6 +20,9 @@ import { notFound } from "next/navigation";
 import { Container } from "@/app/components/ui/Container";
 import { LessonActions } from "./LessonActions";
 import { NoteTracker } from "../../components/NoteTracker";
+import { AuthWallOverlay } from "@/app/components/ui/AuthWallOverlay";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const revalidate = 60;
 
@@ -79,6 +82,7 @@ export default async function LessonPage({
 }) {
   const { courseSlug, lessonSlug } = await params;
   const data = await getNoteData(courseSlug, lessonSlug);
+  const session = await getServerSession(authOptions);
 
   if (!data) notFound();
 
@@ -147,11 +151,37 @@ export default async function LessonPage({
         )}
 
         {/* ── Main Content ─────────────────────────────────────── */}
-        <NoteContent
-          content={currentNote.content || ""}
-          contentJson={currentNote.contentJson}
-          showHeadingAnchors={false}
-        />
+        {!currentNote.isFreePreview && !session ? (
+          <div className="relative">
+            <div className="max-h-[300px] overflow-hidden relative">
+              <NoteContent
+                content="" // Don't pass full HTML to avoid unclosed tags
+                contentJson={
+                  currentNote.contentJson?.content
+                    ? {
+                        ...currentNote.contentJson,
+                        content: currentNote.contentJson.content.slice(0, 3), // First 3 blocks
+                      }
+                    : { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: currentNote.excerpt || "Unlock the full lesson to read more." }] }] }
+                }
+                showHeadingAnchors={false}
+              />
+              <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+            </div>
+            <div className="-mt-16 relative z-10">
+              <AuthWallOverlay 
+                title="Unlock Full Lesson"
+                message="Join CSWITHBS for free to unlock this full lesson, track your progress, and access premium resources."
+              />
+            </div>
+          </div>
+        ) : (
+          <NoteContent
+            content={currentNote.content || ""}
+            contentJson={currentNote.contentJson}
+            showHeadingAnchors={false}
+          />
+        )}
 
         {/* ── Bottom section ────────────────────────────────────── */}
         <div className="mt-32 pt-12 border-t border-white/10">

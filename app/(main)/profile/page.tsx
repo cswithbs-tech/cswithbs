@@ -359,7 +359,7 @@ export default function ProfilePage() {
                                 <h3 className="font-bold text-white">Enrolled Courses</h3>
                             </div>
                             <p className="text-zinc-500 text-sm mb-4">You are not currently enrolled in any courses.</p>
-                            <Button variant="outline" className="w-full text-xs">Browse Courses</Button>
+                            <Button variant="outline" onClick={() => router.push("/courses")} className="w-full text-xs">Browse Courses</Button>
                         </div>
                         <div className="border border-white/5 bg-white/5 rounded-lg p-6">
                             <div className="flex items-center gap-3 mb-4">
@@ -369,7 +369,7 @@ export default function ProfilePage() {
                                 <h3 className="font-bold text-white">CSwithBS PRO</h3>
                             </div>
                             <p className="text-zinc-500 text-sm mb-4">You are currently on the Free Tier.</p>
-                            <Button variant="primary" className="w-full text-xs">Upgrade to PRO</Button>
+                            <Button variant="primary" onClick={() => showToast("CSwithBS PRO is coming soon!", "info")} className="w-full text-xs">Upgrade to PRO</Button>
                         </div>
                     </div>
                 </div>
@@ -382,7 +382,7 @@ export default function ProfilePage() {
                             <h2 className="text-2xl font-bold text-white mb-2">Writing Hub</h2>
                             <p className="text-zinc-400 text-sm">Overview of your articles, views, and engagement.</p>
                         </div>
-                        <Button variant="primary" onClick={() => router.push("/writers-hub/posts/create")} className="shrink-0 flex items-center gap-2">
+                        <Button variant="primary" onClick={() => router.push("/writers-hub/write")} className="shrink-0 flex items-center gap-2">
                             <PenTool size={16} /> Write New Post
                         </Button>
                     </div>
@@ -418,7 +418,7 @@ export default function ProfilePage() {
                             </Button>
                         </div>
                         <div className="bg-white/5 border border-white/10 rounded-lg p-8 text-center text-zinc-500">
-                            No posts found. Start writing your first article!
+                            View and manage all your posts, drafts, and analytics in the Writer Panel.
                         </div>
                     </div>
                 </div>

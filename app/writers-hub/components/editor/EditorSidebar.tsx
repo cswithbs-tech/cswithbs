@@ -290,6 +290,26 @@ export function EditorSidebar({
                 Press Enter or Comma to add tag
               </p>
             </div>
+            
+            {/* isFreePreview Toggle */}
+            <div className="flex items-center gap-2 pt-2">
+              <input
+                type="checkbox"
+                id="isFreePreview"
+                checked={formData.isFreePreview || false}
+                onChange={(e) => {
+                  setFormData((p) => ({
+                    ...p,
+                    isFreePreview: e.target.checked,
+                  }));
+                  setIsDirty(true);
+                }}
+                className="rounded bg-[#121212] border-white/10"
+              />
+              <label htmlFor="isFreePreview" className="text-sm text-zinc-300">
+                Free Preview (Guest Access)
+              </label>
+            </div>
             {contentType !== 'note' && (
               <div className="flex items-center gap-2 pt-2">
                 <input

@@ -4,6 +4,8 @@ import Chapter from "@/models/Chapter";
 import Note from "@/models/Note";
 import { SidebarClient } from "./SidebarClient";
 import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const revalidate = 60; // Revalidate every minute
 
@@ -63,6 +65,7 @@ export default async function CourseLayout({
 }) {
   const { courseSlug } = await params;
   const courseData = await getCourseData(courseSlug);
+  const session = await getServerSession(authOptions);
 
   if (!courseData) {
     notFound();
@@ -73,7 +76,8 @@ export default async function CourseLayout({
       <SidebarClient 
         courseSlug={courseSlug} 
         subject={courseData.subject} 
-        chapters={courseData.chapters} 
+        chapters={courseData.chapters}
+        hasSession={!!session}
       />
 
       {/* Main Content Area */}

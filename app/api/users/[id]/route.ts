@@ -48,10 +48,13 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    const currentUserRole = (session?.user as any)?.roles;
+    const currentUserRoles = (session?.user as any)?.roles || [];
+    const hasAdminRights = Array.isArray(currentUserRoles) 
+       ? currentUserRoles.some((r: string) => ['SUPER_ADMIN', 'ADMIN', 'super_admin', 'admin'].includes(r))
+       : ['SUPER_ADMIN', 'ADMIN', 'super_admin', 'admin'].includes(currentUserRoles);
     const currentUserId = (session?.user as any)?.id;
 
-    if (!session || !['super_admin', 'admin'].includes(currentUserRole)) {
+    if (!session || !hasAdminRights) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -70,9 +73,13 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     }
 
     // Role-based deletion logic
-    if (currentUserRole === 'admin') {
+    const isSuperAdmin = Array.isArray(currentUserRoles) 
+       ? currentUserRoles.some((r: string) => ['SUPER_ADMIN', 'super_admin'].includes(r))
+       : ['SUPER_ADMIN', 'super_admin'].includes(currentUserRoles);
+
+    if (!isSuperAdmin) {
         // Admins cannot delete other Admins or Super Admins
-        if (targetUser.roles?.some((r: string) => ['ADMIN', 'SUPER_ADMIN'].includes(r))) {
+        if (targetUser.roles?.some((r: string) => ['ADMIN', 'SUPER_ADMIN', 'admin', 'super_admin'].includes(r))) {
             return NextResponse.json({ error: 'Unauthorized: Cannot delete a superior or peer' }, { status: 403 });
         }
     }

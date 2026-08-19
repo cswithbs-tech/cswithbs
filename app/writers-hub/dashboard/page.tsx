@@ -42,23 +42,26 @@ export default function WritersHubDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Quick Access: Academic Notes */}
-        <div className="group bg-[#0A0A0A] border border-white/5 rounded-xl p-6 hover:border-accent/30 hover:bg-zinc-900/50 transition-all">
-          <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-            <BookOpen className="w-6 h-6 text-accent" />
+      <div className={`grid grid-cols-1 ${["ADMIN", "SUPER_ADMIN"].some(r => (session?.user as any)?.roles?.includes(r)) ? "md:grid-cols-2" : ""} gap-6`}>
+
+        {/* Quick Access: Academic Notes (Admins Only) */}
+        {["ADMIN", "SUPER_ADMIN"].some(r => (session?.user as any)?.roles?.includes(r)) && (
+          <div className="group bg-[#0A0A0A] border border-white/5 rounded-xl p-6 hover:border-accent/30 hover:bg-zinc-900/50 transition-all">
+            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+              <BookOpen className="w-6 h-6 text-accent" />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Academic Notes</h2>
+            <p className="text-sm text-zinc-400 mb-6 line-clamp-2">
+              Create structured, chapter-based educational content. Used for the main curriculum and study materials.
+            </p>
+            <Link
+              href="/writers-hub/notes"
+              className="flex items-center gap-2 text-sm font-medium text-accent group-hover:gap-3 transition-all"
+            >
+              Manage Notes <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Academic Notes</h2>
-          <p className="text-sm text-zinc-400 mb-6 line-clamp-2">
-            Create structured, chapter-based educational content. Used for the main curriculum and study materials.
-          </p>
-          <Link
-            href="/writers-hub/notes"
-            className="flex items-center gap-2 text-sm font-medium text-accent group-hover:gap-3 transition-all"
-          >
-            Manage Notes <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
+        )}
 
         {/* Quick Access: Blog Posts */}
         <div className="group bg-[#0A0A0A] border border-white/5 rounded-xl p-6 hover:border-amber-500/30 hover:bg-zinc-900/50 transition-all">

@@ -45,11 +45,7 @@ const sidebarLinks = [
       </svg>
     ),
   },
-  {
-    label: "Academic Notes",
-    href: "/writers-hub/notes",
-    icon: <BookOpen className="w-5 h-5" />,
-  },
+
   {
     label: "Blog Posts",
     href: "/writers-hub/posts",
@@ -68,6 +64,11 @@ const adminOnlyLinks = [
     label: "Curriculum",
     href: "/writers-hub/curriculum",
     icon: <Library className="w-5 h-5" />,
+  },
+  {
+    label: "Academic Notes",
+    href: "/writers-hub/notes",
+    icon: <BookOpen className="w-5 h-5" />,
   }
 ];
 

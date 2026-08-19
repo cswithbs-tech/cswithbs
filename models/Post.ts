@@ -17,6 +17,7 @@ export interface IPost extends Document {
   featured: boolean;
   status: "draft" | "published" | "archived" | "scheduled";
   scheduledPublishDate?: Date;
+  isFreePreview: boolean;
   // SEO Metadata
   seoTitle?: string;
   seoDescription?: string;
@@ -54,6 +55,7 @@ const PostSchema: Schema = new Schema(
     },
     // Schedule Field
     scheduledPublishDate: { type: Date },
+    isFreePreview: { type: Boolean, default: false },
     // SEO Fields
     seoTitle: { type: String },
     seoDescription: { type: String },
