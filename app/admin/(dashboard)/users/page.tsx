@@ -100,7 +100,7 @@ async function getUsers(
       image: u.image,
       roles: u.roles || [],
       isPremium: u.isPremium || false,
-      createdAt: u.createdAt.toISOString(),
+      createdAt: u.createdAt ? new Date(u.createdAt).toISOString() : new Date().toISOString(),
       postCount: postCountMap[u._id.toString()] || 0,
       commentCount: commentCountMap[u._id.toString()] || 0,
     })),
