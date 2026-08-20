@@ -22,13 +22,16 @@ async function getLandingData() {
       ],
     };
 
+    // IMPORTANT: In Next.js serverless/dev environments, we must ensure the Subject model 
+    // is registered in Mongoose BEFORE we try to populate it in the Note query.
+    const Subject = (await import("@/models/Subject")).default;
+
     let notes = await Note.find(publishedFilter)
       .sort({ createdAt: -1 })
       .limit(4)
       .populate("subject", "name slug")
       .lean();
 
-    const Subject = (await import("@/models/Subject")).default;
     let subjects = await Subject.find().sort({ name: 1 }).limit(4).lean();
 
     return {
