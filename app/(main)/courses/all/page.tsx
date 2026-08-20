@@ -11,7 +11,7 @@ export const revalidate = 60;
 
 async function getAllSubjects() {
   await dbConnect();
-  const subjects = await Subject.find().sort({ name: 1 }).lean();
+  const subjects = await Subject.find().sort({ createdAt: -1 }).lean();
 
   const subjectsData = await Promise.all(
     subjects.map(async (subject) => {

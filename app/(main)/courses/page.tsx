@@ -29,7 +29,8 @@ export const revalidate = 60;
 async function getCoursesPageData() {
   await dbConnect();
 
-  const subjects = await Subject.find().sort({ name: 1 }).lean();
+  // Industry standard: Sort by recently created/updated so fresh content is always visible at the top
+  const subjects = await Subject.find().sort({ createdAt: -1 }).lean();
 
   let totalChapters = 0;
   let totalNotes = 0;

@@ -14,6 +14,7 @@ import {
   ChevronRight,
   Search,
   SlidersHorizontal,
+  ArrowDownAZ,
 } from "lucide-react";
 
 // Map string icons to Lucide components
@@ -30,6 +31,24 @@ const iconMap: Record<string, any> = {
 
 const LEVELS = ["All", "Beginner", "Intermediate", "Advanced"] as const;
 type Level = (typeof LEVELS)[number];
+type SortOption = "newest" | "popular" | "az" | "za";
+
+const TAG_COLORS = [
+  "text-blue-400 bg-blue-500/10 border-blue-500/20",
+  "text-purple-400 bg-purple-500/10 border-purple-500/20",
+  "text-teal-400 bg-teal-500/10 border-teal-500/20",
+  "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+  "text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20",
+  "text-sky-400 bg-sky-500/10 border-sky-500/20",
+];
+
+const getTagColor = (tag: string) => {
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) {
+    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
+};
 
 interface CourseCardProps {
   course: any;
@@ -38,6 +57,11 @@ interface CourseCardProps {
 function CourseCard({ course }: CourseCardProps) {
   const Icon = course.icon && iconMap[course.icon] ? iconMap[course.icon] : BookOpen;
   const accentColor = course.color || "#E2C6B9";
+
+  let levelColor = "text-zinc-400 bg-white/5 border-white/10";
+  if (course.level === "Beginner") levelColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+  if (course.level === "Intermediate") levelColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+  if (course.level === "Advanced") levelColor = "text-[#ff0000] bg-[#ff0000]/15 border-[#ff0000]/30 shadow-[0_0_10px_rgba(255,0,0,0.15)]";
 
   return (
     <Link href={`/courses/${course.slug}`} className="group block h-full">
@@ -93,19 +117,6 @@ function CourseCard({ course }: CourseCardProps) {
           )}
           {/* Dark gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-transparent" />
-
-          {/* Level badge */}
-          {course.level && course.level !== "All Levels" && (
-            <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold border"
-              style={{
-                backgroundColor: `${accentColor}15`,
-                borderColor: `${accentColor}30`,
-                color: accentColor,
-              }}
-            >
-              {course.level}
-            </div>
-          )}
         </div>
 
         {/* Card body */}
@@ -131,19 +142,22 @@ function CourseCard({ course }: CourseCardProps) {
             {course.description || "Explore comprehensive notes and chapters for this subject."}
           </p>
 
-          {/* Alignment tags */}
-          {course.alignments && course.alignments.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mt-3">
-              {course.alignments.slice(0, 2).map((tag: string, i: number) => (
-                <span
-                  key={i}
-                  className="px-2 py-0.5 bg-white/5 border border-white/10 text-zinc-400 text-xs rounded-md"
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
+          {/* Tags and Alignments */}
+          <div className="flex flex-wrap gap-1.5 mt-3">
+            {course.level && course.level !== "All Levels" && (
+              <span className={`px-2 py-0.5 border text-xs rounded-md font-medium ${levelColor}`}>
+                {course.level}
+              </span>
+            )}
+            {course.alignments && course.alignments.slice(0, 2).map((tag: string, i: number) => (
+              <span
+                key={i}
+                className={`px-2 py-0.5 border text-xs rounded-md font-medium ${getTagColor(tag)}`}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
 
           {/* Divider */}
           <div className="my-4 border-t border-white/5" />
@@ -184,14 +198,14 @@ interface FilteredCoursesGridProps {
 export function FilteredCoursesGrid({ courses, hideFilters = false, limit }: FilteredCoursesGridProps) {
   const [activeLevel, setActiveLevel] = useState<Level>("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
 
   const filtered = useMemo(() => {
+    // 1. Filter
     let result = courses.filter((c) => {
       const matchesLevel =
         activeLevel === "All" ||
-        c.level === activeLevel ||
-        c.level === "All Levels" ||
-        !c.level;
+        c.level === activeLevel;
       const matchesSearch =
         searchQuery === "" ||
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -199,11 +213,31 @@ export function FilteredCoursesGrid({ courses, hideFilters = false, limit }: Fil
       return matchesLevel && matchesSearch;
     });
 
+    // 2. Sort
+    result.sort((a, b) => {
+      if (sortBy === "az") {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === "za") {
+        return b.name.localeCompare(a.name);
+      } else if (sortBy === "popular") {
+        // Industry Standard: "Popular" or "Comprehensive" implies highest volume of content if we lack tracking data
+        const aScore = (a.chapterCount || 0) + (a.noteCount || 0);
+        const bScore = (b.chapterCount || 0) + (b.noteCount || 0);
+        return bScore - aScore;
+      } else {
+        // newest (default)
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      }
+    });
+
+    // 3. Limit
     if (limit && limit > 0) {
       result = result.slice(0, limit);
     }
     return result;
-  }, [courses, activeLevel, searchQuery, limit]);
+  }, [courses, activeLevel, searchQuery, sortBy, limit]);
 
   return (
     <div>
@@ -243,8 +277,23 @@ export function FilteredCoursesGrid({ courses, hideFilters = false, limit }: Fil
           />
         </div>
 
+        {/* Sort Dropdown */}
+        <div className="relative shrink-0">
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            className="appearance-none bg-white/[0.03] border border-white/10 rounded-full text-sm text-zinc-300 pl-4 pr-10 py-2 focus:outline-none focus:border-accent/50 transition-colors cursor-pointer"
+          >
+            <option value="newest" className="bg-[#0d0d0d]">Recently Added</option>
+            <option value="popular" className="bg-[#0d0d0d]">Most Comprehensive</option>
+            <option value="az" className="bg-[#0d0d0d]">Alphabetical (A-Z)</option>
+            <option value="za" className="bg-[#0d0d0d]">Alphabetical (Z-A)</option>
+          </select>
+          <ArrowDownAZ className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+        </div>
+
         {/* Results count */}
-        <p className="text-xs text-zinc-600 font-mono ml-auto shrink-0">
+        <p className="text-xs text-zinc-600 font-mono ml-auto shrink-0 hidden lg:block">
           {filtered.length} {filtered.length === 1 ? "subject" : "subjects"} found
         </p>
       </div>
