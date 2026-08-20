@@ -53,6 +53,7 @@ export default function NotesPage() {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -65,6 +66,7 @@ export default function NotesPage() {
         limit: "10",
         query,
         subject: selectedSubject,
+        sort: sortOrder,
       });
       const res = await fetch(`/api/writers-hub/notes?${params}`);
       if (res.ok) {
@@ -81,7 +83,7 @@ export default function NotesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, query, selectedSubject, showToast]);
+  }, [page, query, selectedSubject, sortOrder, showToast]);
 
   useEffect(() => {
     fetchNotes();
@@ -195,6 +197,18 @@ export default function NotesPage() {
               {s.name}
             </option>
           ))}
+        </select>
+        <select
+          value={sortOrder}
+          onChange={(e) => {
+            setSortOrder(e.target.value);
+            setPage(1);
+          }}
+          className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-accent/50 transition-colors cursor-pointer"
+          style={{ colorScheme: 'dark' }}
+        >
+          <option value="newest" className="bg-zinc-900 text-zinc-200">Newest First</option>
+          <option value="oldest" className="bg-zinc-900 text-zinc-200">Oldest First</option>
         </select>
       </div>
 

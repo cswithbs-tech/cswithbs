@@ -3,14 +3,14 @@ import { Button } from "@/app/components/ui/Button";
 import Link from "next/link";
 import Image from "next/image";
 import dbConnect from "@/lib/db";
-import Post from "@/models/Post";
+import Note from "@/models/Note";
 import { NewsletterForm } from "@/app/components/NewsletterForm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import Subscriber from "@/models/Subscriber";
 import { Code, Database, Cpu, Network, BookOpen, ChevronRight, FileText } from "lucide-react";
 
-// Fetch posts for the study materials section
+// Fetch notes for the study materials section
 async function getLandingData() {
   try {
     await dbConnect();
@@ -22,21 +22,22 @@ async function getLandingData() {
       ],
     };
 
-    let posts = await Post.find(publishedFilter)
+    let notes = await Note.find(publishedFilter)
       .sort({ createdAt: -1 })
       .limit(4)
-      .populate("category", "name")
+      .populate("subject", "name slug")
       .lean();
 
     const Subject = (await import("@/models/Subject")).default;
     let subjects = await Subject.find().sort({ name: 1 }).limit(4).lean();
 
     return {
-      latest: posts.map((p: any) => ({
-        ...p,
-        _id: p._id.toString(),
-        category: p.category?.name || "Uncategorized",
-        createdAt: p.createdAt.toISOString(),
+      latest: notes.map((n: any) => ({
+        ...n,
+        _id: n._id.toString(),
+        category: n.subject?.name || "Uncategorized",
+        subjectSlug: n.subject?.slug || "",
+        createdAt: n.createdAt.toISOString(),
       })),
       subjects: subjects.map((s: any) => ({
         ...s,
@@ -184,7 +185,7 @@ export default async function LandingPage() {
                <h3 className="text-3xl md:text-4xl font-serif font-bold text-white">Study Hub</h3>
             </div>
             <Link
-              href="/study"
+              href="/courses"
               className="group flex items-center text-sm font-mono text-zinc-400 hover:text-accent transition-colors"
             >
               [ View All Materials ]
@@ -207,7 +208,7 @@ export default async function LandingPage() {
               {latest.length > 0 ? latest.map((post: any, index: number) => (
                 <Link
                   key={post._id}
-                  href={`/blog/${post.slug}`}
+                  href={post.subjectSlug ? `/courses/${post.subjectSlug}/${post.slug}` : `#`}
                   className="flex flex-col md:flex-row md:items-center gap-4 p-6 hover:bg-white/[0.02] transition-colors group"
                 >
                   <div className="text-xs font-mono text-zinc-600 md:w-12 shrink-0">
@@ -248,41 +249,52 @@ export default async function LandingPage() {
             </div>
 
             <div className="space-y-4">
-              {/* Publication 1 */}
-              <a href="#" className="block p-6 rounded-xl border border-white/5 bg-[#0a0a0a] hover:border-accent/30 hover:bg-[#0f0f0f] transition-all group relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
-                <div className="flex flex-col md:flex-row gap-4 justify-between">
-                  <div>
-                    <h4 className="text-lg font-bold text-zinc-100 mb-2 leading-snug">
-                      Optimizing Distributed Consensus Protocols for Low-Latency Networks
-                    </h4>
-                    <p className="text-sm text-zinc-400 font-sans">Published in IEEE Transactions on Parallel and Distributed Systems &middot; 2025</p>
+              {[
+                {
+                  id: 1,
+                  title: "A Comprehensive Survey on Artificial Hummingbird Algorithm and its Applications",
+                  journal: "Archives of Computational Methods in Engineering",
+                  year: "2023",
+                  link: "https://scholar.google.com/citations?view_op=view_citation&hl=en&user=qE2uisoAAAAJ&citation_for_view=qE2uisoAAAAJ:N5tVd3kTz84C",
+                },
+                {
+                  id: 2,
+                  title: "Reptile Search Algorithm: Theory, variants and applications",
+                  journal: "Swarm and Evolutionary Computation",
+                  year: "2024",
+                  link: "https://link.springer.com/article/10.1007/s11831-023-09990-1",
+                },
+                {
+                  id: 3,
+                  title: "Mango leaf disease classification using deep learning techniques: a comprehensive review",
+                  journal: "Multimedia Tools and Applications",
+                  year: "2023",
+                  link: "https://scholar.google.com/citations?view_op=view_citation&hl=en&user=qE2uisoAAAAJ&citation_for_view=qE2uisoAAAAJ:__bU50VfleQC",
+                }
+              ].map((pub) => (
+                <a key={pub.id} href={pub.link} target="_blank" rel="noopener noreferrer" className="block p-6 rounded-xl border border-white/5 bg-[#0a0a0a] hover:border-accent/30 hover:bg-[#0f0f0f] transition-all group relative overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
+                  <div className="flex flex-col md:flex-row gap-4 justify-between">
+                    <div>
+                      <h4 className="text-lg font-bold text-zinc-100 mb-2 leading-snug group-hover:text-accent transition-colors">
+                        {pub.title}
+                      </h4>
+                      <p className="text-sm text-zinc-400 font-sans">Published in {pub.journal} &middot; {pub.year}</p>
+                    </div>
+                    <div className="shrink-0 flex items-start">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white/10 text-zinc-500 group-hover:text-accent group-hover:border-accent/50 transition-colors">
+                          <FileText className="w-4 h-4" />
+                      </span>
+                    </div>
                   </div>
-                  <div className="shrink-0 flex items-start">
-                     <span className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white/10 text-zinc-500 group-hover:text-accent group-hover:border-accent/50 transition-colors">
-                        <FileText className="w-4 h-4" />
-                     </span>
-                  </div>
-                </div>
-              </a>
-
-              {/* Publication 2 */}
-              <a href="#" className="block p-6 rounded-xl border border-white/5 bg-[#0a0a0a] hover:border-accent/30 hover:bg-[#0f0f0f] transition-all group relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent scale-y-0 group-hover:scale-y-100 transition-transform origin-top"></div>
-                <div className="flex flex-col md:flex-row gap-4 justify-between">
-                  <div>
-                    <h4 className="text-lg font-bold text-zinc-100 mb-2 leading-snug">
-                      A Novel Approach to Graph Clustering using Quantum Annealing
-                    </h4>
-                    <p className="text-sm text-zinc-400 font-sans">Presented at ACM Symposium on Theory of Computing (STOC) &middot; 2024</p>
-                  </div>
-                  <div className="shrink-0 flex items-start">
-                     <span className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white/10 text-zinc-500 group-hover:text-accent group-hover:border-accent/50 transition-colors">
-                        <FileText className="w-4 h-4" />
-                     </span>
-                  </div>
-                </div>
-              </a>
+                </a>
+              ))}
+              
+              <div className="mt-8 text-center">
+                <Link href="/research" className="inline-flex items-center gap-2 text-sm font-mono text-zinc-400 hover:text-accent transition-colors">
+                  [ View All Publications ] <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </div>
         </Container>

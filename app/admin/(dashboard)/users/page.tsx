@@ -300,13 +300,22 @@ export default async function UsersPage(props: {
                     </td>
 
                     <td className="px-6 py-4 align-middle">
-                      <span className="text-xs text-zinc-400 font-medium tabular-nums">
-                        {new Date(user.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-xs text-zinc-300 font-medium tabular-nums">
+                          {new Date(user.createdAt).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </span>
+                        <span className="text-[10px] text-zinc-500 tabular-nums mt-0.5">
+                          {new Date(user.createdAt).toLocaleTimeString("en-US", {
+                            hour: "numeric",
+                            minute: "2-digit",
+                            hour12: true,
+                          })}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 align-middle text-right">
                       <UserRowActions

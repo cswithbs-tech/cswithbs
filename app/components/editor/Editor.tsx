@@ -113,7 +113,7 @@ export const Editor = forwardRef<any, EditorProps>(
     const editor = useEditor({
       extensions: editorExtensions,
       content: value,
-      immediatelyRender: true,
+      immediatelyRender: false,
       editorProps: {
         attributes: {
           class: twMerge(

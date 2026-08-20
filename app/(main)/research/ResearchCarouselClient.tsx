@@ -15,6 +15,7 @@ const SLIDES = [
     cta: "Explore Research",
     href: "",
     image: "/images/Research/R_Carousel_3.png", 
+    mobileImage: "/images/Research/Mobile_R-1.png",
     hideText: true,
     gradient: "from-[#1a0a00] via-[#0d0d0d] to-[#0d0d0d]",
     orb1: "bg-[#E2C6B9]/20",
@@ -31,6 +32,7 @@ const SLIDES = [
     cta: "View Papers",
     href: "",
     image: "/images/Research/R_Carousel_2.png",
+    mobileImage: "/images/Research/Mobile_R-3.png",
     hideText: false,
     features: [
       { label: "Disease Detection", desc: "Identifying blights early" },
@@ -52,6 +54,7 @@ const SLIDES = [
     cta: "Learn More",
     href: "",
     image: "/images/Research/R_Carousel_4.png", 
+    mobileImage: "/images/Research/Mobile_R-4.png",
     hideText: true,
     gradient: "from-[#0d0619] via-[#0d0d0d] to-[#0d0d0d]",
     orb1: "bg-purple-500/15",
@@ -88,9 +91,9 @@ export function ResearchCarouselClient() {
   const slide = SLIDES[current];
 
   return (
-    <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0a] min-h-[450px] md:min-h-[550px] shadow-2xl shadow-black/50 group">
+    <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0a] md:min-h-[550px] shadow-2xl shadow-black/50 group">
       {/* Background layer */}
-      <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out">
+      <div className="relative md:absolute md:inset-0 w-full h-full">
         {slide.image ? (
           (() => {
             const ImageContent = (
@@ -99,13 +102,29 @@ export function ResearchCarouselClient() {
                   src={slide.image}
                   alt={slide.title}
                   fill
-                  className="object-cover"
-                  priority
+                  priority={current === 0}
+                  className={`hidden md:block object-cover transition-transform duration-[1.5s] ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                    isAnimating ? "scale-[1.03]" : "scale-100"
+                  }`}
+                  sizes="100vw"
                 />
+                
+                <Image
+                  src={(slide as any).mobileImage || slide.image}
+                  alt={slide.title}
+                  width={1000}
+                  height={1500}
+                  priority={current === 0}
+                  className={`block md:hidden w-full h-auto object-contain transition-transform duration-[1.5s] ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                    isAnimating ? "scale-[1.03]" : "scale-100"
+                  }`}
+                  sizes="100vw"
+                />
+
                 {/* @ts-ignore */}
                 {!slide.hideText && (
                   <div
-                    className="absolute inset-y-0 left-0 pointer-events-none"
+                    className="absolute inset-y-0 left-0 pointer-events-none hidden md:block"
                     style={{ width: '55%', background: 'linear-gradient(to right, rgba(3,0,10,0.95) 0%, rgba(3,0,10,0.85) 60%, transparent 100%)' }}
                   />
                 )}
@@ -142,7 +161,7 @@ export function ResearchCarouselClient() {
       {/* Content */}
       {/* @ts-ignore */}
       {!slide.hideText && (
-        <div className="absolute inset-0 z-10 flex flex-col justify-center px-10 md:px-12 py-14">
+        <div className="absolute inset-0 z-10 hidden md:flex flex-col justify-center px-10 md:px-12 py-14">
           {/* Strictly lock to 28% width so we don't overlap R_Carousel_2's diagrams */}
           <div style={{ maxWidth: '28%' }}>
             {/* Tag badge */}
@@ -153,8 +172,8 @@ export function ResearchCarouselClient() {
             </div>
 
             <h2
-              className="font-black text-white leading-[1.02] tracking-tight mb-4"
-              style={{ fontSize: 'clamp(2.4rem, 5vw, 4.5rem)', letterSpacing: '-0.02em' }}
+              className="font-black text-white leading-[1.1] md:leading-[1.02] tracking-tight mb-4"
+              style={{ fontSize: 'clamp(2.2rem, 5vw, 4.5rem)', letterSpacing: '-0.02em' }}
             >
               {slide.title}
             </h2>
@@ -212,20 +231,20 @@ export function ResearchCarouselClient() {
       )}
 
       {/* Controls */}
-      <div className="absolute bottom-10 right-10 flex items-center gap-4 z-20">
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:bottom-10 md:right-10 flex items-center gap-4 z-20">
         <div className="flex gap-2">
           {SLIDES.map((_, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}
               className={`h-1.5 rounded-full transition-all duration-500 ${
-                current === i ? "w-8 bg-white" : "w-2 bg-white/20 hover:bg-white/40"
+                current === i ? "w-6 md:w-8 bg-white/60 md:bg-white" : "w-1.5 md:w-2 bg-white/20 hover:bg-white/40"
               }`}
               aria-label={`Go to slide ${i + 1}`}
             />
           ))}
         </div>
-        <div className="flex items-center gap-2 ml-4">
+        <div className="hidden md:flex items-center gap-2 ml-4">
           <button
             onClick={goPrev}
             className="p-3 rounded-full bg-white/5 border border-white/10 text-white backdrop-blur-md hover:bg-white/10 hover:scale-105 active:scale-95 transition-all"

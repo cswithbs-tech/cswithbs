@@ -22,6 +22,7 @@ export const Header = () => {
   const { data: session } = useSession();
   const [userImage, setUserImage] = useState<string | null | undefined>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -276,132 +277,167 @@ export const Header = () => {
       </Container>
 
       {/* Mobile Menu Overlay */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 top-0 left-0 w-full h-screen bg-black/95 backdrop-blur-xl z-40 flex flex-col items-center justify-center opacity-100 transition-all duration-300">
-          <nav className="flex flex-col items-center gap-8 mb-12">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-3xl font-bold text-white hover:text-accent transition-colors tracking-tight"
-                onClick={() => setIsMobileMenuOpen(false)}
+      <div 
+        className={`fixed inset-0 top-0 left-0 w-full h-screen bg-[#0a0a0a]/95 backdrop-blur-3xl z-40 flex flex-col overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        <div className="flex flex-col h-full p-8 pt-24 max-w-sm mx-auto w-full">
+          {/* Profile Section at the Top */}
+          {session ? (
+            <div 
+              className="w-full flex flex-col mb-12"
+              style={{
+                transform: isMobileMenuOpen ? "translateY(0)" : "translateY(20px)",
+                opacity: isMobileMenuOpen ? 1 : 0,
+                transition: "all 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s"
+              }}
+            >
+              <div 
+                className="flex items-center gap-4 mb-4 cursor-pointer hover:bg-white/[0.02] p-2 -mx-2 rounded-xl transition-colors"
+                onClick={() => setIsMobileProfileOpen(!isMobileProfileOpen)}
               >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="flex flex-col items-center gap-6 p-8 border-t border-white/10 w-full max-w-xs">
-            {session ? (
-              <div className="w-full flex flex-col">
-                <div className="flex items-center gap-4 mb-6 p-4 bg-white/5 rounded-2xl border border-white/10">
-                  <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white/10 shrink-0">
-                    {userImage ? (
-                      <img
-                        src={userImage}
-                        alt="User"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-lg font-bold text-white uppercase">
-                        {session.user?.name?.charAt(0)}
-                      </div>
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-white/20 shrink-0 shadow-[0_0_20px_rgba(0,255,157,0.15)]">
+                  {userImage ? (
+                    <img
+                      src={userImage}
+                      alt="User"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-lg font-bold text-white uppercase">
+                      {session.user?.name?.charAt(0)}
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col text-left overflow-hidden flex-1">
+                  <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-0.5 font-bold">Welcome back</p>
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-base font-bold text-white truncate">
+                      {session.user?.name?.split(' ')[0]}
+                    </h4>
+                    {/* Mobile Minimalist Badges */}
+                    {(session.user as any).roles?.includes("SUPER_ADMIN") && (
+                      <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    )}
+                    {(session.user as any).roles?.includes("ADMIN") &&
+                      !(session.user as any).roles?.includes("SUPER_ADMIN") && (
+                        <UserCog className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                      )}
+                    {(session.user as any).roles?.includes("WRITER") &&
+                      !(session.user as any).roles?.some((r: string) => ["SUPER_ADMIN", "ADMIN"].includes(r)) && (
+                        <PenTool className="w-3.5 h-3.5 text-accent shrink-0" />
+                      )}
+                    {(session.user as any).isPremium && (
+                      <Star className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
                     )}
                   </div>
-                  <div className="flex flex-col text-left overflow-hidden">
-                    <div className="flex items-center gap-2">
-                      <h4 className="text-base font-bold text-white truncate">
-                        {session.user?.name}
-                      </h4>
-                      {/* Mobile Minimalist Badges */}
-                      {(session.user as any).roles?.includes("SUPER_ADMIN") && (
-                        <Crown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                      )}
-                      {(session.user as any).roles?.includes("ADMIN") &&
-                        !(session.user as any).roles?.includes(
-                          "SUPER_ADMIN",
-                        ) && (
-                          <UserCog className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                        )}
-                      {(session.user as any).roles?.includes("WRITER") &&
-                        !(session.user as any).roles?.some((r: string) =>
-                          ["SUPER_ADMIN", "ADMIN"].includes(r),
-                        ) && (
-                          <PenTool className="w-3.5 h-3.5 text-accent shrink-0" />
-                        )}
-                      {(session.user as any).isPremium && (
-                        <Star className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-                      )}
-                    </div>
-                    <p className="text-xs text-zinc-400 truncate">
-                      {session.user?.email}
-                    </p>
-                  </div>
                 </div>
+                <ChevronDown className={`w-5 h-5 text-zinc-600 transition-transform duration-300 ${isMobileProfileOpen ? "rotate-180" : ""}`} />
+              </div>
 
-                <div className="flex flex-col gap-2 w-full">
-                  {(session.user as any).roles?.some((r: string) =>
-                    ["ADMIN", "SUPER_ADMIN"].includes(r),
-                  ) && (
+              {/* Action Links (Collapsible) */}
+              <div 
+                className={`flex flex-col w-full bg-white/[0.03] rounded-2xl border-white/10 shadow-xl shadow-black/20 overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                  isMobileProfileOpen ? "max-h-[400px] p-2 border opacity-100 mb-4" : "max-h-0 p-0 border-transparent opacity-0 mb-0"
+                }`}
+              >
+                <div className="flex flex-col gap-1">
+                  {(session.user as any).roles?.some((r: string) => ["ADMIN", "SUPER_ADMIN"].includes(r)) && (
                     <Link
                       href="/admin/dashboard"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white"
+                      className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white group"
                     >
-                      <LayoutDashboard className="w-5 h-5 text-zinc-400" />
-                      <span className="font-medium">Admin Dashboard</span>
+                      <div className="flex items-center gap-3">
+                        <LayoutDashboard className="w-4 h-4 text-zinc-400 group-hover:text-accent transition-colors" />
+                        <span className="font-medium text-sm">Admin Dashboard</span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover:opacity-100 group-hover:text-accent transition-all" />
                     </Link>
                   )}
 
-                  {(session.user as any).roles?.some((r: string) =>
-                    ["ADMIN", "SUPER_ADMIN", "WRITER"].includes(r),
-                  ) && (
+                  {(session.user as any).roles?.some((r: string) => ["ADMIN", "SUPER_ADMIN", "WRITER"].includes(r)) && (
                     <Link
                       href="/writers-hub/posts/create"
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white"
+                      className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white group"
                     >
-                      <PenTool className="w-5 h-5 text-zinc-400" />
-                      <span className="font-medium">Write New Post</span>
+                      <div className="flex items-center gap-3">
+                        <PenTool className="w-4 h-4 text-zinc-400 group-hover:text-accent transition-colors" />
+                        <span className="font-medium text-sm">Write New Post</span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover:opacity-100 group-hover:text-accent transition-all" />
                     </Link>
                   )}
 
                   <Link
                     href={`/profile/${(session.user as any).id}`}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white"
+                    className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white group"
                   >
-                    <User className="w-5 h-5 text-zinc-400" />
-                    <span className="font-medium">View Profile</span>
+                    <div className="flex items-center gap-3">
+                      <User className="w-4 h-4 text-zinc-400 group-hover:text-accent transition-colors" />
+                      <span className="font-medium text-sm">View Profile</span>
+                    </div>
+                    <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover:opacity-100 group-hover:text-accent transition-all" />
                   </Link>
-
-                  <div className="h-px bg-white/10 my-2 w-full"></div>
+                  
+                  <div className="h-px bg-white/10 my-1 mx-2"></div>
 
                   <button
                     onClick={() => signOut()}
-                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-red-500/10 transition-colors text-red-400 w-full text-left"
+                    className="flex items-center justify-between p-3 rounded-xl hover:bg-red-500/10 transition-colors text-red-400 group w-full text-left"
                   >
-                    <LogOut className="w-5 h-5" />
-                    <span className="font-medium">Sign Out</span>
+                    <div className="flex items-center gap-3">
+                      <LogOut className="w-4 h-4" />
+                      <span className="font-medium text-sm">Sign Out</span>
+                    </div>
                   </button>
                 </div>
               </div>
-            ) : (
-              <div className="flex flex-col gap-4 w-full">
-                <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-center h-12 text-lg flex items-center gap-2"
-                  >
-                    <User className="w-5 h-5" />
-                    Sign In
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div 
+              className="mb-12"
+              style={{
+                transform: isMobileMenuOpen ? "translateY(0)" : "translateY(20px)",
+                opacity: isMobileMenuOpen ? 1 : 0,
+                transition: "all 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.1s"
+              }}
+            >
+              <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                <Button variant="primary" className="w-full justify-center h-12 text-base font-bold bg-white text-black hover:bg-zinc-200 rounded-xl flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  Sign In / Register
+                </Button>
+              </Link>
+            </div>
+          )}
+
+          {/* Navigation Links */}
+          <nav className="flex flex-col gap-2">
+            {navLinks.map((link, index) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="group flex items-center justify-between py-4 border-b border-white/5 last:border-0"
+                onClick={() => setIsMobileMenuOpen(false)}
+                style={{
+                  transform: isMobileMenuOpen ? "translateY(0)" : "translateY(20px)",
+                  opacity: isMobileMenuOpen ? 1 : 0,
+                  transition: `all 0.5s cubic-bezier(0.22, 1, 0.36, 1) ${0.15 + index * 0.05}s`
+                }}
+              >
+                <span className="text-xl md:text-2xl font-bold text-zinc-300 group-hover:text-white transition-colors font-display tracking-tight">
+                  {link.label}
+                </span>
+                <ChevronDown className="w-5 h-5 -rotate-90 text-zinc-600 group-hover:text-accent transition-all transform group-hover:translate-x-2" />
+              </Link>
+            ))}
+          </nav>
         </div>
-      )}
+      </div>
     </header>
   );
 };

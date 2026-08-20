@@ -231,17 +231,17 @@
 /* Table Styles */
 :is(.ProseMirror, .cswithbs-components) table {
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
   width: 100%;
-  margin: 1.5em 0;
+  margin: 2em 0;
   overflow: hidden;
 }
 
 :is(.ProseMirror, .cswithbs-components) td,
 :is(.ProseMirror, .cswithbs-components) th {
   min-width: 1em;
-  border: 1px solid #27272a;
-  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 16px;
   vertical-align: top;
   box-sizing: border-box;
   position: relative;
@@ -250,8 +250,17 @@
 :is(.ProseMirror, .cswithbs-components) th {
   font-weight: 600;
   text-align: left;
-  background-color: rgba(255, 255, 255, 0.03);
-  color: var(--text-secondary);
+  background-color: rgba(255, 255, 255, 0.04);
+  color: #f3f4f6;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+:is(.ProseMirror, .cswithbs-components) tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+:is(.ProseMirror, .cswithbs-components) tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
 :is(.ProseMirror, .cswithbs-components) .selectedCell:after {

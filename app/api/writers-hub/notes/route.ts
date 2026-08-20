@@ -43,13 +43,16 @@ export async function GET(request: Request) {
             });
         }
 
+        const sortParam = searchParams.get('sort') || 'newest';
+        const sortOrder = sortParam === 'oldest' ? 1 : -1;
+
         if (subject) {
             dbQuery.subject = subject;
         }
 
         const total = await Note.countDocuments(dbQuery);
         const notes = await Note.find(dbQuery)
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: sortOrder })
             .populate({ path: 'subject', model: Subject, select: 'name slug' })
             .populate({ path: 'chapter', model: Chapter, select: 'name slug order' })
             .populate({ path: 'author', model: User, select: 'name image email' })

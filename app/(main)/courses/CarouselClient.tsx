@@ -9,22 +9,29 @@ import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 const SLIDES = [
   {
     id: 1,
-    tag: "Most Popular",
-    title: "Data Structures & Algorithms",
+    tag: "Networking & Security",
+    title: "Computer Networks",
     subtitle:
-      "From arrays to graphs — build the problem-solving intuition every CS student needs.",
+      "Understand the backbone of the internet, from protocols to architecture.",
     cta: "Start Learning",
-    // NOTE: Leave href empty ("") if the course page is not ready yet. 
-    // This will prevent the slide from being clickable. Change to actual URL (e.g., "/courses/dsa") when ready.
-    href: "", 
-    // NOTE: Change this to your custom image path. If your image already contains text natively (like carousel_1), keep hideText: true.
+    href: "/courses/computer-networks", 
     image: "/images/courses/carousel_1.png", 
-    hideText: true,
-    gradient: "from-[#1a0a00] via-[#0d0d0d] to-[#0d0d0d]",
-    orb1: "bg-[#E2C6B9]/20",
-    orb2: "bg-amber-600/10",
-    accentColor: "#E2C6B9",
-    badgeColor: "bg-[#E2C6B9]/10 border-[#E2C6B9]/20 text-[#E2C6B9]",
+    mobileImage: "/images/courses/networking-mobile.png",
+    hideText: false,
+    desktopHideText: true,
+    
+    features: [
+      { label: "OSI Model", desc: "Master the 7 layers of networking" },
+      { label: "Protocols", desc: "TCP/IP, HTTP, DNS, & more" },
+      { label: "Security", desc: "Basics of network security & firewalls" }
+    ],
+    technologies: ["TCP/IP", "Wireshark", "Cisco", "DNS"],
+    
+    gradient: "from-[#000a1a] via-[#0d0d0d] to-[#0d0d0d]",
+    orb1: "bg-blue-500/15",
+    orb2: "bg-indigo-600/10",
+    accentColor: "#3b82f6",
+    badgeColor: "bg-blue-500/10 border border-blue-400/40 text-blue-300",
   },
   {
     id: 2,
@@ -37,6 +44,7 @@ const SLIDES = [
     href: "/courses/c-programming",
     // NOTE: If hideText is false, the HTML text (title, subtitle, features) will be rendered over the left side of the image.
     image: "/images/courses/carousel_4.png",
+    mobileImage: "/images/courses/c-mobile.png",
     hideText: false,
     
     // NOTE: You can add features here to display below the subtitle. Remove or leave empty if not needed.
@@ -63,6 +71,7 @@ const SLIDES = [
     cta: "Dive In",
     href: "/courses/machine-learning",
     image: "/images/courses/Carousel_5.png",
+    mobileImage: "/images/courses/AI-ML-mobile.png",
     hideText: false,
 
     features: [
@@ -72,12 +81,11 @@ const SLIDES = [
     ],
     technologies: ["Python", "TensorFlow", "PyTorch", "Scikit-Learn"],
 
-    gradient: "from-[#0d0619] via-[#0d0d0d] to-[#0d0d0d]",
-    orb1: "bg-purple-500/15",
-    orb2: "bg-violet-600/10",
-    // Cyan to match the glowing AI brain
-    accentColor: "#06b6d4",
-    badgeColor: "bg-cyan-500/10 border border-cyan-400/40 text-cyan-300",
+    gradient: "from-[#1a0014] via-[#0d0d0d] to-[#0d0d0d]",
+    orb1: "bg-fuchsia-500/15",
+    orb2: "bg-pink-600/10",
+    accentColor: "#d946ef",
+    badgeColor: "bg-fuchsia-500/10 border border-fuchsia-400/40 text-fuchsia-300",
   },
 ];
 
@@ -109,7 +117,7 @@ export function CarouselClient() {
   const slide = SLIDES[current];
 
   return (
-    <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0a] min-h-[450px] md:min-h-[550px] shadow-2xl shadow-black/50 group">
+    <div className="relative w-full overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0a] min-h-[550px] md:min-h-[550px] shadow-2xl shadow-black/50 group">
       {/* Background layer: Either Image or Gradient */}
       <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out">
         {slide.image ? (
@@ -120,15 +128,34 @@ export function CarouselClient() {
                   src={slide.image}
                   alt={slide.title}
                   fill
-                  className="object-cover"
-                  priority
+                  priority={current === 0}
+                  className={`hidden md:block object-cover transition-transform duration-[1.5s] ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                    isAnimating ? "scale-[1.03]" : "scale-100"
+                  }`}
+                  sizes="100vw"
                 />
+                
+                <Image
+                  src={(slide as any).mobileImage || slide.image}
+                  alt={slide.title}
+                  fill
+                  priority={current === 0}
+                  className={`block md:hidden object-contain object-top transition-transform duration-[1.5s] ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                    isAnimating ? "scale-[1.03]" : "scale-100"
+                  }`}
+                  sizes="100vw"
+                />
+
+                {/* Dark gradient fade from left for the text to sit on (only on desktop where text sits on left, or we can adjust mobile later) */}
                 {!slide.hideText && (
                   <>
-                    {/* Very minimal left gradient — only the extreme-left edge to blend HTML text seamlessly. */}
-                    <div
-                      className="absolute inset-y-0 left-0 pointer-events-none"
+                    <div 
+                      className={`absolute inset-y-0 left-0 pointer-events-none hidden ${(slide as any).desktopHideText ? '' : 'md:block'}`}
                       style={{ width: '45%', background: 'linear-gradient(to right, rgba(3,0,10,0.92) 0%, rgba(3,0,10,0.75) 50%, transparent 100%)' }}
+                    />
+                    <div 
+                      className="absolute inset-x-0 bottom-0 top-[30%] pointer-events-none block md:hidden z-0"
+                      style={{ background: 'linear-gradient(to bottom, transparent 0%, #0a0a0a 60%, #0a0a0a 100%)' }}
                     />
                   </>
                 )}
@@ -164,7 +191,7 @@ export function CarouselClient() {
 
       {/* Content */}
       {!slide.hideText && (
-        <div className="absolute inset-0 z-10 flex flex-col justify-center px-10 md:px-16 py-14">
+        <div className={`absolute inset-0 z-10 flex flex-col justify-end md:justify-center px-6 md:px-16 pb-12 md:py-14 ${(slide as any).desktopHideText ? 'md:hidden' : ''}`}>
           <div className="w-full lg:max-w-3xl">
             {/* Tag badge — styled to match the image's color palette */}
             <div
@@ -175,8 +202,8 @@ export function CarouselClient() {
 
             {/* Large title — same weight and impact as carousel_1's baked-in text */}
             <h2
-              className="font-black text-white leading-[1.02] tracking-tight mb-4 whitespace-nowrap"
-              style={{ fontSize: 'clamp(2.4rem, 5vw, 4.5rem)', letterSpacing: '-0.02em' }}
+              className="font-black text-white leading-[1.1] md:leading-[1.02] tracking-tight mb-4"
+              style={{ fontSize: 'clamp(2.2rem, 5vw, 4.5rem)', letterSpacing: '-0.02em' }}
             >
               {slide.title}
             </h2>
@@ -269,7 +296,7 @@ export function CarouselClient() {
       </div>
 
       {/* Slide counter */}
-      <div className="absolute top-8 right-8 z-20 flex items-center gap-2">
+      <div className="absolute top-8 right-8 z-20 hidden md:flex items-center gap-2">
          <div className="text-sm font-bold text-white tracking-widest">
             {String(current + 1).padStart(2, "0")} <span className="text-white/40">/ {String(SLIDES.length).padStart(2, "0")}</span>
          </div>

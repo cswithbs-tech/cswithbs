@@ -71,7 +71,12 @@ export default function UniversalEditor({
       if (currentTempId) {
         setTempDraftId(currentTempId);
       } else {
-        const newId = crypto.randomUUID();
+        const generateId = () => 
+          typeof crypto !== 'undefined' && crypto.randomUUID 
+            ? crypto.randomUUID() 
+            : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            
+        const newId = generateId();
         const currentSearchParams = new URLSearchParams(window.location.search);
         currentSearchParams.set("tempId", newId);
         const newUrl = window.location.pathname + "?" + currentSearchParams.toString();
