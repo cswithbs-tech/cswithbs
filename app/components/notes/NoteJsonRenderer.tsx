@@ -208,9 +208,11 @@ const sanitizeClass = (cls: string | undefined): string | undefined => {
 export const NoteJsonRenderer = ({
   content,
   onImageClick,
+  pageTitle,
 }: {
   content: JSONContent | JSONContent[];
   onImageClick?: (src: string) => void;
+  pageTitle?: string;
 }) => {
   const nodes = Array.isArray(content) ? content : content.content;
   if (!nodes) return null;
@@ -218,16 +220,16 @@ export const NoteJsonRenderer = ({
   return (
     <RendererContext.Provider value={{ onImageClick }}>
       {nodes.map((node, index) => (
-        <NodeRenderer key={index} node={node} />
+        <NodeRenderer key={index} node={node} isFirst={index === 0} pageTitle={pageTitle} />
       ))}
     </RendererContext.Provider>
   );
 };
 
-const NodeRenderer = ({ node }: { node: JSONContent }) => {
+const NodeRenderer = ({ node, isFirst, pageTitle }: { node: JSONContent, isFirst?: boolean, pageTitle?: string }) => {
   switch (node.type) {
     case "doc":
-      return <NoteJsonRenderer content={node.content || []} />;
+      return <NoteJsonRenderer content={node.content || []} pageTitle={pageTitle} />;
 
     case "paragraph":
       return (
@@ -250,6 +252,11 @@ const NodeRenderer = ({ node }: { node: JSONContent }) => {
       const Tag = `h${level}` as React.ElementType;
       const textContent = node.content?.map((c) => c.text).join(" ") || "";
       const slug = textContent.toLowerCase().replace(/[^\w]+/g, "-");
+
+      // Hide if it's the very first node, it's an H1, and it exactly matches the page title
+      if (isFirst && level === 1 && pageTitle && textContent.trim().toLowerCase() === pageTitle.trim().toLowerCase()) {
+        return null;
+      }
 
       return (
         <Tag 

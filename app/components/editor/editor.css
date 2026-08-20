@@ -71,7 +71,13 @@
   margin-top: 1em;
   margin-bottom: 1em;
   line-height: 1.75;
-  font-weight: 300;
+  font-weight: 400; /* Regular for mobile legibility */
+}
+
+@media (min-width: 768px) {
+  .ProseMirror p {
+    font-weight: 300; /* Keep Light for desktop */
+  }
 }
 
 /* Blockquote Styles */
@@ -89,13 +95,20 @@
   display: flex;
   gap: 1rem;
   font-style: normal;
-  padding: 1rem 1.25rem;
+  padding: 1rem; /* Tighter padding for mobile */
   border-radius: 0.75rem; /* Rounded like a modern card */
   margin: 1.5rem 0;
   border-width: 1px;
   border-style: solid;
   align-items: flex-start;
 }
+
+@media (min-width: 768px) {
+  :is(.ProseMirror, .cswithbs-components) blockquote[class*="callout"] {
+    padding: 1rem 1.25rem; /* Larger padding for desktop */
+  }
+}
+
 :is(.ProseMirror, .cswithbs-components) blockquote[class*="callout"] p {
   margin: 0;
   font-size: 0.95em; /* Slightly smaller text for callouts */
@@ -197,6 +210,13 @@
   color: #e2e8f0;
   font-family: monospace;
   overflow-x: auto;
+  font-size: 0.85em; /* Smaller code blocks on mobile */
+}
+
+@media (min-width: 768px) {
+  :is(.ProseMirror, .cswithbs-components) pre {
+    font-size: 1em; /* Restore desktop size */
+  }
 }
 
 :is(.ProseMirror, .cswithbs-components) code {
@@ -217,15 +237,38 @@
 /* Inline code blocks (exclude pre) */
 :is(.ProseMirror, .cswithbs-components) :not(pre) > code {
   color: rgba(34, 211, 238, 0.9); /* text-accent/90 */
-  background-color: #1a1a1a;
+  background-color: rgba(255, 255, 255, 0.05); /* Softer background on mobile */
   padding: 0.25rem 0.5rem;
   border-radius: 0.5rem;
   font-size: 0.9em;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: none; /* No border on mobile */
 }
+
+@media (min-width: 768px) {
+  :is(.ProseMirror, .cswithbs-components) :not(pre) > code {
+    background-color: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+}
+
 :is(.ProseMirror, .cswithbs-components) :not(pre) > code::before,
 :is(.ProseMirror, .cswithbs-components) :not(pre) > code::after {
   content: none !important;
+}
+
+/* Mobile: Strip pill styling from inline code when inside headings to prevent broken wrapping */
+@media (max-width: 767px) {
+  :is(.ProseMirror, .cswithbs-components) h1 > code,
+  :is(.ProseMirror, .cswithbs-components) h2 > code,
+  :is(.ProseMirror, .cswithbs-components) h3 > code,
+  :is(.ProseMirror, .cswithbs-components) h4 > code,
+  :is(.ProseMirror, .cswithbs-components) h5 > code,
+  :is(.ProseMirror, .cswithbs-components) h6 > code {
+    background-color: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    font-size: inherit !important;
+  }
 }
 
 /* Table Styles */
@@ -239,7 +282,7 @@
 
 :is(.ProseMirror, .cswithbs-components) td,
 :is(.ProseMirror, .cswithbs-components) th {
-  min-width: 1em;
+  min-width: 120px; /* Force scroll on narrow screens */
   border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 12px 16px;
   vertical-align: top;

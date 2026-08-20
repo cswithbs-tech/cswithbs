@@ -10,7 +10,8 @@ import {
   FileText,
   LayoutList,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 export function SidebarClient({
   courseSlug,
@@ -170,7 +171,7 @@ export function SidebarClient({
   return (
     <>
       {/* ── Mobile top bar ─────────────────────────────────────── */}
-      <div className="md:hidden sticky top-20 z-30 flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0d0d0d]/90 backdrop-blur-md">
+      <div className="md:hidden sticky top-20 z-30 flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/80 backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <BookOpen className="w-4 h-4 text-accent" />
           <span className="font-bold text-white text-sm truncate max-w-[200px]">
@@ -178,25 +179,56 @@ export function SidebarClient({
           </span>
         </div>
         <button
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="text-xs font-bold bg-white/10 border border-white/10 px-3 py-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
+          onClick={() => setIsMobileMenuOpen(true)}
+          className="text-xs font-bold bg-white/10 border border-white/10 px-4 py-1.5 rounded-full text-white hover:bg-white/20 transition-all active:scale-95"
         >
-          {isMobileMenuOpen ? "Close" : "Contents"}
+          Contents
         </button>
       </div>
 
-      {/* ── Mobile sidebar overlay ──────────────────────────────── */}
-      {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-40 flex">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          <aside className="relative z-50 w-80 max-w-[85vw] bg-[#0d0d0d] border-r border-white/10 h-full flex flex-col">
-            <SidebarContent />
-          </aside>
-        </div>
-      )}
+      {/* ── Premium Mobile Bottom Sheet ───────────────────────────── */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <div className="md:hidden fixed inset-x-0 bottom-0 top-20 z-50 flex flex-col justify-end overflow-hidden">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            
+            {/* Sheet */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-full h-[85vh] bg-[#0d0d0d] rounded-t-3xl border-t border-white/10 shadow-2xl flex flex-col overflow-hidden"
+            >
+              {/* Drag Handle & Header */}
+              <div className="flex flex-col items-center pt-3 pb-2 border-b border-white/10 shrink-0 bg-black/40">
+                <div className="w-12 h-1.5 bg-white/20 rounded-full mb-3" />
+                <div className="w-full flex justify-between items-center px-5">
+                  <span className="font-bold text-white">Table of Contents</span>
+                  <button 
+                    onClick={() => setIsMobileMenuOpen(false)} 
+                    className="text-xs font-bold text-zinc-400 bg-white/5 px-3 py-1.5 rounded-full hover:text-white transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto">
+                <SidebarContent />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* ── Desktop sidebar ─────────────────────────────────────── */}
       <aside className="hidden md:flex flex-col w-72 xl:w-80 shrink-0 border-r border-white/10 bg-[#0a0a0a] h-[calc(100vh-80px)] sticky top-20">

@@ -13,12 +13,14 @@ interface NoteContentProps {
   content: string; // HTML Fallback
   contentJson?: any; // Kept for compatibility but ignored for rendering
   showHeadingAnchors?: boolean;
+  pageTitle?: string;
 }
 
 export const NoteContent = ({
   content,
   contentJson,
   showHeadingAnchors = true,
+  pageTitle,
 }: NoteContentProps) => {
   /* ---------------------------------------------------------------------------
    * TYPOGRAPHY SYSTEM (Medium-Style Editorial Theme)
@@ -43,6 +45,7 @@ export const NoteContent = ({
             <NoteJsonRenderer 
               content={contentJson} 
               onImageClick={handleImageClick} 
+              pageTitle={pageTitle}
             />
           </div>
         ) : (

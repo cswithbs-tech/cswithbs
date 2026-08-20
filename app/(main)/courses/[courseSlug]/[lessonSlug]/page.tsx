@@ -135,7 +135,7 @@ export default async function LessonPage({
           )}
         </div>
 
-        <h1 className="text-3xl md:text-5xl font-black text-white leading-tight font-display tracking-wide mb-10">
+        <h1 className="text-4xl md:text-5xl font-black text-white leading-[1.15] md:leading-tight font-display tracking-wide mb-10">
           {currentNote.title}
         </h1>
 
@@ -165,6 +165,7 @@ export default async function LessonPage({
                     : { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: currentNote.excerpt || "Unlock the full lesson to read more." }] }] }
                 }
                 showHeadingAnchors={false}
+                pageTitle={currentNote.title}
               />
               <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
             </div>
@@ -180,6 +181,7 @@ export default async function LessonPage({
             content={currentNote.content || ""}
             contentJson={currentNote.contentJson}
             showHeadingAnchors={false}
+            pageTitle={currentNote.title}
           />
         )}
 
@@ -187,7 +189,7 @@ export default async function LessonPage({
         <div className="mt-32 pt-12 border-t border-white/10">
 
           {/* Prev / Next navigation */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {prevNote ? (
               <Link
                 href={`/courses/${courseSlug}/${prevNote.slug}`}
