@@ -11,6 +11,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { path, referrer, visitorId } = body;
     
+    // 0. Ignore Development Traffic to prevent polluting analytics
+    if (process.env.NODE_ENV === 'development') {
+        return NextResponse.json({ success: true, ignored: true, reason: 'development_mode' });
+    }
+
     // 1. Validate Input & Backwards Compatibility
     // If no visitorId provided (cached client), fallback to IP as ID
     const effectiveVisitorId = visitorId || (request.headers.get('x-forwarded-for') ? request.headers.get('x-forwarded-for')!.split(',')[0].trim() : '127.0.0.1');
