@@ -304,6 +304,7 @@ export default async function UsersPage(props: {
                       <div className="flex flex-col">
                         <span className="text-xs text-zinc-300 font-medium tabular-nums">
                           {new Date(user.createdAt).toLocaleDateString("en-US", {
+                            timeZone: "Asia/Kolkata",
                             month: "short",
                             day: "numeric",
                             year: "numeric",
@@ -311,6 +312,7 @@ export default async function UsersPage(props: {
                         </span>
                         <span className="text-[10px] text-zinc-500 tabular-nums mt-0.5">
                           {new Date(user.createdAt).toLocaleTimeString("en-US", {
+                            timeZone: "Asia/Kolkata",
                             hour: "numeric",
                             minute: "2-digit",
                             hour12: true,
