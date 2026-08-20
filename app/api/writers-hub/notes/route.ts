@@ -44,7 +44,10 @@ export async function GET(request: Request) {
         }
 
         const sortParam = searchParams.get('sort') || 'newest';
-        const sortOrder = sortParam === 'oldest' ? 1 : -1;
+        let sortQuery: any = { createdAt: -1 };
+        if (sortParam === 'oldest') sortQuery = { createdAt: 1 };
+        else if (sortParam === 'views_desc') sortQuery = { views: -1 };
+        else if (sortParam === 'views_asc') sortQuery = { views: 1 };
 
         if (subject) {
             dbQuery.subject = subject;
@@ -52,7 +55,7 @@ export async function GET(request: Request) {
 
         const total = await Note.countDocuments(dbQuery);
         const notes = await Note.find(dbQuery)
-            .sort({ createdAt: sortOrder })
+            .sort(sortQuery)
             .populate({ path: 'subject', model: Subject, select: 'name slug' })
             .populate({ path: 'chapter', model: Chapter, select: 'name slug order' })
             .populate({ path: 'author', model: User, select: 'name image email' })

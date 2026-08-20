@@ -8,10 +8,9 @@ import {
   Hammer,
   Zap,
   RefreshCw,
-  Twitter,
+  Facebook,
   Github,
   Linkedin,
-  Instagram,
   Mail,
   Clock,
   User,
@@ -324,16 +323,16 @@ export default function SettingsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
-            {/* Twitter */}
+            {/* Facebook */}
             <div className="space-y-1.5">
               <label className="flex items-center gap-2 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                <Twitter size={12} /> Twitter / X
+                <Facebook size={12} /> Facebook
               </label>
               <input
                 type="text"
-                value={formState.social_twitter || ""}
-                onChange={(e) => handleChange("social_twitter", e.target.value)}
-                placeholder="https://twitter.com/..."
+                value={formState.social_facebook || ""}
+                onChange={(e) => handleChange("social_facebook", e.target.value)}
+                placeholder="https://facebook.com/..."
                 className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
               />
             </div>
@@ -366,21 +365,8 @@ export default function SettingsPage() {
               />
             </div>
 
-            {/* Instagram */}
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-2 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                <Instagram size={12} /> Instagram
-              </label>
-              <input
-                type="text"
-                value={formState.social_instagram || ""}
-                onChange={(e) => handleChange("social_instagram", e.target.value)}
-                placeholder="https://instagram.com/..."
-                className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
-              />
-            </div>
           </div>
-          <AuditTrail keys={["social_twitter", "social_github", "social_linkedin", "social_instagram"]} />
+          <AuditTrail keys={["social_facebook", "social_github", "social_linkedin"]} />
         </div>
 
         {/* --- 2. Real-time Notification Banner --- */}

@@ -116,6 +116,7 @@ export default async function UsersPage(props: {
     sort?: string;
     sortBy?: string;
     order?: string;
+    limit?: string;
   }>;
 }) {
   const searchParams = await props.searchParams;
@@ -124,7 +125,7 @@ export default async function UsersPage(props: {
   const role = searchParams.role || "all";
   const sortBy = searchParams.sortBy || "date";
   const order = searchParams.order || "asc"; // default: oldest first
-  const limit = 10;
+  const limit = Number(searchParams.limit) || 10;
 
   const session = await getServerSession(authOptions);
   const currentUser = session?.user as any;
@@ -341,11 +342,14 @@ export default async function UsersPage(props: {
             </table>
           </div>
 
-          {totalPages > 1 && (
-            <div className="p-4 border-t border-white/5 bg-white/[0.02]">
-              <Pagination totalPages={totalPages} />
-            </div>
-          )}
+          <div className="p-4 border-t border-white/5 bg-white/[0.02]">
+            <Pagination 
+              totalPages={totalPages} 
+              showLimitSelector={true} 
+              currentLimit={limit}
+              limitOptions={[10, 20, 50, 100]}
+            />
+          </div>
         </div>
       </div>
     </div>

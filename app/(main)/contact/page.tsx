@@ -5,7 +5,6 @@ import {
   Mail,
   Globe,
   User,
-  Twitter,
   Facebook,
   Linkedin,
   GraduationCap,
@@ -42,11 +41,12 @@ export default function ContactPage() {
                   <p className="text-zinc-400 mb-2 text-sm leading-relaxed max-w-xs">
                     For research, students, and personal messages.
                   </p>
+                  {/* UPDATE HERE: Change your personal/academic email below */}
                   <a
-                    href="mailto:academic.cswithbs@gmail.com"
+                    href="mailto:buddhadev.sasmal.2529@gmail.com"
                     className="text-white hover:text-accent font-medium transition-colors"
                   >
-                    academic.cswithbs@gmail.com
+                    buddhadev.sasmal.2529@gmail.com
                   </a>
                 </div>
               </div>
@@ -63,6 +63,7 @@ export default function ContactPage() {
                   <p className="text-zinc-400 mb-2 text-sm leading-relaxed max-w-xs">
                     For reporting site issues or technical feedback.
                   </p>
+                  {/* UPDATE HERE: Change your technical support email below */}
                   <a
                     href="mailto:support.cswithbs@gmail.com"
                     className="text-white hover:text-accent font-medium transition-colors"
@@ -81,6 +82,7 @@ export default function ContactPage() {
                   <h3 className="text-lg font-serif font-medium text-white mb-1">
                     Academic Office
                   </h3>
+                  {/* UPDATE HERE: Change your physical address below */}
                   <p className="text-zinc-400 mb-2 text-sm leading-relaxed max-w-xs">
                     Midnapore, Paschim Medinipur
                     <br />
@@ -99,29 +101,25 @@ export default function ContactPage() {
                     Professional Networks
                   </h3>
                   <div className="flex gap-4">
+                    {/* UPDATE HERE: Put your Google Scholar link in the href="#" below */}
                     <a
-                      href="#"
+                      href="https://scholar.google.com/citations?user=qE2uisoAAAAJ&hl=en"
                       className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-accent/20 hover:border-accent/50 transition-all"
                       title="Google Scholar"
                     >
                       <GraduationCap className="w-5 h-5" />
                     </a>
+                    {/* UPDATE HERE: Put your LinkedIn link in the href="#" below */}
                     <a
-                      href="#"
+                      href="https://www.linkedin.com/in/buddhadev-sasmal-391346159/"
                       className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-accent/20 hover:border-accent/50 transition-all"
                       title="LinkedIn"
                     >
                       <Linkedin className="w-5 h-5" />
                     </a>
+                    {/* UPDATE HERE: Put your Facebook link in the href="#" below */}
                     <a
-                      href="#"
-                      className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-accent/20 hover:border-accent/50 transition-all"
-                      title="Twitter"
-                    >
-                      <Twitter className="w-5 h-5" />
-                    </a>
-                    <a
-                      href="#"
+                      href="https://www.facebook.com/share/1ExjhBinXw/"
                       className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:text-white hover:bg-accent/20 hover:border-accent/50 transition-all"
                       title="Facebook"
                     >

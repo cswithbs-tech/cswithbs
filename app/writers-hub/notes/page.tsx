@@ -54,16 +54,20 @@ export default function NotesPage() {
   const [query, setQuery] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
+  const [limit, setLimit] = useState("10");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+
+  const startItem = total === 0 ? 0 : (page - 1) * Number(limit) + 1;
+  const endItem = Math.min(page * Number(limit), total);
 
   const fetchNotes = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
         page: String(page),
-        limit: "10",
+        limit: limit,
         query,
         subject: selectedSubject,
         sort: sortOrder,
@@ -83,7 +87,7 @@ export default function NotesPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, query, selectedSubject, sortOrder, showToast]);
+  }, [page, limit, query, selectedSubject, sortOrder, showToast]);
 
   useEffect(() => {
     fetchNotes();
@@ -143,8 +147,8 @@ export default function NotesPage() {
           </h1>
           <p className="text-zinc-400 mt-1.5 text-sm">
             {isSuperOrAdmin
-              ? `All notes across all writers — ${total} total`
-              : `Your notes — ${total} total`}
+              ? `Showing ${startItem}-${endItem} of ${total} notes across all writers`
+              : `Showing ${startItem}-${endItem} of ${total} notes`}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -209,6 +213,22 @@ export default function NotesPage() {
         >
           <option value="newest" className="bg-zinc-900 text-zinc-200">Newest First</option>
           <option value="oldest" className="bg-zinc-900 text-zinc-200">Oldest First</option>
+          <option value="views_desc" className="bg-zinc-900 text-zinc-200">Highest Views</option>
+          <option value="views_asc" className="bg-zinc-900 text-zinc-200">Lowest Views</option>
+        </select>
+        <select
+          value={limit}
+          onChange={(e) => {
+            setLimit(e.target.value);
+            setPage(1);
+          }}
+          className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-accent/50 transition-colors cursor-pointer"
+          style={{ colorScheme: 'dark' }}
+        >
+          <option value="10" className="bg-zinc-900 text-zinc-200">10 per page</option>
+          <option value="20" className="bg-zinc-900 text-zinc-200">20 per page</option>
+          <option value="50" className="bg-zinc-900 text-zinc-200">50 per page</option>
+          <option value="100" className="bg-zinc-900 text-zinc-200">100 per page</option>
         </select>
       </div>
 
