@@ -3,6 +3,7 @@ import { MetadataRoute } from 'next';
 import dbConnect from '@/lib/db';
 import Post from '@/models/Post';
 import Subject from '@/models/Subject';
+import Note from '@/models/Note';
 
 const BASE_URL = 'https://www.cswithbs.com'; // Production URL
 
@@ -35,6 +36,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: 'weekly',
     priority: 0.9,
   }));
+
+  // Fetch Lessons (Notes)
+  const notes = await Note.find({
+    $or: [
+      { status: 'published' },
+      { status: 'scheduled', scheduledPublishDate: { $lte: new Date() } }
+    ]
+  }).populate('subject', 'slug').select('slug updatedAt subject').lean();
+
+  const lessonEntries: MetadataRoute.Sitemap = notes
+    .filter((note: any) => note.subject?.slug)
+    .map((note: any) => ({
+      url: `${BASE_URL}/courses/${note.subject.slug}/${note.slug}`,
+      lastModified: new Date(note.updatedAt || new Date()),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }));
 
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -94,5 +112,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   ];
 
-  return [...staticPages, ...blogEntries, ...courseEntries];
+  return [...staticPages, ...blogEntries, ...courseEntries, ...lessonEntries];
 }

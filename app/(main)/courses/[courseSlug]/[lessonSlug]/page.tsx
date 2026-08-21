@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { NOTE_PROSE_STYLES } from "@/app/components/notes/noteStyles";
 import { NoteContent } from "@/app/components/notes/NoteContent";
@@ -25,6 +26,43 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 export const revalidate = 60;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ courseSlug: string; lessonSlug: string }>;
+}): Promise<Metadata> {
+  const { courseSlug, lessonSlug } = await params;
+  
+  await dbConnect();
+  const subject = await Subject.findOne({ slug: courseSlug }).lean();
+  if (!subject) return { title: "Lesson Not Found" };
+
+  const currentNote = await Note.findOne({
+    subject: subject._id,
+    slug: lessonSlug,
+  }).lean();
+
+  if (!currentNote) return { title: "Lesson Not Found" };
+
+  const title = `${currentNote.title} | ${subject.name} | CSWITHBS`;
+  const description = currentNote.excerpt || `Study ${currentNote.title} in the ${subject.name} course on CSWITHBS.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
 
 async function getNoteData(subjectSlug: string, noteSlug: string) {
   await dbConnect();
