@@ -15,24 +15,7 @@ import { SocialShare } from "@/app/components/blog/SocialShare";
 import { Metadata } from "next";
 import Setting from "@/models/Setting";
 
-export const revalidate = 60;
-export const dynamicParams = true; // Allow new posts not generated at build time
-
-export async function generateStaticParams() {
-  await dbConnect();
-  const now = new Date();
-  const publishedFilter = {
-    $or: [
-      { status: "published" },
-      { status: "scheduled", scheduledPublishDate: { $lte: now } },
-    ],
-  };
-  const posts = await Post.find(publishedFilter).select("slug").lean();
-
-  return posts.map((post: any) => ({
-    slug: post.slug,
-  }));
-}
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({
   params,
