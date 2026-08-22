@@ -93,6 +93,10 @@ export const authOptions: NextAuthOptions = {
                 token.roles = user.roles;
                 token.isPremium = (user as any).isPremium;
                 token.id = user.id;
+                token.isCourseRestricted = (user as any).isCourseRestricted;
+                token.university = (user as any).university;
+                token.semester = (user as any).semester;
+                token.year = (user as any).year;
             }
 
             // Sync with DB on every check
@@ -103,6 +107,10 @@ export const authOptions: NextAuthOptions = {
                      token.roles = dbUser.roles;
                      token.isPremium = dbUser.isPremium;
                      token.id = dbUser._id.toString();
+                     token.isCourseRestricted = dbUser.isCourseRestricted;
+                     token.university = dbUser.university;
+                     token.semester = dbUser.semester;
+                     token.year = dbUser.year;
                  }
             }
 
@@ -114,6 +122,10 @@ export const authOptions: NextAuthOptions = {
                 (session.user as any).roles = token.roles || legacyRole;
                 (session.user as any).isPremium = token.isPremium || false;
                 (session.user as any).id = token.id;
+                (session.user as any).isCourseRestricted = token.isCourseRestricted || false;
+                (session.user as any).university = token.university;
+                (session.user as any).semester = token.semester;
+                (session.user as any).year = token.year;
             }
             return session;
         }

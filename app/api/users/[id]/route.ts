@@ -109,7 +109,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   
       const { id } = await params;
       const body = await req.json();
-      const { roles: newRoles, isPremium } = body;
+      const { roles: newRoles, isPremium, isCourseRestricted } = body;
       
       const updateData: any = {};
 
@@ -123,6 +123,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
       if (isPremium !== undefined) {
           updateData.isPremium = Boolean(isPremium);
+      }
+
+      if (isCourseRestricted !== undefined) {
+          updateData.isCourseRestricted = Boolean(isCourseRestricted);
       }
 
       if (Object.keys(updateData).length === 0) {

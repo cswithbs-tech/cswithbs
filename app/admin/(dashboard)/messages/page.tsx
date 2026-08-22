@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/app/context/ToastContext";
 import GlobalLoading from "@/app/loading";
-import { Mail, MailOpen, Trash2 } from "lucide-react";
+import { Mail, MailOpen, Trash2, Eye, X } from "lucide-react";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 
 export default function MessagesPage() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [viewMessage, setViewMessage] = useState<any>(null);
   const { showToast } = useToast();
 
   const fetchMessages = async () => {
@@ -142,6 +143,16 @@ export default function MessagesPage() {
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
+                        onClick={() => {
+                          setViewMessage(msg);
+                          if (!msg.read) toggleRead(msg._id, msg.read);
+                        }}
+                        className="p-2 hover:bg-blue-500/10 rounded-lg text-zinc-400 hover:text-blue-500 transition-colors"
+                        title="View Full Message"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
                         onClick={() => toggleRead(msg._id, msg.read)}
                         className={`p-2 rounded-lg transition-colors ${
                           msg.read
@@ -178,6 +189,52 @@ export default function MessagesPage() {
           </table>
         </div>
       </div>
+      
+      {/* View Message Modal */}
+      {viewMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-white/10 shrink-0">
+              <h2 className="text-lg font-bold text-white">Message Details</h2>
+              <button
+                onClick={() => setViewMessage(null)}
+                className="p-2 text-zinc-400 hover:text-white rounded-lg transition-colors bg-white/5 hover:bg-white/10"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            {/* Modal Body (Scrollable) */}
+            <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">From</label>
+                <div className="text-zinc-200 font-medium">
+                  {viewMessage.firstName} {viewMessage.lastName} <span className="text-zinc-500 font-normal">({viewMessage.email})</span>
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Subject</label>
+                <div className="text-zinc-200 font-medium">{viewMessage.subject}</div>
+              </div>
+              
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Received</label>
+                <div className="text-zinc-400 text-sm">{new Date(viewMessage.createdAt).toLocaleString()}</div>
+              </div>
+              
+              <div className="pt-4 border-t border-white/5">
+                <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider mb-2 block">Message Content</label>
+                <div className="text-zinc-300 whitespace-pre-wrap leading-relaxed bg-black/40 p-4 rounded-xl border border-white/5 font-serif">
+                  {viewMessage.message}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ConfirmDialog
         isOpen={!!confirmId}
         onClose={() => setConfirmId(null)}

@@ -44,20 +44,23 @@ export default function UniversalEditor({
   const searchParams = useSearchParams();
   const editorRef = useRef<any>(null);
 
-  const isSuperAdmin = (session?.user as any)?.roles?.includes('SUPER_ADMIN');
+  const userRoles = (session?.user as any)?.roles || [];
+  const isSuperAdmin = Array.isArray(userRoles) 
+    ? userRoles.some(r => ['SUPER_ADMIN', 'super_admin', 'ADMIN', 'admin'].includes(r)) 
+    : ['SUPER_ADMIN', 'super_admin', 'ADMIN', 'admin'].includes(userRoles);
   const [tempDraftId, setTempDraftId] = useState<string>("");
 
   const [users, setUsers] = useState<any[]>([]);
   useEffect(() => {
     if (isSuperAdmin && users.length === 0) {
-      fetch("/api/users")
+      fetch("/api/users?limit=100")
         .then((res) => res.json())
         .then((data) => {
           if (data.users && Array.isArray(data.users)) {
-            const allowedRoles = ["admin", "editor", "author"];
-            const validUsers = data.users.filter((u: any) =>
-              u.roles?.some((r: string) => ['ADMIN', 'SUPER_ADMIN', 'WRITER'].includes(r))
-            );
+            const validUsers = data.users.filter((u: any) => {
+              const uRoles = Array.isArray(u.roles) ? u.roles : (u.roles ? [u.roles] : (u.role ? [u.role] : []));
+              return uRoles.some((r: string) => ['ADMIN', 'SUPER_ADMIN', 'WRITER', 'admin', 'super_admin', 'writer'].includes(r));
+            });
             setUsers(validUsers);
           }
         })

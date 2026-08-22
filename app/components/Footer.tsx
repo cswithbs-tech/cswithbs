@@ -170,6 +170,14 @@ export const Footer = async () => {
                   Blog & Articles
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/archive"
+                  className="hover:text-accent transition-colors"
+                >
+                  Archive
+                </Link>
+              </li>
             </ul>
           </div>
 

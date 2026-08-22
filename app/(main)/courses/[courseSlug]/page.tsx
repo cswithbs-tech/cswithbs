@@ -18,6 +18,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/app/components/ui/Container";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { DataWall } from "@/app/components/DataWall";
 
 export const revalidate = 60;
 export const dynamicParams = true; // Allow new courses to be accessed dynamically
@@ -210,7 +211,8 @@ export default async function CourseIndexPage({
         </div>
 
           {/* ── Chapter Accordion ─────────────────────────────────── */}
-          <div>
+          <DataWall article={subject} session={session}>
+            <div>
             <div className="flex items-baseline gap-4 mb-8">
               <h2 className="text-2xl font-black text-white font-display">
                 Curriculum
@@ -335,6 +337,7 @@ export default async function CourseIndexPage({
               </div>
             )}
           </div>
+        </DataWall>
         </Container>
     </div>
   );

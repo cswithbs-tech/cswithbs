@@ -230,11 +230,14 @@ export function EditorSidebar({
                   <option value="" disabled>
                     Select Author
                   </option>
-                  {users.map((user) => (
-                    <option key={user._id} value={user._id}>
-                      {user.name} ({user.roles?.length ? user.roles.join(', ') : 'USER'})
-                    </option>
-                  ))}
+                  {users.map((user) => {
+                    const uRoles = Array.isArray(user.roles) ? user.roles : (user.roles ? [user.roles] : (user.role ? [user.role] : []));
+                    return (
+                      <option key={user._id} value={user._id}>
+                        {user.name} ({uRoles.length > 0 ? uRoles.join(', ') : 'USER'})
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
             )}

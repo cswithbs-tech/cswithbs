@@ -32,7 +32,7 @@ export default function SubjectCurriculumPage() {
 
   // States for Subject Settings (Update)
   const [showSubjectSettings, setShowSubjectSettings] = useState(false);
-  const [subjectForm, setSubjectForm] = useState({ name: "", description: "", level: "All Levels", alignments: "", coverImage: "" });
+  const [subjectForm, setSubjectForm] = useState({ name: "", description: "", level: "All Levels", alignments: "", coverImage: "", isRestricted: undefined as boolean | undefined });
   const [updatingSubject, setUpdatingSubject] = useState(false);
 
   // States for Chapter Creation
@@ -83,7 +83,8 @@ export default function SubjectCurriculumPage() {
       description: subject.description || "",
       level: subject.level || "All Levels",
       alignments: subject.alignments ? subject.alignments.join(", ") : "",
-      coverImage: subject.coverImage || ""
+      coverImage: subject.coverImage || "",
+      isRestricted: subject.isRestricted
     });
     setShowSubjectSettings(true);
   };
@@ -521,15 +522,33 @@ export default function SubjectCurriculumPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-500 block mb-1.5">Tags / Alignments</label>
-                  <input
-                    type="text"
-                    value={subjectForm.alignments}
-                    onChange={(e) => setSubjectForm((p) => ({ ...p, alignments: e.target.value }))}
-                    placeholder="Comma separated"
+                  <label className="text-xs text-zinc-500 block mb-1.5">Course Access</label>
+                  <select
+                    value={subjectForm.isRestricted === undefined ? "default" : subjectForm.isRestricted ? "restricted" : "open"}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      let isRestricted = undefined;
+                      if (val === "restricted") isRestricted = true;
+                      if (val === "open") isRestricted = false;
+                      setSubjectForm(p => ({ ...p, isRestricted }));
+                    }}
                     className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50"
-                  />
+                  >
+                    <option value="default">Use Default Rules (Based on Level)</option>
+                    <option value="open">Open to All (No Lock)</option>
+                    <option value="restricted">Restricted (Require Profile)</option>
+                  </select>
                 </div>
+              </div>
+              <div>
+                <label className="text-xs text-zinc-500 block mb-1.5">Tags / Alignments</label>
+                <input
+                  type="text"
+                  value={subjectForm.alignments}
+                  onChange={(e) => setSubjectForm((p) => ({ ...p, alignments: e.target.value }))}
+                  placeholder="Comma separated"
+                  className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50"
+                />
               </div>
               <div>
                 <label className="text-xs text-zinc-500 block mb-1.5">Cover Image URL</label>

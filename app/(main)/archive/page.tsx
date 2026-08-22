@@ -1,111 +1,120 @@
 import { Container } from "@/app/components/ui/Container";
+import Link from "next/link";
 import dbConnect from "@/lib/db";
 import Post from "@/models/Post";
-import Link from "next/link";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Archive | CSwithBS",
-  description:
-    "A complete chronological history of all our published essays and notes.",
+  title: "The Archive | CSwithBS",
+  description: "A chronological timeline of all published articles and essays.",
 };
 
-export const revalidate = 60; // Standard ISR
-
-async function getArchivePosts() {
-  await dbConnect();
-
-  // Fetch all published posts, sorted by date (newest first)
-  const posts = await Post.find({ status: "published" })
-    .select("title slug createdAt category readTime")
-    .populate("category", "name")
-    .sort({ createdAt: -1 }) // Newest first
-    .lean();
-
-  // Group by Year
-  const grouped: Record<string, any[]> = {};
-
-  posts.forEach((post: any) => {
-    const year = new Date(post.createdAt).getFullYear().toString();
-    if (!grouped[year]) {
-      grouped[year] = [];
-    }
-    grouped[year].push({
-      ...post,
-      _id: post._id.toString(),
-      createdAt: post.createdAt.toISOString(),
-    });
-  });
-
-  return grouped;
-}
+export const revalidate = 3600; // Cache for 1 hour, revalidate on demand
 
 export default async function ArchivePage() {
-  const groupedPosts = await getArchivePosts();
-  const years = Object.keys(groupedPosts).sort((a, b) => Number(b) - Number(a)); // Descending years
+  await dbConnect();
+  
+  const now = new Date();
+  const publishedFilter = {
+    $or: [
+      { status: "published" },
+      { status: "scheduled", scheduledPublishDate: { $lte: now } },
+    ],
+  };
+
+  // Fetch all published posts, sorted by newest first
+  const posts = await Post.find(publishedFilter)
+    .select("title slug createdAt scheduledPublishDate status readTime views")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  // Group posts by Year
+  const groupedPosts = posts.reduce((acc: any, post: any) => {
+    const dateToUse = post.status === "scheduled" && post.scheduledPublishDate 
+      ? new Date(post.scheduledPublishDate) 
+      : new Date(post.createdAt);
+      
+    const year = dateToUse.getFullYear().toString();
+    
+    if (!acc[year]) {
+      acc[year] = [];
+    }
+    acc[year].push(post);
+    return acc;
+  }, {});
+
+  // Sort years descending
+  const sortedYears = Object.keys(groupedPosts).sort((a, b) => Number(b) - Number(a));
 
   return (
-    <div className="bg-background min-h-screen pt-32 pb-20">
+    <div className="min-h-screen bg-black pt-32 pb-24 selection:bg-accent/30">
       <Container className="max-w-3xl">
         <div className="mb-16">
-          <h1 className="text-4xl md:text-5xl font-serif font-medium text-white mb-6">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-zinc-100 tracking-tight mb-4">
             The Archive
           </h1>
-          <p className="text-zinc-400 text-lg leading-relaxed">
-            A complete chronological index of our thinking. <br />
-            Exploring technology, science, and the future, one post at a time.
+          <p className="text-lg text-zinc-400">
+            A complete chronological timeline of {posts.length} articles and essays written over the years.
           </p>
         </div>
 
         <div className="space-y-20">
-          {years.map((year) => (
-            <section key={year} className="relative">
-              {/* Year Marker (Sticky-ish visual) */}
-              <div className="flex items-baseline gap-6 mb-8 border-b border-white/10 pb-4">
-                <h2 className="text-6xl font-black text-white/5 font-display select-none">
+          {sortedYears.map((year) => (
+            <div key={year} className="relative">
+              {/* Year Heading */}
+              <h2 className="text-2xl font-bold text-zinc-100 mb-8 flex items-center gap-4">
+                <span className="bg-white/5 border border-white/10 px-3 py-1 rounded-md text-accent">
                   {year}
-                </h2>
-                <span className="text-zinc-500 font-medium uppercase tracking-widest text-sm">
-                  {groupedPosts[year].length} Articles
                 </span>
-              </div>
+                <div className="h-px bg-white/10 flex-1"></div>
+              </h2>
 
-              {/* Post List */}
-              <div className="space-y-6">
+              {/* Posts List */}
+              <div className="space-y-8 pl-4 md:pl-8 border-l border-white/5">
                 {groupedPosts[year].map((post: any) => {
-                  const date = new Date(post.createdAt);
+                  const date = post.status === "scheduled" && post.scheduledPublishDate 
+                    ? new Date(post.scheduledPublishDate) 
+                    : new Date(post.createdAt);
+                    
                   return (
-                    <Link
-                      key={post._id}
-                      href={`/blog/${post.slug}`}
-                      className="group flex flex-col md:flex-row md:items-baseline gap-2 md:gap-8 hover:bg-white/5 p-4 -mx-4 rounded-xl transition-colors"
-                    >
-                      <div className="w-32 shrink-0 text-sm font-mono text-zinc-500">
-                        {date.toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-white group-hover:text-accent transition-colors mb-1">
-                          {post.title}
-                        </h3>
-                        <div className="flex items-center gap-3 text-xs text-zinc-600 uppercase tracking-wider font-bold">
-                          <span>{post.category?.name || "Uncategorized"}</span>
-                          <span className="w-1 h-1 rounded-full bg-zinc-800"></span>
-                          <span>{post.readTime || "Read"}</span>
+                    <article key={post._id.toString()} className="relative group">
+                      {/* Timeline dot */}
+                      <div className="absolute -left-[21px] md:-left-[37px] top-2.5 w-2 h-2 rounded-full bg-zinc-700 group-hover:bg-accent transition-colors ring-4 ring-black"></div>
+                      
+                      <div className="flex flex-col sm:flex-row sm:items-baseline gap-2 sm:gap-6">
+                        <time className="text-sm font-mono text-zinc-500 w-24 shrink-0">
+                          {date.toLocaleDateString("en-US", { month: "short", day: "2-digit" })}
+                        </time>
+                        <div className="flex-1">
+                          <Link 
+                            href={`/blog/${post.slug}`}
+                            className="text-lg font-medium text-zinc-200 group-hover:text-accent transition-colors block mb-1"
+                          >
+                            {post.title}
+                          </Link>
+                          <div className="flex items-center gap-3 text-xs text-zinc-500 font-medium mt-1">
+                            <span>{post.readTime}</span>
+                            <span className="w-1 h-1 rounded-full bg-zinc-700"></span>
+                            <span className="flex items-center gap-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 opacity-70">
+                                <path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+                                <path fillRule="evenodd" d="M.664 10.59a1.651 1.651 0 0 1 0-1.186A10.004 10.004 0 0 1 10 3c4.257 0 7.893 2.66 9.336 6.41.147.381.146.804 0 1.186A10.004 10.004 0 0 1 10 17c-4.257 0-7.893-2.66-9.336-6.41ZM14 10a4 4 0 1 1-8 0 4 4 0 0 1 8 0Z" clipRule="evenodd" />
+                              </svg>
+                              {post.views?.toLocaleString() || 0}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </Link>
+                    </article>
                   );
                 })}
               </div>
-            </section>
+            </div>
           ))}
-
-          {years.length === 0 && (
-            <div className="py-20 text-center text-zinc-500 italic">
-              No archives found.
+          
+          {posts.length === 0 && (
+            <div className="text-center py-20 text-zinc-500 border border-white/5 rounded-2xl bg-white/[0.02]">
+              No posts found.
             </div>
           )}
         </div>

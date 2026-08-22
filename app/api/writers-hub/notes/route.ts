@@ -4,6 +4,7 @@ import Note from '@/models/Note';
 import Subject from '@/models/Subject';
 import Chapter from '@/models/Chapter';
 import User from '@/models/User';
+import Notification from '@/models/Notification';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { revalidatePath } from 'next/cache';
@@ -124,6 +125,24 @@ export async function POST(request: Request) {
         const authorId = (isSuperOrAdmin && body.author) ? body.author : user.id;
 
         const note = await Note.create({ ...body, author: authorId, readTime: readTimeVal });
+
+        // Auto-broadcast if note is published immediately
+        if (body.status === 'published') {
+            try {
+                const subjectDoc = await Subject.findById(body.subject);
+                const subjectName = subjectDoc ? subjectDoc.name : 'a Course';
+
+                await Notification.create({
+                    type: 'NEW_COURSE',
+                    recipient: null, // Global
+                    title: `New Note in ${subjectName}`,
+                    message: note.title,
+                    link: `/notes/${note.slug}`
+                });
+            } catch (notifError) {
+                console.error("Failed to auto-broadcast note notification:", notifError);
+            }
+        }
 
         revalidatePath('/writers-hub/notes');
         return NextResponse.json(note, { status: 201 });

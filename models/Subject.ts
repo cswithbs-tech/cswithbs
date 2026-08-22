@@ -9,6 +9,7 @@ export interface ISubject extends Document {
   level?: string;
   alignments?: string[];
   coverImage?: string;
+  isRestricted?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +24,7 @@ const SubjectSchema: Schema = new Schema(
     level: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced', 'All Levels'], default: 'All Levels' },
     alignments: { type: [String], default: [] },
     coverImage: { type: String, default: "" },
+    isRestricted: { type: Boolean, default: undefined }, // null/undefined means fallback to tag/level logic
   },
   { timestamps: true }
 );

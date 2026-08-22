@@ -30,17 +30,14 @@ hljs.registerLanguage("cpp", cpp);
 // Theme (Dracula/One Dark Hybrid)
 // We'll embed strict theme CSS here to ensure it overrides everything
 const HIGHLIGHT_STYLES = `
-  .hljs-comment, .hljs-quote { color: #5c6370; font-style: italic; }
-  .hljs-doctag, .hljs-keyword, .hljs-formula { color: #c678dd; }
-  .hljs-section, .hljs-name, .hljs-selector-tag, .hljs-delete, .hljs-subst { color: #e06c75; }
-  .hljs-literal { color: #56b6c2; }
-  .hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute, .hljs-meta .hljs-string { color: #98c379; }
-  .hljs-attr, .hljs-variable, .hljs-template-variable, .hljs-type, .hljs-selector-class, .hljs-selector-attr, .hljs-selector-pseudo, .hljs-number { color: #d19a66; }
-  .hljs-symbol, .hljs-bullet, .hljs-link, .hljs-meta, .hljs-selector-id, .hljs-title { color: #61aeee; }
-  .hljs-built_in, .hljs-title.class_, .hljs-class .hljs-title { color: #e6c07b; }
+  .hljs-comment, .hljs-quote { color: #6272a4; font-style: italic; }
+  .hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-section, .hljs-link { color: #ff79c6; }
+  .hljs-attribute, .hljs-name, .hljs-symbol, .hljs-bullet, .hljs-subst { color: #f1fa8c; }
+  .hljs-string, .hljs-meta, .hljs-addition, .hljs-type { color: #f1fa8c; }
+  .hljs-title, .hljs-built_in, .hljs-function, .hljs-class .hljs-title { color: #50fa7b; }
+  .hljs-attr, .hljs-variable, .hljs-template-variable, .hljs-tag, .hljs-number, .hljs-regexp { color: #8be9fd; }
   .hljs-emphasis { font-style: italic; }
   .hljs-strong { font-weight: bold; }
-  .hljs-link { text-decoration: underline; }
 `;
 
 interface CodeBlockProps {
@@ -80,10 +77,15 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
       <style>{HIGHLIGHT_STYLES}</style>
 
       {/* Header Bar */}
-      <div className="flex items-center justify-between px-3 py-2 bg-white/5 border-b border-white/5 select-none font-sans">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#1a1a1a] border-b border-white/5 select-none font-sans">
         {/* Language Label */}
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-400 uppercase tracking-wider font-mono">
+          <span className="flex gap-1.5 opacity-50">
+            <span className="w-3 h-3 rounded-full bg-red-500/80"></span>
+            <span className="w-3 h-3 rounded-full bg-yellow-500/80"></span>
+            <span className="w-3 h-3 rounded-full bg-green-500/80"></span>
+          </span>
+          <span className="ml-2 text-xs font-medium text-gray-400 uppercase tracking-wider font-mono">
             {lang || "CODE"}
           </span>
         </div>
@@ -110,7 +112,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({
 
       {/* Code Area */}
       <div className="relative overflow-x-auto">
-        <pre className="!m-0 !bg-[#0d0d0d] !p-4 text-sm leading-relaxed font-mono">
+        <pre className="!m-0 !bg-[#0d0d0d] !p-5 text-[0.9em] leading-relaxed font-mono">
           <code
             className={`hljs language-${lang} !bg-transparent !p-0 !text-[#f8f8f2] font-mono`}
             dangerouslySetInnerHTML={{ __html: highlightedCode }}

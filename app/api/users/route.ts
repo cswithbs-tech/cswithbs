@@ -9,9 +9,12 @@ export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    // Check if admin OR super_admin
     const userRoles = (session?.user as any)?.roles || [];
-    if (!session || !['admin', 'super_admin'].includes(userRoles)) {
+    const hasAdminRights = Array.isArray(userRoles) 
+       ? userRoles.some((r: string) => ['SUPER_ADMIN', 'ADMIN', 'super_admin', 'admin'].includes(r))
+       : ['super_admin', 'admin'].includes(userRoles);
+
+    if (!session || !hasAdminRights) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 

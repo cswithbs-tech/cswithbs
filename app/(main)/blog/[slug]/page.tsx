@@ -100,7 +100,7 @@ async function getPost(slug: string) {
   const post = await Post.findOne({ slug })
     .populate(
       "author",
-      "name image role bio articleSignature title socialLinks",
+      "name image roles bio articleSignature title socialLinks",
     ) // Populate author details incl. socialLinks
     .populate("category", "name slug") // Populate category details
     .lean();
@@ -201,7 +201,7 @@ import { ReadingProgress } from "@/app/components/blog/ReadingProgress";
 import { AuthorBio } from "@/app/components/blog/AuthorBio";
 import { ArticleContent } from "@/app/components/blog/ArticleContent";
 import { JoinCommunityCard } from "@/app/components/blog/JoinCommunityCard";
-import { AuthWallOverlay } from "@/app/components/ui/AuthWallOverlay";
+
 
 export default async function BlogPostPage({
   params,
@@ -280,7 +280,7 @@ export default async function BlogPostPage({
       <ReadingProgress />
       <ViewCounter slug={slug} />
       {/* Full Width Hero */}
-      <div className="relative w-full h-[500px]">
+      <div className="relative w-full min-h-[500px] flex flex-col">
         {post.image ? (
           <Image
             src={post.image}
@@ -293,38 +293,14 @@ export default async function BlogPostPage({
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
-        <Container className="relative h-full flex flex-col justify-end pb-16">
+        <Container className="relative flex-1 flex flex-col justify-end pb-16 pt-32">
           <div className="flex justify-between items-end mb-4">
             <div className="inline-block rounded-full border border-accent/50 bg-accent/10 px-4 py-1 text-sm font-medium text-accent backdrop-blur-md">
               {post.category?.name || "Uncategorized"}
             </div>
-            {isAdmin && (
-              <Link href={`/writers-hub/posts/${post._id}/edit`}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-black/50 backdrop-blur border-white/20 hover:bg-black/70"
-                >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                    />
-                  </svg>
-                  Edit Post
-                </Button>
-              </Link>
-            )}
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-serif font-medium text-white mb-6 max-w-4xl leading-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-medium text-white mb-6 max-w-4xl leading-tight text-balance">
             {post.title}
           </h1>
 
@@ -339,8 +315,16 @@ export default async function BlogPostPage({
                 />
               </div>
               <div>
-                <p className="text-white font-medium">{post.author.name}</p>
-                <p className="text-xs text-muted">{post.author.role}</p>
+                <p className="text-white font-medium">{post.author?.name || "Unknown Author"}</p>
+                {(post.author?.title || (post.author?.roles && post.author.roles.length > 0)) && (
+                  <p className="text-xs text-muted">
+                    {post.author.title || 
+                      (post.author.roles.includes('SUPER_ADMIN') ? 'super admin' : 
+                       post.author.roles.includes('ADMIN') ? 'admin' : 
+                       post.author.roles.includes('EDITOR') ? 'editor' : 
+                       post.author.roles.includes('WRITER') ? 'writer' : 'member')}
+                  </p>
+                )}
               </div>
             </div>
             <div className="h-10 w-px bg-white/20" />
@@ -380,35 +364,10 @@ export default async function BlogPostPage({
                 {post.excerpt}
               </p>
 
-              {!post.isFreePreview && !session ? (
-                <div className="relative">
-                  <div className="max-h-[300px] overflow-hidden relative">
-                    <ArticleContent
-                      content="" // Don't pass full HTML to avoid unclosed tags
-                      contentJson={
-                        post.contentJson?.content
-                          ? {
-                              ...post.contentJson,
-                              content: post.contentJson.content.slice(0, 3), // First 3 blocks
-                            }
-                          : { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: post.excerpt || "Unlock the full article to read more." }] }] }
-                      }
-                    />
-                    <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
-                  </div>
-                  <div className="-mt-16 relative z-10">
-                    <AuthWallOverlay
-                      title="Unlock Full Article"
-                      message="Join CSWITHBS for free to unlock this full article, engage with the community, and access premium resources."
-                    />
-                  </div>
-                </div>
-              ) : (
-                <ArticleContent
-                  content={post.content}
-                  contentJson={post.contentJson}
-                />
-              )}
+              <ArticleContent
+                content={post.content}
+                contentJson={post.contentJson}
+              />
 
               <div className="mt-32">
                 <AuthorBio author={post.author} authorPosts={authorPosts} />

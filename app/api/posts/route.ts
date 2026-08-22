@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Post from '@/models/Post';
+import Notification from '@/models/Notification';
 
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
@@ -75,6 +76,21 @@ export async function POST(request: Request) {
         author: authorId,
         readTime: readTimeVal
     });
+
+    // Auto-broadcast Notification if published immediately
+    if (body.status === 'published') {
+        try {
+            await Notification.create({
+                type: 'NEW_BLOG',
+                recipient: null, // Global broadcast
+                title: `New Post: ${newPost.title}`,
+                message: newPost.excerpt || 'Check out our latest blog post!',
+                link: `/blog/${newPost.slug}`
+            });
+        } catch (notifError) {
+            console.error("Failed to auto-broadcast post notification:", notifError);
+        }
+    }
 
     // BUST CACHE
     revalidatePath("/writers-hub/posts");

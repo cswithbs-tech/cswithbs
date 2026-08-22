@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Post from '@/models/Post';
 import PostRevision from '@/models/PostRevision';
+import Notification from '@/models/Notification';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { revalidatePath } from 'next/cache';
@@ -166,6 +167,23 @@ export async function PATCH(
         }
 
         const finalPost = await Post.findByIdAndUpdate(id, body, { new: true });
+
+        // Auto-broadcast if the post was just published
+        const wasPublished = post.status === 'published';
+        const isPublishingNow = body.status === 'published';
+        if (!wasPublished && isPublishingNow) {
+            try {
+                await Notification.create({
+                    type: 'NEW_BLOG',
+                    recipient: null, // Global
+                    title: `New Post: ${finalPost.title}`,
+                    message: finalPost.excerpt || 'Check out our latest blog post!',
+                    link: `/blog/${finalPost.slug}`
+                });
+            } catch (notifError) {
+                console.error("Failed to auto-broadcast post notification:", notifError);
+            }
+        }
 
         // BUST CACHE
         revalidatePath("/writers-hub/posts");

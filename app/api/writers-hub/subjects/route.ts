@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import Subject from '@/models/Subject';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import Notification from '@/models/Notification';
 
 // GET - list all subjects
 export async function GET() {
@@ -41,6 +42,19 @@ export async function POST(request: Request) {
 
         await dbConnect();
         const subject = await Subject.create({ ...body, slug });
+
+        // Auto-broadcast a notification for the new course
+        try {
+            await Notification.create({
+                type: 'NEW_COURSE',
+                recipient: null, // Global
+                title: `New Course Added: ${subject.name}`,
+                message: subject.description || 'We just launched a brand new course! Check it out.',
+                link: `/notes` // Or /courses if you have a specific page for it
+            });
+        } catch (notifError) {
+            console.error("Failed to auto-broadcast subject notification:", notifError);
+        }
 
         return NextResponse.json({ ...subject.toObject(), _id: subject._id.toString() }, { status: 201 });
     } catch (error: any) {

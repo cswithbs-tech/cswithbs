@@ -22,6 +22,7 @@ import { Container } from "@/app/components/ui/Container";
 import { LessonActions } from "./LessonActions";
 import { NoteTracker } from "../../components/NoteTracker";
 import { AuthWallOverlay } from "@/app/components/ui/AuthWallOverlay";
+import { DataWall } from "@/app/components/DataWall";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
@@ -215,12 +216,14 @@ export default async function LessonPage({
             </div>
           </div>
         ) : (
-          <NoteContent
-            content={currentNote.content || ""}
-            contentJson={currentNote.contentJson}
-            showHeadingAnchors={false}
-            pageTitle={currentNote.title}
-          />
+          <DataWall article={currentNote} session={session}>
+            <NoteContent
+              content={currentNote.content || ""}
+              contentJson={currentNote.contentJson}
+              showHeadingAnchors={false}
+              pageTitle={currentNote.title}
+            />
+          </DataWall>
         )}
 
         {/* ── Bottom section ────────────────────────────────────── */}

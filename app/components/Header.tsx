@@ -17,6 +17,7 @@ import {
 import { Container } from "./ui/Container";
 import { Button } from "./ui/Button";
 import { useSession, signOut } from "next-auth/react";
+import { NotificationBell } from "./NotificationBell";
 
 export const Header = () => {
   const { data: session } = useSession();
@@ -123,11 +124,13 @@ export const Header = () => {
           {/* CTA / User Menu */}
           <div className="hidden md:flex items-center gap-4">
             {session ? (
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center gap-3 pl-4 border-l border-white/10 group cursor-pointer focus:outline-none"
-                >
+              <div className="flex items-center gap-2">
+                <NotificationBell />
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-3 pl-4 border-l border-white/10 group cursor-pointer focus:outline-none"
+                  >
                   <div className="h-9 w-9 rounded-full bg-zinc-800 border border-white/10 overflow-hidden relative group-hover:border-accent transition-colors">
                     {userImage ? (
                       <img
@@ -222,6 +225,7 @@ export const Header = () => {
                     </button>
                   </div>
                 )}
+                </div>
               </div>
             ) : (
               <div className="flex items-center gap-4">
@@ -236,43 +240,46 @@ export const Header = () => {
             )}
           </div>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            className="md:hidden z-50 relative text-white p-2"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-8 h-8"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className="w-8 h-8"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                />
-              </svg>
-            )}
-          </button>
+          {/* Mobile Right Section (Bell & Toggle) */}
+          <div className="flex items-center gap-2 md:hidden z-50 relative">
+            {session && <NotificationBell />}
+            <button
+              className="text-white p-2"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-8 h-8"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-8 h-8"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                  />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </Container>
 

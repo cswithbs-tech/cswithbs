@@ -17,20 +17,32 @@ const UserSchema = new Schema(
     articleSignature: { type: String, default: '' },
     title: { type: String, default: '' }, // e.g. "Senior Editor"
     qualification: { type: String, default: '' }, // e.g. "PhD in Astrophysics"
-    occupation: { type: String, default: '' }, // e.g. "Freelance Science Writer"
+    occupation: { type: String, default: 'Student' }, // e.g. "Freelance Science Writer"
+    university: { type: String, default: '' },
+    semester: { type: String, default: '' },
+    year: { type: String, default: '' },
     location: { type: String, default: '' }, // e.g. "New York, USA"
     bannerImage: { type: String, default: '' },
+    isCourseRestricted: { type: Boolean, default: false }, // Used to block users from courses if identity verification fails
     socialLinks: {
         twitter: { type: String, default: '' },
         linkedin: { type: String, default: '' },
         github: { type: String, default: '' },
+        facebook: { type: String, default: '' },
         website: { type: String, default: '' }
     },
+    readNotifications: [{ type: Schema.Types.ObjectId, ref: 'Notification' }],
+    hiddenNotifications: [{ type: Schema.Types.ObjectId, ref: 'Notification' }],
     bookmarks: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
     likedPosts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
   },
   { timestamps: true }
 );
 
-export const User = mongoose.models?.User || mongoose.model('User', UserSchema);
+// Delete the model if it exists to ensure schema updates take effect in dev
+if (mongoose.models?.User) {
+  delete mongoose.models.User;
+}
+
+export const User = mongoose.model('User', UserSchema);
 export default User;

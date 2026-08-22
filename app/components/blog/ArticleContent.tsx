@@ -4,26 +4,24 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 
+import { JsonRenderer } from "./JsonRenderer";
 import { HtmlRenderer } from "./HtmlRenderer";
-import { EDITOR_PROSE_STYLES } from "../editor/editorStyles";
-import "./blog.css"; // Isolated styles for the blog
+import "./blog.css";
 
 interface ArticleContentProps {
   content: string; // HTML Fallback
-  contentJson?: any; // Kept for compatibility but ignored for rendering
-  showHeadingAnchors?: boolean;
+  contentJson?: any; // Preferred
 }
 
 export const ArticleContent = ({
   content,
   contentJson,
-  showHeadingAnchors = true,
 }: ArticleContentProps) => {
   /* ---------------------------------------------------------------------------
    * TYPOGRAPHY SYSTEM (Medium-Style Editorial Theme)
-   * Now handled centrally via EDITOR_PROSE_STYLES and editor.css
+   * Now handled centrally in globals.css via .prose-article
    * --------------------------------------------------------------------------- */
-  const PROSE_STYLES = EDITOR_PROSE_STYLES;
+  const PROSE_STYLES = "prose-article";
 
   const [zoomImage, setZoomImage] = useState<string | null>(null);
 
@@ -36,14 +34,17 @@ export const ArticleContent = ({
    * -------------------------------------------------------------------------------- */
   return (
     <>
-      <div className={PROSE_STYLES}>
+      {contentJson ? (
+        <div className={PROSE_STYLES}>
+          <JsonRenderer content={contentJson} onImageClick={handleImageClick} />
+        </div>
+      ) : (
         <HtmlRenderer
           content={content}
-          className="cswithbs-components outline-none"
+          className={PROSE_STYLES}
           onImageClick={handleImageClick}
-          showHeadingAnchors={showHeadingAnchors}
         />
-      </div>
+      )}
 
       {/* Shared Image Zoom Modal */}
       <AnimatePresence>

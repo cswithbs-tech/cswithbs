@@ -18,6 +18,7 @@ export interface IPost extends Document {
   status: "draft" | "published" | "archived" | "scheduled";
   scheduledPublishDate?: Date;
   isFreePreview: boolean;
+  isRestricted?: boolean; // Manual override for Data Wall access control
   // SEO Metadata
   seoTitle?: string;
   seoDescription?: string;
@@ -56,6 +57,7 @@ const PostSchema: Schema = new Schema(
     // Schedule Field
     scheduledPublishDate: { type: Date },
     isFreePreview: { type: Boolean, default: false },
+    isRestricted: { type: Boolean, default: undefined }, // null/undefined means fallback to tag logic
     // SEO Fields
     seoTitle: { type: String },
     seoDescription: { type: String },

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Note from '@/models/Note';
+import Subject from '@/models/Subject';
+import Notification from '@/models/Notification';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { revalidatePath } from 'next/cache';
@@ -66,6 +68,26 @@ export async function PATCH(
         }
 
         const finalNote = await Note.findByIdAndUpdate(id, body, { new: true });
+
+        // Auto-broadcast if note was just published
+        const wasPublished = note.status === 'published';
+        const isPublishingNow = body.status === 'published';
+        if (!wasPublished && isPublishingNow) {
+            try {
+                const subjectDoc = await Subject.findById(finalNote.subject);
+                const subjectName = subjectDoc ? subjectDoc.name : 'a Course';
+
+                await Notification.create({
+                    type: 'NEW_COURSE',
+                    recipient: null, // Global
+                    title: `New Note in ${subjectName}`,
+                    message: finalNote.title,
+                    link: `/notes/${finalNote.slug}`
+                });
+            } catch (notifError) {
+                console.error("Failed to auto-broadcast note notification:", notifError);
+            }
+        }
 
         revalidatePath('/writers-hub/notes');
         return NextResponse.json(finalNote);

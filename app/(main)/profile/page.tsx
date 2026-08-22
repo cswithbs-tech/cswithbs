@@ -17,16 +17,23 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<"dashboard" | "settings" | "writer">("dashboard");
 
   const [formData, setFormData] = useState({
+    roles: [] as string[],
     name: "",
     bio: "",
+    articleSignature: "",
+    title: "",
     qualification: "",
-    occupation: "",
+    occupation: "Student",
+    university: "",
+    semester: "",
+    year: "",
     location: "",
     image: "",
     socialLinks: {
       twitter: "",
       linkedin: "",
       github: "",
+      facebook: "",
       website: "",
     },
   });
@@ -55,16 +62,23 @@ export default function ProfilePage() {
     }
     if (session?.user) {
       const init = {
+        roles: [],
         name: session.user.name || "",
         bio: (session.user as any).bio || "",
+        articleSignature: (session.user as any).articleSignature || `${session.user.name || "This author"} is a contributor at CSwithBS, exploring the intersection of modern technology, scientific discovery, and human philosophy.`,
+        title: "",
         qualification: "",
-        occupation: "",
+        occupation: "Student",
+        university: "",
+        semester: "",
+        year: "",
         location: "",
         image: session.user.image || "",
         socialLinks: {
           twitter: "",
           linkedin: "",
           github: "",
+          facebook: "",
           website: "",
         },
       };
@@ -78,16 +92,23 @@ export default function ProfilePage() {
           if (data) {
             setHasPassword(data.hasPassword !== false);
             const fetchedInit = {
+              roles: data.roles || [],
               name: data.name || "",
               bio: data.bio || "",
+              articleSignature: data.articleSignature || `${data.name || "This author"} is a contributor at CSwithBS, exploring the intersection of modern technology, scientific discovery, and human philosophy.`,
+              title: data.title || "",
               qualification: data.qualification || "",
-              occupation: data.occupation || "",
+              occupation: data.occupation || "Student",
+              university: data.university || "",
+              semester: data.semester || "",
+              year: data.year || "",
               location: data.location || "",
               image: data.image || "",
               socialLinks: {
                 twitter: data.socialLinks?.twitter || "",
                 linkedin: data.socialLinks?.linkedin || "",
                 github: data.socialLinks?.github || "",
+                facebook: data.socialLinks?.facebook || "",
                 website: data.socialLinks?.website || "",
               },
             };
@@ -445,10 +466,6 @@ export default function ProfilePage() {
                                 <label className="text-xs font-medium text-zinc-400">Location</label>
                                 <input name="location" type="text" value={formData.location} onChange={handleChange} placeholder="e.g. New York, USA" className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent/50 text-sm" />
                             </div>
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium text-zinc-400">Occupation / Student Status</label>
-                                <input name="occupation" type="text" value={formData.occupation} onChange={handleChange} placeholder="e.g. Computer Science Student" className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent/50 text-sm" />
-                            </div>
                         </div>
 
                         <div className="space-y-1">
@@ -457,9 +474,55 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="pt-4 border-t border-white/5">
-                            <h4 className="text-sm font-bold text-white mb-4">Social Links</h4>
+                            <h4 className="text-sm font-bold text-white mb-4">Academic & Professional Details</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-zinc-400">Occupation</label>
+                                    <select name="occupation" value={formData.occupation} onChange={handleChange as any} className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent/50 text-sm appearance-none">
+                                        <option value="Student">Student</option>
+                                        <option value="Teacher">Teacher / Professor</option>
+                                        <option value="Professional">Industry Professional</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-zinc-400">University / Institution</label>
+                                    <input name="university" type="text" value={formData.university} onChange={handleChange} placeholder="e.g. Vidyasagar University" className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent/50 text-sm" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-zinc-400">Current Semester</label>
+                                    <input name="semester" type="text" value={formData.semester} onChange={handleChange} placeholder="e.g. 5th Semester" className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent/50 text-sm" />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-zinc-400">Graduation Year</label>
+                                    <input name="year" type="text" value={formData.year} onChange={handleChange} placeholder="e.g. 2026" className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent/50 text-sm" />
+                                </div>
+                            </div>
+                        </div>
+
+                        {formData.roles?.some((r) => ["WRITER", "ADMIN", "SUPER_ADMIN"].includes(r)) && (
+                            <div className="pt-4 border-t border-white/5">
+                                <h4 className="text-sm font-bold text-accent mb-4">Author Settings</h4>
+                                <div className="space-y-6">
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-zinc-400">Author Title (Optional)</label>
+                                        <input name="title" type="text" value={formData.title} onChange={handleChange} placeholder="e.g. Senior Editor" className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent/50 text-sm" />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-xs font-medium text-zinc-400">Article Signature / Short Bio</label>
+                                        <textarea name="articleSignature" rows={3} value={formData.articleSignature} onChange={handleChange} placeholder="A short bio that appears at the bottom of your articles..." className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent/50 text-sm"></textarea>
+                                        <p className="text-[10px] text-zinc-500 mt-1">
+                                          This signature appears at the bottom of your blog posts. We've pre-filled a default one for you, but feel free to customize it!
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="pt-4 border-t border-white/5">
+                            <h4 className="text-sm font-bold text-white mb-4">Social Links <span className="text-zinc-500 font-normal">(Optional)</span></h4>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {['github', 'linkedin', 'twitter', 'website'].map((platform) => (
+                                {['github', 'linkedin', 'twitter', 'facebook', 'website'].map((platform) => (
                                     <div key={platform} className="space-y-1">
                                         <label className="text-xs font-medium text-zinc-400 capitalize">{platform}</label>
                                         <input name={platform} type="text" value={(formData.socialLinks as any)[platform]} onChange={handleSocialChange} placeholder={`${platform} URL`} className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent/50 text-sm" />

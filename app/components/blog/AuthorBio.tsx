@@ -6,7 +6,7 @@ import {
   Linkedin,
   Github,
   Facebook,
-  Instagram,
+  Globe,
 } from "lucide-react";
 
 interface AuthorBioProps {
@@ -23,7 +23,7 @@ interface AuthorBioProps {
       linkedin?: string;
       github?: string;
       facebook?: string;
-      instagram?: string;
+      website?: string;
     };
   };
   authorPosts?: any[]; // Allow passing recent posts by author
@@ -55,12 +55,9 @@ export const AuthorBio = ({ author, authorPosts = [] }: AuthorBioProps) => {
             <h4 className="text-2xl font-serif font-bold text-white mb-1">
               {author.name}
             </h4>
-            <p className="text-xs text-accent uppercase tracking-[0.2em] font-bold opacity-80">
-              {author.title || (author.roles?.length ? author.roles.map((r: string) => r.replace(/_/g, ' ')).join(" & ") : "Contributor")}
-            </p>
           </div>
 
-          <p className="text-zinc-400 text-lg leading-relaxed max-w-2xl font-light italic">
+          <p className="text-zinc-400 text-lg leading-relaxed max-w-2xl font-serif font-light italic">
             "{author.articleSignature || author.bio || defaultSignature}"
           </p>
 
@@ -113,13 +110,13 @@ export const AuthorBio = ({ author, authorPosts = [] }: AuthorBioProps) => {
                   <Facebook size={14} />
                 </a>
               )}
-              {author.socialLinks?.instagram && (
+              {author.socialLinks?.website && (
                 <a
-                  href={author.socialLinks.instagram}
+                  href={author.socialLinks.website}
                   target="_blank"
                   className="hover:text-white transition-colors"
                 >
-                  <Instagram size={14} />
+                  <Globe size={14} />
                 </a>
               )}
             </div>
