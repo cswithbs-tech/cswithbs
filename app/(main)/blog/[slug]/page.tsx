@@ -247,7 +247,7 @@ export default async function BlogPostPage({
   const relatedPosts = await getRelatedPosts(post.category, post._id);
   const nextPost = await getNextPost(post.createdAt);
   const prevPost = await getPrevPost(post.createdAt);
-  const authorPosts = await getAuthorPosts(post.author._id, post._id);
+  const authorPosts = post.author ? await getAuthorPosts(post.author._id, post._id) : [];
 
   // Fetch Global Comment Settings
   await dbConnect();
@@ -308,14 +308,14 @@ export default async function BlogPostPage({
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-full overflow-hidden border border-white/20 relative">
                 <Image
-                  src={post.author.image}
-                  alt={post.author.name}
+                  src={post.author?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(post.author?.name || "CSWITHBS Admin")}&background=random`}
+                  alt={post.author?.name || "Unknown Author"}
                   fill
                   className="object-cover"
                 />
               </div>
               <div>
-                <p className="text-white font-medium">{post.author?.name || "Unknown Author"}</p>
+                <p className="text-white font-medium">{post.author?.name || "CSWITHBS Admin"}</p>
                 {(post.author?.title || (post.author?.roles && post.author.roles.length > 0)) && (
                   <p className="text-xs text-muted">
                     {post.author.title || 
@@ -370,7 +370,15 @@ export default async function BlogPostPage({
               />
 
               <div className="mt-32">
-                <AuthorBio author={post.author} authorPosts={authorPosts} />
+                <AuthorBio 
+                  author={post.author || {
+                    _id: "unknown",
+                    name: "CSWITHBS Admin",
+                    image: "https://ui-avatars.com/api/?name=CSWITHBS+Admin&background=random",
+                    roles: ["ADMIN"]
+                  }} 
+                  authorPosts={authorPosts} 
+                />
               </div>
 
               {/* Tags & Share */}

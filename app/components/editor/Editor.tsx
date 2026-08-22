@@ -243,7 +243,11 @@ export const Editor = forwardRef<any, EditorProps>(
       // This eliminates cursor jumping issues when parent updates.
       if (value !== currentContent) {
         if (editor.isEmpty || currentContent === "<p></p>") {
-          editor.commands.setContent(value, { emitUpdate: false });
+          setTimeout(() => {
+            if (editor && !editor.isDestroyed) {
+              editor.commands.setContent(value, { emitUpdate: false });
+            }
+          }, 0);
         }
       }
     }, [value, editor]);

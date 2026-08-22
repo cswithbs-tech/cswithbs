@@ -38,9 +38,9 @@ export const AuthorBio = ({ author, authorPosts = [] }: AuthorBioProps) => {
       <div className="flex flex-col md:flex-row items-center md:items-start gap-8 py-12 border-y border-white/5">
         <Link
           href={`/profile/${author._id}`}
-          className="shrink-0 group cursor-pointer relative"
+          className="shrink-0 cursor-pointer relative"
         >
-          <div className="w-24 h-24 rounded-full overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700 ring-1 ring-white/10 group-hover:ring-accent/40 shadow-2xl">
+          <div className="w-24 h-24 rounded-full overflow-hidden ring-1 ring-white/10 shadow-2xl relative">
             <Image
               src={author.image}
               alt={author.name}

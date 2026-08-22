@@ -169,6 +169,8 @@
 .prose-article .callout-success, .ProseMirror .callout-success { border-left: 3px solid #22c55e; background: rgba(34, 197, 94, 0.05) !important; color: #bbf7d0; }
 .prose-article .callout-success::before, .ProseMirror .callout-success::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2322c55e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 11.08V12a10 10 0 1 1-5.93-9.14'/%3E%3Cpolyline points='22 4 12 14.01 9 11.01'/%3E%3C/svg%3E"); }
 
+.prose-article .callout-tip, .ProseMirror .callout-tip { border-left: 3px solid #a855f7; background: rgba(168, 85, 247, 0.05) !important; color: #e9d5ff; }
+.prose-article .callout-tip::before, .ProseMirror .callout-tip::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23a855f7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.3 1.5 1.5 2.5'/%3E%3Cpath d='M9 18h6'/%3E%3Cpath d='M10 22h4'/%3E%3C/svg%3E"); }
 
 /* Blackquotes */
 /* Default Quote (Editorial Style) */
