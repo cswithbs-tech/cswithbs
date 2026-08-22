@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import useSWR from "swr";
-import { Bell, Check, ExternalLink, Info, BellRing, BookOpen } from "lucide-react";
+import { Bell, Check, ExternalLink, Info, BellRing, BookOpen, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 
@@ -22,7 +23,13 @@ interface Notification {
 export const NotificationBell = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Poll every 60 seconds
   const { data, mutate, isLoading } = useSWR("/api/notifications", fetcher, {
@@ -125,6 +132,8 @@ export const NotificationBell = () => {
     if (notification.link) {
       setIsOpen(false);
       router.push(notification.link);
+    } else {
+      setSelectedNotification(notification);
     }
   };
 
@@ -153,10 +162,14 @@ export const NotificationBell = () => {
       </button>
 
       {isOpen && (
-        <div className="fixed top-[80px] left-4 right-4 sm:absolute sm:top-full sm:left-auto sm:right-0 sm:mt-4 w-auto sm:w-[420px] bg-black/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden flex flex-col">
-          <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              Notifications
+        <>
+          {/* Invisible overlay for mobile to click out easily */}
+          <div className="fixed inset-0 z-40 sm:hidden" onClick={() => setIsOpen(false)} />
+          
+          <div className="fixed inset-x-4 top-[90px] sm:inset-auto sm:absolute sm:right-0 sm:top-[calc(100%+20px)] w-auto sm:w-[420px] bg-[#0a0a0a]/95 backdrop-blur-3xl border border-white/10 rounded-3xl shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] z-50 overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-4 sm:slide-in-from-top-2 duration-300">
+            <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.01]">
+              <h3 className="text-[15px] font-bold text-white flex items-center gap-2 tracking-wide">
+                Notifications
               {unreadCount > 0 && (
                 <span className="bg-accent/20 text-accent text-[10px] px-2 py-0.5 rounded-full">
                   {unreadCount} new
@@ -183,14 +196,14 @@ export const NotificationBell = () => {
                 <p className="text-zinc-600 text-xs mt-1">We'll let you know when something comes up!</p>
               </div>
             ) : (
-              <div className="divide-y divide-white/5">
+              <div className="p-2 space-y-1">
                 {notifications.map((notification) => (
                   <div
                     key={notification._id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`p-4 hover:bg-white/[0.04] transition-colors relative group/item ${
+                    className={`p-4 rounded-2xl hover:bg-white/[0.06] transition-all duration-200 relative group/item ${
                       notification.link ? "cursor-pointer group" : ""
-                    } ${!notification.isRead ? "bg-accent/[0.02]" : ""}`}
+                    } ${!notification.isRead ? "bg-accent/[0.03]" : ""}`}
                   >
                     <div className="flex gap-3">
                       <div className="mt-1 shrink-0">
@@ -244,6 +257,42 @@ export const NotificationBell = () => {
             )}
           </div>
         </div>
+        </>
+      )}
+
+      {/* Modal for full message */}
+      {mounted && selectedNotification && createPortal(
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/[0.02]">
+              <h3 className="font-bold text-white flex items-center gap-2">
+                {getIcon(selectedNotification.type)}
+                {selectedNotification.title}
+              </h3>
+              <button
+                onClick={() => setSelectedNotification(null)}
+                className="text-zinc-400 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[60vh] custom-scrollbar">
+              <p className="text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                {selectedNotification.message}
+              </p>
+            </div>
+            <div className="p-4 border-t border-white/10 bg-white/[0.02] flex justify-between items-center text-xs text-zinc-500">
+              <span>{formatDistanceToNow(new Date(selectedNotification.createdAt), { addSuffix: true })}</span>
+              <button 
+                onClick={() => setSelectedNotification(null)}
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-md transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );
