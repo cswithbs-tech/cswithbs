@@ -5,6 +5,10 @@ import mongoose from 'mongoose';
 async function test() {
   await dbConnect();
   const user = await User.findOne();
+  if (!user) {
+    console.log("No user found");
+    return;
+  }
   console.log("User:", user._id);
   
   const notificationId = new mongoose.Types.ObjectId().toString();
@@ -15,9 +19,14 @@ async function test() {
     { new: true }
   );
   
+  if (!updatedUser) {
+    console.log("Failed to update user");
+    return;
+  }
   console.log("Updated hiddenNotifications:", updatedUser.hiddenNotifications);
   
   const fetchedUser = await User.findById(user._id).select('hiddenNotifications');
+  if (!fetchedUser) return;
   console.log("Fetched hiddenNotifications:", fetchedUser.hiddenNotifications);
   
   process.exit(0);

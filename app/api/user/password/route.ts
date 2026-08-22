@@ -22,6 +22,10 @@ export async function PATCH(req: Request) {
     await dbConnect();
     const user = await User.findById(userId);
 
+    if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     // Verify current password
     if (!user.password) {
         return NextResponse.json({ error: 'No password set (Social Login account)' }, { status: 400 });
