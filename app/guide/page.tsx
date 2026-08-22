@@ -68,8 +68,18 @@ export default function GuidePage() {
 
         {/* Action Button */}
         <div className="text-center pt-8">
-          <Link href="/" className="inline-flex items-center justify-center px-8 py-4 bg-accent text-white font-bold rounded-full hover:bg-accent/90 transition-all shadow-[0_0_20px_rgba(var(--color-accent),0.3)]">
+          <Link href="/" className="inline-flex items-center justify-center px-8 py-4 bg-accent text-white font-bold rounded-full hover:bg-accent/90 transition-all shadow-[0_0_20px_rgba(var(--color-accent),0.3)] mb-12">
             Explore the Platform
+          </Link>
+        </div>
+
+        {/* Support Section */}
+        <div className="text-center pt-8 border-t border-white/10 pb-8">
+          <p className="text-zinc-400 mb-4 text-lg">
+            Have questions, feedback, or facing any issues? We are always here to help you succeed.
+          </p>
+          <Link href="/contact" className="text-accent hover:text-white transition-colors underline underline-offset-4 font-medium text-lg">
+            Contact us freely
           </Link>
         </div>
 
