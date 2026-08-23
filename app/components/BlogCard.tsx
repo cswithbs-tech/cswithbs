@@ -55,8 +55,8 @@ export const BlogCard = ({ post }: { post: BlogPost }) => {
           <span>{post.views} views</span>
         </div>
 
-        <h3 className="mb-3 text-xl font-bold leading-tight text-white group-hover:text-accent transition-colors">
-          <Link href={`/blog/${post.slug}`}>{post.title}</Link>
+        <h3 className="mb-3 text-xl font-bold leading-tight text-white group-hover:text-accent transition-colors line-clamp-2">
+          <Link href={`/blog/${post.slug}`} title={post.title}>{post.title}</Link>
         </h3>
 
         <p className="mb-6 line-clamp-2 text-sm text-muted">{post.excerpt}</p>

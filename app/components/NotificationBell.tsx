@@ -211,7 +211,7 @@ export const NotificationBell = () => {
                       </div>
                       <div className="flex-1 space-y-1">
                         <div className="flex items-start justify-between gap-2">
-                          <h4 className={`text-sm font-semibold ${!notification.isRead ? "text-white" : "text-zinc-300"} flex-1 pr-2`}>
+                          <h4 className={`text-sm font-semibold ${!notification.isRead ? "text-white" : "text-zinc-300"} flex-1 pr-2 line-clamp-2 leading-snug`}>
                             {notification.title}
                           </h4>
                           <div className="flex items-center gap-2 shrink-0">
@@ -227,8 +227,8 @@ export const NotificationBell = () => {
                             </button>
                           </div>
                         </div>
-                        {/* We use line-clamp-3 so very long messages don't break the layout, but give enough context */}
-                        <p className={`text-xs leading-relaxed ${!notification.isRead ? "text-zinc-300" : "text-zinc-500"} line-clamp-3`}>
+                        {/* We use line-clamp-2 so very long messages don't break the layout, but give enough context */}
+                        <p className={`text-xs leading-relaxed ${!notification.isRead ? "text-zinc-300" : "text-zinc-500"} line-clamp-2 mt-1`}>
                           {notification.message}
                         </p>
                         

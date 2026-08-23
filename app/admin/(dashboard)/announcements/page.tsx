@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Megaphone, Users, Search, Send, Clock, User as UserIcon, Link as LinkIcon, Trash2 } from "lucide-react";
+import { Megaphone, Users, Search, Send, Clock, User as UserIcon, Link as LinkIcon, Trash2, BarChart2 } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
 import Image from "next/image";
+import Link from "next/link";
 import { useSession } from "next-auth/react";
 
 type Audience = "ALL" | "SPECIFIC";
@@ -444,7 +445,16 @@ export default function AnnouncementsPage() {
                       <td className="p-4 text-sm text-white font-medium max-w-xs truncate">
                         {notif.title}
                       </td>
-                      <td className="p-4 text-right">
+                      <td className="p-4 text-right flex items-center justify-end gap-1">
+                        {(session?.user as any)?.roles?.includes("SUPER_ADMIN") && (
+                          <Link
+                            href={`/admin/announcements/${notif._id}`}
+                            className="p-2 text-zinc-500 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors inline-block"
+                            title="View Stats"
+                          >
+                            <BarChart2 className="w-4 h-4" />
+                          </Link>
+                        )}
                         <button
                           onClick={() => setDeleteId(notif._id)}
                           className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"

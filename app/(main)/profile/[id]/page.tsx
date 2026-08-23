@@ -23,6 +23,7 @@ import {
   Star
 } from "lucide-react";
 import { UserBadge } from "@/app/components/ui/UserBadge";
+import { BlogCard } from "@/app/components/BlogCard";
 
 export default function UserProfilePage({
   params,
@@ -269,6 +270,33 @@ export default function UserProfilePage({
             </div>
           </div>
         </div>
+
+        {/* Published Articles (For Writers/Admins) */}
+        {user.roles?.some((r: string) => ["SUPER_ADMIN", "ADMIN", "WRITER"].includes(r)) && user.posts && user.posts.length > 0 && (
+          <div className="bg-[#0D0D0D] border border-white/5 rounded-2xl p-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <PenTool className="text-accent" />
+              Published Articles
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {user.posts.map((p: any) => (
+                <BlogCard
+                  key={p._id}
+                  post={{
+                    slug: p.slug,
+                    title: p.title,
+                    excerpt: p.excerpt,
+                    date: new Date(p.createdAt).toLocaleDateString(),
+                    category: p.category || "Article",
+                    imageUrl: p.image,
+                    likes: p.likes || 0,
+                    views: p.views || 0,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Public Activity Feed */}
         <div className="bg-[#0D0D0D] border border-white/5 rounded-2xl p-8">
