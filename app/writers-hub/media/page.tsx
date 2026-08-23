@@ -9,6 +9,8 @@ import {
   Loader2,
   FileImage,
   Search,
+  Edit2,
+  X,
 } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -31,6 +33,8 @@ export default function MediaLibraryPage() {
   const [uploading, setUploading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [renameItem, setRenameItem] = useState<MediaItem | null>(null);
+  const [newName, setNewName] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast() || { showToast: console.log };
@@ -110,6 +114,30 @@ export default function MediaLibraryPage() {
       showToast("Failed to delete image", "error");
     } finally {
       setConfirmId(null);
+    }
+  };
+
+  const executeRename = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!renameItem || !newName.trim()) return;
+
+    try {
+      const res = await fetch(`/api/admin/media`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: renameItem._id, newFilename: newName.trim() }),
+      });
+      if (res.ok) {
+        setMedia((prev) => prev.map((item) => item._id === renameItem._id ? { ...item, filename: newName.trim() } : item));
+        showToast("Image renamed successfully", "success");
+      } else {
+        throw new Error("Rename failed");
+      }
+    } catch (error) {
+      showToast("Failed to rename image", "error");
+    } finally {
+      setRenameItem(null);
+      setNewName("");
     }
   };
 
@@ -222,6 +250,13 @@ export default function MediaLibraryPage() {
                       <Copy size={16} />
                     </button>
                     <button
+                      onClick={() => { setRenameItem(item); setNewName(item.filename); }}
+                      className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-colors"
+                      title="Rename"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                    <button
                       onClick={() => handleDelete(item._id)}
                       className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-full text-red-400 backdrop-blur-md transition-colors"
                       title="Delete"
@@ -258,6 +293,59 @@ export default function MediaLibraryPage() {
         variant="danger"
         confirmText="Delete"
       />
+
+      {/* Rename Modal */}
+      <AnimatePresence>
+        {renameItem && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#111111] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl relative"
+            >
+              <button
+                onClick={() => setRenameItem(null)}
+                className="absolute top-4 right-4 text-zinc-500 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h3 className="text-xl font-bold text-white mb-4">Rename Image</h3>
+              <form onSubmit={executeRename} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">
+                    New Filename
+                  </label>
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    autoFocus
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent"
+                    placeholder="Enter new name..."
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setRenameItem(null)}
+                    className="flex-1 py-3 px-4 rounded-xl font-bold border border-white/10 text-white hover:bg-white/5 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!newName.trim()}
+                    className="flex-1 py-3 px-4 rounded-xl font-bold bg-accent text-white hover:bg-accent/90 transition-colors disabled:opacity-50"
+                  >
+                    Save Name
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
