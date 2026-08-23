@@ -299,13 +299,9 @@ export default async function BlogPostPage({
               </div>
               <div>
                 <p className="text-white font-medium">{post.author?.name || "CSWITHBS Admin"}</p>
-                {(post.author?.title || (post.author?.roles && post.author.roles.length > 0)) && (
+                {post.author?.title && (
                   <p className="text-xs text-muted">
-                    {post.author.title || 
-                      (post.author.roles.includes('SUPER_ADMIN') ? 'super admin' : 
-                       post.author.roles.includes('ADMIN') ? 'admin' : 
-                       post.author.roles.includes('EDITOR') ? 'editor' : 
-                       post.author.roles.includes('WRITER') ? 'writer' : 'member')}
+                    {post.author.title}
                   </p>
                 )}
               </div>

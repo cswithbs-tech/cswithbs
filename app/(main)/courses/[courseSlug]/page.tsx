@@ -131,6 +131,37 @@ export default async function CourseIndexPage({
   // First note for "Start Learning" button
   const firstNote = chapters.find((c: any) => c.notes?.length > 0)?.notes?.[0];
 
+  // Determine if this course is restricted for the current user
+  const user = session?.user as any;
+  const hasCompleteProfile = user?.university && user?.semester && user?.year;
+  let isRestricted = false;
+
+  if (!user || user.isCourseRestricted) {
+    isRestricted = true;
+  } else if (!hasCompleteProfile) {
+    const roles = user.roles || [];
+    const isPrivileged = roles.some((r: string) => 
+      ["ADMIN", "SUPER_ADMIN", "WRITER", "admin", "super_admin", "writer"].includes(r)
+    );
+    
+    if (!isPrivileged) {
+      if (subject.isRestricted === true) {
+        isRestricted = true;
+      } else if (subject.isRestricted !== false) {
+        const isAdvancedOrIntermediateTag = subject.tags?.some((tag: string) => 
+          tag.toLowerCase().includes('advanced') || tag.toLowerCase().includes('intermediate')
+        );
+        const isAdvancedOrIntermediateLevel = subject.level && (
+          subject.level.toLowerCase().includes('advanced') || 
+          subject.level.toLowerCase().includes('intermediate')
+        );
+        if (isAdvancedOrIntermediateTag || isAdvancedOrIntermediateLevel) {
+          isRestricted = true;
+        }
+      }
+    }
+  }
+
   return (
     <div className="py-10 md:py-14">
       <Container className="max-w-5xl mx-auto">
@@ -198,7 +229,7 @@ export default async function CourseIndexPage({
               {/* Action Button */}
               {firstNote && (
                 <Link
-                  href={`/courses/${courseSlug}/${firstNote.slug}`}
+                  href={isRestricted ? "#curriculum-data-wall" : `/courses/${courseSlug}/${firstNote.slug}`}
                   className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-bold text-black text-sm transition-all hover:opacity-90 active:scale-95 hover:gap-3 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
                   style={{ backgroundColor: accentColor }}
                 >
@@ -211,9 +242,10 @@ export default async function CourseIndexPage({
         </div>
 
           {/* ── Chapter Accordion ─────────────────────────────────── */}
-          <DataWall article={subject} session={session}>
-            <div>
-            <div className="flex items-baseline gap-4 mb-8">
+          <div id="curriculum-data-wall" className="scroll-mt-24">
+            <DataWall article={subject} session={session}>
+              <div>
+              <div className="flex items-baseline gap-4 mb-8">
               <h2 className="text-2xl font-black text-white font-display">
                 Curriculum
               </h2>
@@ -338,7 +370,8 @@ export default async function CourseIndexPage({
             )}
           </div>
         </DataWall>
-        </Container>
+        </div>
+      </Container>
     </div>
   );
 }
