@@ -74,3 +74,43 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: "Failed to delete media" }, { status: 500 });
   }
 }
+
+export async function PATCH(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    const userRoles = (session?.user as any)?.roles || [];
+    const hasEditorRole = Array.isArray(userRoles) ? userRoles.some((r) => ['ADMIN', 'SUPER_ADMIN', 'EDITOR', 'WRITER', 'admin', 'super_admin', 'editor', 'writer'].includes(r)) : ['admin', 'super_admin', 'editor', 'writer'].includes(userRoles);
+    if (!session || !hasEditorRole) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const { id, newFilename } = body;
+
+    if (!id || !newFilename) {
+        return NextResponse.json({ error: "ID and new filename required" }, { status: 400 });
+    }
+
+    await dbConnect();
+
+    const media = await Media.findById(id);
+    if (!media) {
+        return NextResponse.json({ error: "Media not found" }, { status: 404 });
+    }
+
+    // Check permissions
+    const isSuperOrAdmin = Array.isArray(userRoles) ? userRoles.some(r => ['ADMIN', 'SUPER_ADMIN', 'admin', 'super_admin'].includes(r)) : ['admin', 'super_admin'].includes(userRoles);
+    if (!isSuperOrAdmin && media.uploadedBy?.toString() !== (session.user as any).id) {
+        return NextResponse.json({ error: 'Unauthorized to edit this media' }, { status: 403 });
+    }
+
+    // Update in DB
+    media.filename = newFilename;
+    await media.save();
+
+    return NextResponse.json({ success: true, media });
+  } catch (error) {
+    console.error("Failed to rename media:", error);
+    return NextResponse.json({ error: "Failed to rename media" }, { status: 500 });
+  }
+}
