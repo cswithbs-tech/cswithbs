@@ -22,9 +22,11 @@ async function getLandingData() {
       ],
     };
 
-    // IMPORTANT: In Next.js serverless/dev environments, we must ensure the Subject model 
-    // is registered in Mongoose BEFORE we try to populate it in the Note query.
+    // IMPORTANT: In Next.js serverless/dev environments, we must ensure the models
+    // are registered in Mongoose BEFORE we try to populate them in queries.
     const Subject = (await import("@/models/Subject")).default;
+    const Post = (await import("@/models/Post")).default;
+    const Category = (await import("@/models/Category")).default;
 
     let notes = await Note.find(publishedFilter)
       .sort({ createdAt: -1 })
@@ -33,6 +35,14 @@ async function getLandingData() {
       .lean();
 
     let subjects = await Subject.find().sort({ name: 1 }).limit(4).lean();
+    
+    // Fetch featured/latest blogs
+    let featuredBlogs = await Post.find(publishedFilter)
+      .sort({ featured: -1, createdAt: -1 })
+      .limit(4)
+      .populate("category", "name")
+      .select("title slug excerpt image category createdAt readTime")
+      .lean();
 
     return {
       latest: notes.map((n: any) => ({
@@ -45,18 +55,28 @@ async function getLandingData() {
       subjects: subjects.map((s: any) => ({
         ...s,
         _id: s._id.toString()
+      })),
+      blogs: featuredBlogs.map((b: any) => ({
+        _id: b._id.toString(),
+        title: b.title,
+        slug: b.slug,
+        excerpt: b.excerpt,
+        image: b.image,
+        category: b.category?.name || "General",
+        createdAt: b.createdAt.toISOString(),
+        readTime: b.readTime || "5 min read",
       }))
     };
   } catch (error) {
     console.error("Error fetching landing data:", error);
-    return { latest: [], subjects: [] };
+    return { latest: [], subjects: [], blogs: [] };
   }
 }
 
 export const revalidate = 60; // Revalidate every minute
 
 export default async function LandingPage() {
-  const { latest, subjects } = await getLandingData();
+  const { latest, subjects, blogs } = await getLandingData();
 
   // Check session for newsletter pre-filling
   const session = await getServerSession(authOptions);
@@ -242,8 +262,80 @@ export default async function LandingPage() {
         </Container>
       </section>
 
+      {/* 3.5. Featured Blogs Section */}
+      <section className="py-24" id="featured-blogs">
+        <Container>
+          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+            <div>
+               <h2 className="text-sm font-mono text-accent uppercase tracking-widest mb-3">// Insights & Updates</h2>
+               <h3 className="text-3xl md:text-4xl font-serif font-bold text-white">Featured Articles</h3>
+            </div>
+            <Link
+              href="/blog"
+              className="group flex items-center text-sm font-mono text-zinc-400 hover:text-accent transition-colors"
+            >
+              [ View All Articles ]
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {blogs.length > 0 ? blogs.map((post: any) => (
+              <Link 
+                key={post._id} 
+                href={`/blog/${post.slug}`}
+                className="group flex flex-col bg-[#0a0a0a] border border-white/5 rounded-2xl overflow-hidden hover:border-accent/30 transition-all duration-300 relative"
+              >
+                {/* Glowing Hover Effect */}
+                <div className="absolute inset-0 bg-accent/0 group-hover:bg-accent/5 transition-colors z-0 pointer-events-none"></div>
+
+                {/* Cover Image */}
+                <div className="relative h-48 w-full overflow-hidden shrink-0 z-10">
+                  <Image
+                    src={post.image || "/images/cs_abstract_hero.png"}
+                    alt={post.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent"></div>
+                  <div className="absolute top-4 left-4 z-20">
+                     <span className="px-3 py-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-mono text-white uppercase tracking-wider">
+                       {post.category}
+                     </span>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 flex flex-col flex-1 z-10">
+                  <div className="flex items-center gap-3 text-xs font-mono text-zinc-500 mb-4">
+                    <span>{new Date(post.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric'})}</span>
+                    <span>&bull;</span>
+                    <span>{post.readTime}</span>
+                  </div>
+                  
+                  <h4 className="text-xl font-bold text-white mb-3 font-serif group-hover:text-accent transition-colors line-clamp-2">
+                    {post.title}
+                  </h4>
+                  
+                  <p className="text-sm text-zinc-400 font-sans line-clamp-3 mb-6 flex-1">
+                    {post.excerpt}
+                  </p>
+                  
+                  <div className="mt-auto flex items-center text-xs font-mono text-accent opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                    Read Article <ChevronRight className="w-3 h-3 ml-1" />
+                  </div>
+                </div>
+              </Link>
+            )) : (
+              <div className="col-span-full py-16 text-center text-zinc-500 font-mono text-sm border border-dashed border-white/10 rounded-xl">
+                No articles published yet.
+              </div>
+            )}
+          </div>
+        </Container>
+      </section>
+
       {/* 4. Publications & Research */}
-      <section className="py-24" id="publications">
+      <section className="py-24 bg-[#0a0a0a] border-y border-white/5" id="publications">
         <Container>
           <div className="max-w-4xl mx-auto">
             <div className="mb-16">

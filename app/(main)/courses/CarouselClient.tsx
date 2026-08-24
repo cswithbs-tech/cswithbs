@@ -9,23 +9,23 @@ import { ChevronLeft, ChevronRight, ArrowRight } from "lucide-react";
 const SLIDES = [
   {
     id: 1,
-    tag: "Networking & Security",
-    title: "Computer Networks",
+    tag: "Data & Storage",
+    title: "Database Management Systems",
     subtitle:
-      "Understand the backbone of the internet, from protocols to architecture.",
+      "Master data organization, storage, and retrieval with modern database systems.",
     cta: "Start Learning",
-    href: "/courses/computer-networks", 
+    href: "/courses/database-management-systems", 
     image: "/images/courses/carousel_1.png", 
-    mobileImage: "/images/courses/networking-mobile.png",
+    mobileImage: "/images/courses/DBMS_Mobile.png",
     hideText: false,
     desktopHideText: true,
     
     features: [
-      { label: "OSI Model", desc: "Master the 7 layers of networking" },
-      { label: "Protocols", desc: "TCP/IP, HTTP, DNS, & more" },
-      { label: "Security", desc: "Basics of network security & firewalls" }
+      { label: "SQL & NoSQL", desc: "Understand relational and non-relational DBs" },
+      { label: "Data Modeling", desc: "Design efficient and scalable schemas" },
+      { label: "Optimization", desc: "Index and optimize your queries" }
     ],
-    technologies: ["TCP/IP", "Wireshark", "Cisco", "DNS"],
+    technologies: ["SQL", "MongoDB", "PostgreSQL", "Redis"],
     
     gradient: "from-[#000a1a] via-[#0d0d0d] to-[#0d0d0d]",
     orb1: "bg-blue-500/15",

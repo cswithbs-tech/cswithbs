@@ -13,6 +13,11 @@ export interface IVisitor extends Document {
   lastSeen: Date;
   visitCount: number;
   referrer: string;
+  isp?: string;
+  timezone?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
 }
 
 const VisitorSchema: Schema = new Schema({
@@ -28,6 +33,11 @@ const VisitorSchema: Schema = new Schema({
   createdAt: { type: Date, default: Date.now, index: true },
   lastSeen: { type: Date, default: Date.now, index: true },
   visitCount: { type: Number, default: 1 },
+  isp: { type: String, default: "Unknown" },
+  timezone: { type: String, default: "Unknown" },
+  utmSource: { type: String, default: "" },
+  utmMedium: { type: String, default: "" },
+  utmCampaign: { type: String, default: "" },
 });
 
 // Force recompilation in dev to apply schema changes

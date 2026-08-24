@@ -531,7 +531,7 @@ export default function NewDashboardPage() {
                 Live Traffic Feed
               </h3>
               <Link
-                href="/admin/analytics"
+                href="/admin/live-traffic"
                 className="text-xs text-accent hover:text-accent font-medium"
               >
                 View Full Report &rarr;
@@ -548,23 +548,37 @@ export default function NewDashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-zinc-300">
-                  {data?.recentVisits?.slice(0, 5).map((v: any, i: number) => (
-                    <tr key={i} className="hover:bg-white/5 transition-colors">
-                      <td className="px-6 py-3 font-medium text-white">
-                        {v.city !== "Unknown" ? v.city : v.country}
-                      </td>
-                      <td className="px-6 py-3 truncate max-w-[200px] text-zinc-400">
-                        {v.path}
-                      </td>
-                      <td className="px-6 py-3">{v.device || "Desktop"}</td>
-                      <td className="px-6 py-3 text-right font-mono text-zinc-500">
-                        {new Date(v.lastSeen).toLocaleTimeString("en-US", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                    </tr>
-                  ))}
+                  {data?.recentVisits?.slice(0, 5).map((v: any, i: number) => {
+                    let decodedCity = v.city;
+                    if (decodedCity && decodedCity !== "Unknown") {
+                      try {
+                        decodedCity = decodeURIComponent(decodedCity);
+                      } catch (e) { }
+                    }
+                    
+                    let formattedDevice = v.device || "Desktop";
+                    if (formattedDevice) {
+                      formattedDevice = formattedDevice.charAt(0).toUpperCase() + formattedDevice.slice(1);
+                    }
+
+                    return (
+                      <tr key={i} className="hover:bg-white/5 transition-colors">
+                        <td className="px-6 py-3 font-medium text-white truncate max-w-[150px]">
+                          {decodedCity !== "Unknown" ? `${decodedCity}, ${v.country}` : v.country}
+                        </td>
+                        <td className="px-6 py-3 truncate max-w-[200px] text-zinc-400">
+                          {v.path}
+                        </td>
+                        <td className="px-6 py-3">{formattedDevice}</td>
+                        <td className="px-6 py-3 text-right font-mono text-zinc-500">
+                          {new Date(v.lastSeen).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {(!data?.recentVisits || data.recentVisits.length === 0) && (
                     <tr>
                       <td
