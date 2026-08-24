@@ -69,6 +69,7 @@ export default function ProfilePage() {
         title: "",
         qualification: "",
         occupation: "Student",
+        degree: "",
         university: "",
         semester: "",
         year: "",
@@ -99,6 +100,7 @@ export default function ProfilePage() {
               title: data.title || "",
               qualification: data.qualification || "",
               occupation: data.occupation || "Student",
+              degree: data.degree || "",
               university: data.university || "",
               semester: data.semester || "",
               year: data.year || "",
@@ -482,6 +484,20 @@ export default function ProfilePage() {
                                         <option value="Student">Student</option>
                                         <option value="Teacher">Teacher / Professor</option>
                                         <option value="Professional">Industry Professional</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-zinc-400">Degree / Program</label>
+                                    <select name="degree" value={formData.degree} onChange={handleChange as any} className="w-full bg-[#1A1A1A] border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-accent/50 text-sm appearance-none">
+                                        <option value="" disabled>Select your program...</option>
+                                        <option value="BCA (Bachelor of Computer Applications)">BCA (Bachelor of Computer Applications)</option>
+                                        <option value="MCA (Master of Computer Applications)">MCA (Master of Computer Applications)</option>
+                                        <option value="B.Sc. (Bachelor of Science in CS)">B.Sc. (Bachelor of Science in CS)</option>
+                                        <option value="B.Tech (Bachelor of Technology)">B.Tech (Bachelor of Technology)</option>
+                                        <option value="M.Tech (Master of Technology)">M.Tech (Master of Technology)</option>
+                                        <option value="Diploma">Diploma</option>
+                                        <option value="High School">High School</option>
                                         <option value="Other">Other</option>
                                     </select>
                                 </div>

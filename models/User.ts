@@ -18,6 +18,7 @@ const UserSchema = new Schema(
     title: { type: String, default: '' }, // e.g. "Senior Editor"
     qualification: { type: String, default: '' }, // e.g. "PhD in Astrophysics"
     occupation: { type: String, default: 'Student' }, // e.g. "Freelance Science Writer"
+    degree: { type: String, default: '' }, // e.g. "MCA (Master of Computer Applications)"
     university: { type: String, default: '' },
     semester: { type: String, default: '' },
     year: { type: String, default: '' },

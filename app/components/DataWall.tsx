@@ -19,7 +19,7 @@ export const DataWall = ({ article, session, children }: DataWallProps) => {
   const user = session?.user;
   
   // We assume user data is attached to session. If not, they might need to log in first.
-  const hasCompleteProfile = user?.university && user?.semester && user?.year;
+  const hasCompleteProfile = user?.university && user?.semester && user?.year && user?.degree;
 
   const shouldRestrict = () => {
     if (!user) return true; // Not logged in? Hit the wall

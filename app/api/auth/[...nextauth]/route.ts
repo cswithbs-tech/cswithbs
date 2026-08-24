@@ -97,6 +97,7 @@ export const authOptions: NextAuthOptions = {
                 token.university = (user as any).university;
                 token.semester = (user as any).semester;
                 token.year = (user as any).year;
+                token.degree = (user as any).degree;
             }
 
             // Sync with DB on every check
@@ -111,6 +112,7 @@ export const authOptions: NextAuthOptions = {
                      token.university = dbUser.university;
                      token.semester = dbUser.semester;
                      token.year = dbUser.year;
+                     token.degree = dbUser.degree;
                  }
             }
 
@@ -126,6 +128,7 @@ export const authOptions: NextAuthOptions = {
                 (session.user as any).university = token.university;
                 (session.user as any).semester = token.semester;
                 (session.user as any).year = token.year;
+                (session.user as any).degree = token.degree;
             }
             return session;
         }

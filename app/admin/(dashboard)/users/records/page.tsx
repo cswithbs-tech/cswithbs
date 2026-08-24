@@ -74,6 +74,7 @@ async function getUsers(
       isPremium: u.isPremium || false,
       location: u.location,
       occupation: u.occupation,
+      degree: u.degree,
       university: u.university,
       semester: u.semester,
       year: u.year,
@@ -180,6 +181,9 @@ export default async function UserRecordsPage(props: {
                     Occupation
                   </th>
                   <th className="px-6 py-4 text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                    Degree / Program
+                  </th>
+                  <th className="px-6 py-4 text-xs font-semibold text-zinc-300 uppercase tracking-wider">
                     Institution
                   </th>
                   <th className="px-6 py-4 text-xs font-semibold text-zinc-300 uppercase tracking-wider">
@@ -228,6 +232,11 @@ export default async function UserRecordsPage(props: {
                     </td>
                     <td className="px-6 py-4 align-middle">
                       <span className="text-sm text-zinc-300 font-medium">
+                        {user.degree || "-"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 align-middle">
+                      <span className="text-sm text-zinc-300 font-medium">
                         {user.university || "-"}
                       </span>
                     </td>
@@ -260,7 +269,7 @@ export default async function UserRecordsPage(props: {
                 {users.length === 0 && (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={6}
                       className="px-6 py-12 text-center text-zinc-500 font-medium"
                     >
                       No users found.
