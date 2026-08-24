@@ -24,6 +24,7 @@ export default function ProfilePage() {
     title: "",
     qualification: "",
     occupation: "Student",
+    degree: "",
     university: "",
     semester: "",
     year: "",
