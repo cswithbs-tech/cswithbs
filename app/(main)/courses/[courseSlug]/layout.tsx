@@ -71,6 +71,31 @@ export default async function CourseLayout({
     notFound();
   }
 
+  let isCourseLockedForUser = false;
+  if (session?.user) {
+    const user = session.user as any;
+    const hasCompleteProfile = user.university && user.semester && user.year && user.degree;
+    const roles = user.roles || [];
+    const isPrivileged = roles.some((r: string) => 
+      ["ADMIN", "SUPER_ADMIN", "WRITER", "admin", "super_admin", "writer"].includes(r)
+    );
+    
+    if (user.isCourseRestricted) {
+      isCourseLockedForUser = true;
+    } else if (!hasCompleteProfile && !isPrivileged) {
+      const isAdvanced = courseData.subject.tags?.some((tag: string) => 
+        tag.toLowerCase().includes('advanced') || tag.toLowerCase().includes('intermediate')
+      ) || (courseData.subject.level && (
+        courseData.subject.level.toLowerCase().includes('advanced') || 
+        courseData.subject.level.toLowerCase().includes('intermediate')
+      )) || courseData.subject.isRestricted === true;
+      
+      if (isAdvanced) {
+        isCourseLockedForUser = true;
+      }
+    }
+  }
+
   return (
     <div className="min-h-screen bg-black pt-20 flex flex-col md:flex-row">
       <SidebarClient 
@@ -78,6 +103,7 @@ export default async function CourseLayout({
         subject={courseData.subject} 
         chapters={courseData.chapters}
         hasSession={!!session}
+        isLockedForUser={isCourseLockedForUser}
       />
 
       {/* Main Content Area */}

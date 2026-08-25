@@ -18,11 +18,13 @@ export function SidebarClient({
   subject,
   chapters,
   hasSession,
+  isLockedForUser,
 }: {
   courseSlug: string;
   subject: any;
   chapters: any[];
   hasSession: boolean;
+  isLockedForUser?: boolean;
 }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -80,7 +82,9 @@ export function SidebarClient({
               pathname.includes(`/courses/${courseSlug}/${n.slug}`)
             );
 
-            const isLockedTeaser = !hasSession && idx >= 2;
+            // If it's a locked course for the user, lock everything.
+            // If they are just logged out, lock from chapter 2 onwards (idx >= 2).
+            const isLockedTeaser = isLockedForUser ? true : (!hasSession && idx >= 2);
 
             return (
               <div key={chapter._id} className={isLockedTeaser ? "opacity-40 grayscale pointer-events-none select-none blur-[1px]" : ""}>

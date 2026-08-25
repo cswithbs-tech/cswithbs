@@ -128,6 +128,16 @@ export default async function LessonPage({
   const { subject, currentNote, prevNote, nextNote, totalNotes, currentIndex } = data;
   const accentColor = subject.color || "#E2C6B9";
 
+  // Inherit parent course's strictness so DataWall can block direct-link bypasses
+  if (subject) {
+    if (!currentNote.level && subject.level) {
+      currentNote.level = subject.level;
+    }
+    if (subject.isRestricted === true) {
+      currentNote.isRestricted = true;
+    }
+  }
+
   return (
     <div className="min-h-screen pt-4 pb-32 md:pt-6 md:pb-48">
       <Container className="max-w-4xl mx-auto">
