@@ -72,7 +72,22 @@ export default async function CourseLayout({
   }
 
   let isCourseLockedForUser = false;
-  if (session?.user) {
+  
+  // Calculate if course is advanced/restricted inherently
+  const isAdvanced = courseData.subject.tags?.some((tag: string) => 
+    tag.toLowerCase().includes('advanced') || tag.toLowerCase().includes('intermediate')
+  ) || (courseData.subject.level && (
+    courseData.subject.level.toLowerCase().includes('advanced') || 
+    courseData.subject.level.toLowerCase().includes('intermediate')
+  )) || courseData.subject.isRestricted === true;
+
+  if (!session?.user) {
+    // If not logged in, advanced courses are locked
+    if (isAdvanced) {
+      isCourseLockedForUser = true;
+    }
+  } else {
+    // If logged in, check profile completeness and restrictions
     const user = session.user as any;
     const hasCompleteProfile = user.university && user.semester && user.year && user.degree;
     const roles = user.roles || [];
@@ -82,17 +97,8 @@ export default async function CourseLayout({
     
     if (user.isCourseRestricted) {
       isCourseLockedForUser = true;
-    } else if (!hasCompleteProfile && !isPrivileged) {
-      const isAdvanced = courseData.subject.tags?.some((tag: string) => 
-        tag.toLowerCase().includes('advanced') || tag.toLowerCase().includes('intermediate')
-      ) || (courseData.subject.level && (
-        courseData.subject.level.toLowerCase().includes('advanced') || 
-        courseData.subject.level.toLowerCase().includes('intermediate')
-      )) || courseData.subject.isRestricted === true;
-      
-      if (isAdvanced) {
-        isCourseLockedForUser = true;
-      }
+    } else if (!hasCompleteProfile && !isPrivileged && isAdvanced) {
+      isCourseLockedForUser = true;
     }
   }
 
