@@ -115,6 +115,12 @@
   line-height: 1.6;
 }
 
+/* Remove Tailwind prose generated quotes from callout paragraphs */
+:is(.ProseMirror, .cswithbs-components) blockquote[class*="callout"] p::before,
+:is(.ProseMirror, .cswithbs-components) blockquote[class*="callout"] p::after {
+  content: none !important;
+}
+
 /* Callout Icons */
 :is(.ProseMirror, .cswithbs-components) blockquote[class*="callout"]::before {
   content: "";
