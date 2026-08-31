@@ -110,7 +110,7 @@ export default async function LandingPage() {
               </p>
 
               <div className="flex flex-wrap gap-4">
-                <Link href="/study">
+                <Link href="/courses">
                   <Button
                     size="lg"
                     className="rounded-full text-base font-medium px-8 bg-accent text-black hover:bg-accent-hover transition-colors h-12 w-full sm:w-auto"

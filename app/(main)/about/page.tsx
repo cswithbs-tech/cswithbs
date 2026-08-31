@@ -289,21 +289,21 @@ export default function AboutPage() {
               </Link>
               <div className="flex items-center gap-6 px-8 py-4 rounded-full border border-white/10 bg-black/50 backdrop-blur-sm">
                 <Link
-                  href="#"
+                  href="https://scholar.google.com/citations?user=qE2uisoAAAAJ&hl=en"
                   className="text-zinc-400 hover:text-white transition-colors text-sm font-medium"
                 >
                   Google Scholar
                 </Link>
                 <div className="w-1 h-1 rounded-full bg-white/20"></div>
                 <Link
-                  href="#"
+                  href="https://www.facebook.com/share/1ExjhBinXw/"
                   className="text-zinc-400 hover:text-white transition-colors text-sm font-medium"
                 >
-                  ResearchGate
+                  Facebook
                 </Link>
                 <div className="w-1 h-1 rounded-full bg-white/20"></div>
                 <Link
-                  href="#"
+                  href="https://www.linkedin.com/in/buddhadev-sasmal-391346159/"
                   className="text-zinc-400 hover:text-white transition-colors text-sm font-medium"
                 >
                   LinkedIn

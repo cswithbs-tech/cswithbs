@@ -35,6 +35,7 @@ const UserSchema = new Schema(
     readNotifications: [{ type: Schema.Types.ObjectId, ref: 'Notification' }],
     hiddenNotifications: [{ type: Schema.Types.ObjectId, ref: 'Notification' }],
     bookmarks: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
+    bookmarkedNotes: [{ type: Schema.Types.ObjectId, ref: 'Note' }],
     likedPosts: [{ type: Schema.Types.ObjectId, ref: 'Post' }],
   },
   { timestamps: true }

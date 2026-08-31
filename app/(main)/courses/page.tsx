@@ -40,7 +40,13 @@ async function getCoursesPageData() {
       const chaptersCount = await Chapter.countDocuments({
         subject: subject._id,
       });
-      const notesCount = await Note.countDocuments({ subject: subject._id });
+      const notesCount = await Note.countDocuments({ 
+        subject: subject._id,
+        $or: [
+          { status: "published" },
+          { status: "scheduled", scheduledPublishDate: { $lte: new Date() } },
+        ]
+      });
 
       totalChapters += chaptersCount;
       totalNotes += notesCount;

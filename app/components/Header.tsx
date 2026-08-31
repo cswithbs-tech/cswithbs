@@ -366,13 +366,13 @@ export const Header = () => {
 
                   {(session.user as any).roles?.some((r: string) => ["ADMIN", "SUPER_ADMIN", "WRITER"].includes(r)) && (
                     <Link
-                      href="/writers-hub/posts/create"
+                      href="/writers-hub/dashboard"
                       onClick={() => setIsMobileMenuOpen(false)}
                       className="flex items-center justify-between p-3 rounded-xl hover:bg-white/5 transition-colors text-zinc-300 hover:text-white group"
                     >
                       <div className="flex items-center gap-3">
                         <PenTool className="w-4 h-4 text-zinc-400 group-hover:text-accent transition-colors" />
-                        <span className="font-medium text-sm">Write New Post</span>
+                        <span className="font-medium text-sm">Writer Dashboard</span>
                       </div>
                       <ChevronDown className="w-4 h-4 -rotate-90 opacity-30 group-hover:opacity-100 group-hover:text-accent transition-all" />
                     </Link>

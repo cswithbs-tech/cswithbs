@@ -113,6 +113,9 @@ export const authOptions: NextAuthOptions = {
                      token.semester = dbUser.semester;
                      token.year = dbUser.year;
                      token.degree = dbUser.degree;
+                 } else {
+                     // User was deleted from DB! Destroy the session.
+                     return null;
                  }
             }
 

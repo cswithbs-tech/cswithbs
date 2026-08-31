@@ -21,6 +21,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/app/components/ui/Container";
 import { LessonActions } from "./LessonActions";
 import { NoteTracker } from "../../components/NoteTracker";
+import User from "@/models/User";
 import { AuthWallOverlay } from "@/app/components/ui/AuthWallOverlay";
 import { DataWall } from "@/app/components/DataWall";
 import { getServerSession } from "next-auth";
@@ -138,14 +139,51 @@ export default async function LessonPage({
     }
   }
 
+  let initialBookmarked = false;
+  let isRestrictedForUser = false;
+  
+  if (!session?.user) {
+    isRestrictedForUser = true;
+  } else {
+    const user = session.user as any;
+    const hasCompleteProfile = user.university && user.semester && user.year && user.degree;
+    const roles = user.roles || [];
+    const isPrivileged = roles.some((r: string) => 
+      ["ADMIN", "SUPER_ADMIN", "WRITER", "admin", "super_admin", "writer"].includes(r)
+    );
+
+    if (user.isCourseRestricted) {
+      isRestrictedForUser = true;
+    } else if (!hasCompleteProfile && !isPrivileged) {
+      const isAdvanced = currentNote.tags?.some((tag: string) => 
+        tag.toLowerCase().includes('advanced') || tag.toLowerCase().includes('intermediate')
+      ) || (currentNote.level && (
+        currentNote.level.toLowerCase().includes('advanced') || 
+        currentNote.level.toLowerCase().includes('intermediate')
+      )) || currentNote.isRestricted === true;
+
+      if (isAdvanced) {
+        isRestrictedForUser = true;
+      }
+    }
+  }
+
+  if (session?.user) {
+    const userId = (session.user as any).id;
+    const user = await User.findById(userId).select('bookmarkedNotes').lean();
+    if (user?.bookmarkedNotes?.some((id: any) => id.toString() === currentNote._id.toString())) {
+      initialBookmarked = true;
+    }
+  }
+
   return (
     <div className="min-h-screen pt-4 pb-32 md:pt-6 md:pb-48">
       <Container className="max-w-4xl mx-auto">
-        <NoteTracker noteId={currentNote._id} />
+        <NoteTracker noteId={currentNote._id} isRestricted={isRestrictedForUser} />
 
         {/* ── Top bar: actions only ───────────────────── */}
         <div className="flex flex-wrap items-center justify-end gap-4 mb-6 pb-4 border-b border-white/10">
-          <LessonActions />
+          <LessonActions noteId={currentNote._id} initialBookmarked={initialBookmarked} />
         </div>
 
         {/* ── Metadata bar ─────────────────────────────────────── */}
