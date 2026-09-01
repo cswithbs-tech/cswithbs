@@ -20,7 +20,10 @@ import {
   Crown,
   UserCog,
   PenTool,
-  Star
+  Star,
+  GraduationCap,
+  Building,
+  Clock
 } from "lucide-react";
 import { UserBadge } from "@/app/components/ui/UserBadge";
 import { BlogCard } from "@/app/components/BlogCard";
@@ -247,21 +250,39 @@ export default function UserProfilePage({
 
               <div className="flex flex-wrap gap-6 text-sm text-zinc-500">
                 {user.createdAt && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" title="Joined Date">
                     <Calendar size={16} />
                     <span>Joined {new Date(user.createdAt).getFullYear()}</span>
                   </div>
                 )}
                 {user.location && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" title="Location">
                     <MapPin size={16} />
                     <span>{user.location}</span>
                   </div>
                 )}
-                {user.qualification && (
-                  <div className="flex items-center gap-2">
+                {user.university && (
+                  <div className="flex items-center gap-2" title="University/Institution">
+                    <Building size={16} />
+                    <span>{user.university}</span>
+                  </div>
+                )}
+                {user.degree && (
+                  <div className="flex items-center gap-2" title="Degree/Program">
+                    <GraduationCap size={16} />
+                    <span>{user.degree}</span>
+                  </div>
+                )}
+                {user.semester && (
+                  <div className="flex items-center gap-2" title="Current Semester">
                     <BookOpen size={16} />
-                    <span>{user.qualification}</span>
+                    <span>{user.semester}</span>
+                  </div>
+                )}
+                {user.year && (
+                  <div className="flex items-center gap-2" title="Graduation Year">
+                    <Clock size={16} />
+                    <span>Class of {user.year}</span>
                   </div>
                 )}
               </div>
@@ -287,6 +308,7 @@ export default function UserProfilePage({
                     title: p.title,
                     excerpt: p.excerpt,
                     date: new Date(p.createdAt).toLocaleDateString(),
+                    createdAt: new Date(p.createdAt).toISOString(),
                     category: p.category || "Article",
                     imageUrl: p.image,
                     likes: p.likes || 0,
@@ -298,48 +320,50 @@ export default function UserProfilePage({
           </div>
         )}
 
-        {/* Public Activity Feed */}
-        <div className="bg-[#0D0D0D] border border-white/5 rounded-2xl p-8">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <MessageSquare className="text-accent" />
-            Public Activity
-          </h2>
+        {/* Public Activity Feed (Visible only for Writers/Admins) */}
+        {user.roles?.some((r: string) => ["SUPER_ADMIN", "ADMIN", "WRITER"].includes(r)) && (
+          <div className="bg-[#0D0D0D] border border-white/5 rounded-2xl p-8">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <MessageSquare className="text-accent" />
+              Public Activity
+            </h2>
 
-          {interactionsLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="animate-spin text-zinc-500" />
-            </div>
-          ) : publicComments.length > 0 ? (
-            <div className="space-y-4">
-              {publicComments.map((c) => (
-                <div
-                  key={c._id}
-                  className="p-4 border border-white/5 rounded-xl bg-white/5"
-                >
-                  <p className="text-zinc-300 text-sm mb-3">"{c.content}"</p>
-                  <div className="text-xs text-zinc-500 flex gap-2">
-                    <span>{new Date(c.createdAt).toLocaleDateString()}</span>
-                    <span className="text-zinc-600">•</span>
-                    {c.post ? (
-                      <a
-                        href={`/blog/${c.post.slug}`}
-                        className="text-accent hover:underline"
-                      >
-                        Commented on: {c.post.title}
-                      </a>
-                    ) : (
-                      <span>Commented on a deleted resource</span>
-                    )}
+            {interactionsLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="animate-spin text-zinc-500" />
+              </div>
+            ) : publicComments.length > 0 ? (
+              <div className="space-y-4">
+                {publicComments.map((c) => (
+                  <div
+                    key={c._id}
+                    className="p-4 border border-white/5 rounded-xl bg-white/5"
+                  >
+                    <p className="text-zinc-300 text-sm mb-3">"{c.content}"</p>
+                    <div className="text-xs text-zinc-500 flex gap-2">
+                      <span>{new Date(c.createdAt).toLocaleDateString()}</span>
+                      <span className="text-zinc-600">•</span>
+                      {c.post ? (
+                        <a
+                          href={`/blog/${c.post.slug}`}
+                          className="text-accent hover:underline"
+                        >
+                          Commented on: {c.post.title}
+                        </a>
+                      ) : (
+                        <span>Commented on a deleted resource</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-zinc-500 border border-dashed border-white/10 rounded-xl">
-              No public activity to show.
-            </div>
-          )}
-        </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-zinc-500 border border-dashed border-white/10 rounded-xl">
+                No public activity to show.
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </Container>
   );

@@ -477,10 +477,11 @@ export default async function BlogPostPage({
                     title: related.title,
                     excerpt: related.excerpt,
                     date: new Date(related.createdAt).toLocaleDateString(),
+                    createdAt: new Date(related.createdAt).toISOString(),
                     category: related.category?.name || "Article",
                     imageUrl: related.image,
-                    likes: related.likes,
-                    views: related.views,
+                    likes: related.likes || 0,
+                    views: related.views || 0,
                   }}
                 />
               ))}

@@ -275,7 +275,23 @@ export default async function LessonPage({
         )}
 
         {/* ── Bottom section ────────────────────────────────────── */}
-        <div className="mt-32 pt-12 border-t border-white/10">
+        <div className="mt-20 pt-12 border-t border-white/10">
+
+          {/* ── In-Content CTA ───────────────────────────────────── */}
+          <div className="mb-12 bg-[#111111]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 hover:border-accent/30 transition-colors">
+            <div>
+              <h3 className="text-xl font-bold text-white mb-2">Mastered this lesson?</h3>
+              <p className="text-zinc-400 text-sm max-w-lg">
+                Consolidate your learning by teaching others. Join the CSWITHBS Writers Hub and start publishing your own articles today!
+              </p>
+            </div>
+            <Link 
+              href="/writers-hub"
+              className="shrink-0 bg-accent text-black font-bold px-6 py-3 rounded-xl shadow-[0_0_15px_rgba(var(--color-accent),0.3)] hover:shadow-[0_0_25px_rgba(var(--color-accent),0.5)] transition-all hover:-translate-y-1"
+            >
+              Become a Writer
+            </Link>
+          </div>
 
           {/* Prev / Next navigation */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

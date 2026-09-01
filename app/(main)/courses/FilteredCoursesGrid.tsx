@@ -58,6 +58,10 @@ function CourseCard({ course }: CourseCardProps) {
   const Icon = course.icon && iconMap[course.icon] ? iconMap[course.icon] : BookOpen;
   const accentColor = course.color || "#E2C6B9";
 
+  const isNew = course.createdAt 
+    ? (new Date().getTime() - new Date(course.createdAt).getTime()) / (1000 * 60 * 60 * 24) <= 7
+    : false;
+
   let levelColor = "text-zinc-400 bg-white/5 border-white/10";
   if (course.level === "Beginner") levelColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
   if (course.level === "Intermediate") levelColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
@@ -79,9 +83,18 @@ function CourseCard({ course }: CourseCardProps) {
       >
         {/* Left accent bar */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl"
+          className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-2xl z-20"
           style={{ backgroundColor: accentColor }}
         />
+
+        {/* NEW Badge */}
+        {isNew && (
+          <div className="absolute top-0 right-0 z-30">
+            <div className="bg-accent text-black text-[10px] font-black px-3 py-1 tracking-wider uppercase rounded-bl-xl shadow-[0_0_15px_rgba(var(--color-accent),0.5)] flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" /> NEW
+            </div>
+          </div>
+        )}
 
         {/* Cover image or gradient placeholder */}
         <div className="relative w-full aspect-[16/9] shrink-0 overflow-hidden bg-[#0d0d0d]">

@@ -373,27 +373,38 @@ export default function ProfilePage() {
                         <p className="text-zinc-400 text-sm">Welcome back! Here is an overview of your active courses and saved materials.</p>
                     </div>
 
-                    {/* Placeholder for Courses/PRO status */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="border border-white/5 bg-white/5 rounded-lg p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="border border-white/5 bg-white/5 hover:bg-white/10 transition-colors rounded-lg p-6 flex flex-col h-full">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="p-2 bg-accent/20 text-accent rounded-lg">
                                     <BookOpen className="w-5 h-5" />
                                 </div>
                                 <h3 className="font-bold text-white">Enrolled Courses</h3>
                             </div>
-                            <p className="text-zinc-500 text-sm mb-4">You are not currently enrolled in any courses.</p>
-                            <Button variant="outline" onClick={() => router.push("/courses")} className="w-full text-xs">Browse Courses</Button>
+                            <p className="text-zinc-400 text-sm mb-6 flex-1">Ready to master Data Structures, Algorithms, or System Design? Dive into a course and start learning today.</p>
+                            <Button variant="primary" onClick={() => router.push("/courses")} className="w-full text-xs">Start Learning Now</Button>
                         </div>
-                        <div className="border border-white/5 bg-white/5 rounded-lg p-6">
+                        
+                        <div className="border border-white/5 bg-white/5 hover:bg-white/10 transition-colors rounded-lg p-6 flex flex-col h-full">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="p-2 bg-green-500/20 text-green-500 rounded-lg">
+                                <div className="p-2 bg-green-500/20 text-green-400 rounded-lg">
                                     <CheckCircle2 className="w-5 h-5" />
                                 </div>
                                 <h3 className="font-bold text-white">CSwithBS PRO</h3>
                             </div>
-                            <p className="text-zinc-500 text-sm mb-4">You are currently on the Free Tier.</p>
-                            <Button variant="primary" onClick={() => showToast("CSwithBS PRO is coming soon!", "info")} className="w-full text-xs">Upgrade to PRO</Button>
+                            <p className="text-zinc-400 text-sm mb-6 flex-1">Unlock exclusive quizzes, comprehensive Q&A, and premium exam prep materials to boost your grades.</p>
+                            <Button variant="outline" onClick={() => showToast("CSwithBS PRO is coming soon!", "info")} className="w-full text-xs">Join Waitlist</Button>
+                        </div>
+
+                        <div className="border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors rounded-lg p-6 flex flex-col h-full">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 bg-accent text-black rounded-lg">
+                                    <PenTool className="w-5 h-5" />
+                                </div>
+                                <h3 className="font-bold text-white">Join the Writers Hub</h3>
+                            </div>
+                            <p className="text-zinc-400 text-sm mb-6 flex-1">Have insights to share? Write articles, build your portfolio, and reach thousands of tech enthusiasts.</p>
+                            <Button variant="primary" onClick={() => showToast("Writers Hub public registration is coming soon!", "info")} className="w-full text-xs shadow-[0_0_15px_rgba(var(--color-accent),0.2)]">Become a Writer</Button>
                         </div>
                     </div>
                 </div>

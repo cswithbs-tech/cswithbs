@@ -7,6 +7,7 @@ interface BlogPost {
   title: string;
   excerpt: string;
   date: string;
+  createdAt?: string; // ISO String
   category: string;
   imageUrl: string;
   likes: number;
@@ -14,8 +15,22 @@ interface BlogPost {
 }
 
 export const BlogCard = ({ post }: { post: BlogPost }) => {
+  // Check if post is less than 7 days old
+  const isNew = post.createdAt 
+    ? (new Date().getTime() - new Date(post.createdAt).getTime()) / (1000 * 60 * 60 * 24) <= 7
+    : false;
+
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl bg-card border border-white/5 transition-all hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 max-w-full min-w-0">
+    <div className="group flex flex-col overflow-hidden rounded-2xl bg-card border border-white/5 transition-all hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 max-w-full min-w-0 relative">
+      {/* NEW Badge */}
+      {isNew && (
+        <div className="absolute top-0 right-0 z-20">
+          <div className="bg-accent text-black text-[10px] font-black px-3 py-1 tracking-wider uppercase rounded-bl-xl shadow-[0_0_15px_rgba(var(--color-accent),0.5)] flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-black animate-pulse" /> NEW
+          </div>
+        </div>
+      )}
+      
       {/* Image Container */}
       <div className="relative h-48 w-full overflow-hidden">
         {post.imageUrl ? (

@@ -1,6 +1,7 @@
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import { FeedbackCard } from "../components/ui/FeedbackCard";
+import { WelcomeModal } from "../components/WelcomeModal";
 
 export default function MainLayout({
   children,
@@ -15,6 +16,7 @@ export default function MainLayout({
       </main>
       <Footer />
       <FeedbackCard />
+      <WelcomeModal />
     </>
   );
 }
