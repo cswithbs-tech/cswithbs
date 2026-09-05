@@ -1,9 +1,12 @@
 import { Container } from "@/app/components/ui/Container";
 import { ResearchCarouselClient } from "./ResearchCarouselClient";
 import { ProfileSection } from "./ProfileSection";
-import { ExternalLink, FileText } from "lucide-react";
+import { ExternalLink, FileText, ArrowRight, Users } from "lucide-react";
 import { PdfButton } from "./PdfButton";
 import { ExternalLinkButton } from "./ExternalLinkButton";
+import Link from "next/link";
+import dbConnect from "@/lib/db";
+import Collaboration from "@/models/Collaboration";
 
 export const revalidate = 60;
 
@@ -78,7 +81,14 @@ const PUBLICATIONS = [
   },
 ];
 
-export default function ResearchPage() {
+export default async function ResearchPage() {
+  await dbConnect();
+  const collaborations = await Collaboration.find({ status: "published" })
+    .sort({ createdAt: -1 })
+    .limit(3)
+    .populate("student", "name")
+    .lean();
+
   return (
     <div className="min-h-screen bg-[#0d0d0d] pt-32 pb-24">
       {/* ── Ambient background orbs ─────────────────────────────────── */}
@@ -97,6 +107,8 @@ export default function ResearchPage() {
 
         {/* Profile */}
         <ProfileSection />
+
+
 
         {/* Publications */}
         <section id="publications" className="max-w-5xl mx-auto scroll-mt-32">
@@ -172,6 +184,78 @@ export default function ResearchPage() {
             ))}
           </div>
         </section>
+
+        {/* Student Collaborations Highlight Grid (Moved below publications) */}
+        {collaborations.length > 0 && (
+        <section className="max-w-5xl mx-auto mt-32 mb-20">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
+            <div>
+               <h2 className="text-sm font-mono text-accent uppercase tracking-widest mb-3 flex items-center gap-2">
+                 <Users size={14} /> Student Showcase
+               </h2>
+               <h3 className="text-3xl md:text-4xl font-display font-black text-white">Collaborative Research</h3>
+            </div>
+            <Link
+              href="/research/collaborations"
+              className="group flex items-center text-sm font-bold text-zinc-400 hover:text-accent transition-colors"
+            >
+              [ View All Projects ]
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {collaborations.map((project: any) => (
+              <Link 
+                key={project.slug} 
+                href={`/research/collaborations/${project.slug}`}
+                className="group flex flex-col border border-white/5 bg-white/[0.02] rounded-2xl overflow-hidden hover:bg-white/[0.04] hover:border-accent/30 transition-all duration-300 relative"
+              >
+                {/* Glowing Hover Effect */}
+                <div className="absolute inset-0 bg-accent/0 group-hover:bg-accent/5 transition-colors z-0 pointer-events-none"></div>
+
+                {/* Cover Image or Empty State */}
+                <div className="relative h-48 w-full overflow-hidden shrink-0 z-10 flex items-center justify-center bg-[#050505]">
+                  {project.image ? (
+                    <img
+                      src={project.image}
+                      alt={project.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-80 group-hover:opacity-100"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-black group-hover:bg-white/[0.02] transition-colors">
+                       <FileText size={48} className="text-zinc-700" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                  <div className="absolute top-4 left-4 z-20">
+                     <span className="px-3 py-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-bold text-white uppercase tracking-wider">
+                       {project.type}
+                     </span>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6 flex flex-col flex-1 z-10">
+                  <div className="flex items-center gap-3 text-xs font-bold text-zinc-500 mb-4 tracking-widest uppercase">
+                    <span className="text-accent">{project.event}</span>
+                    <span>&bull;</span>
+                    <span>{project.student?.name || "Unknown"}</span>
+                  </div>
+                  
+                  <h4 className="text-lg font-bold text-white mb-3 font-display group-hover:text-accent transition-colors line-clamp-2">
+                    {project.title}
+                  </h4>
+                  
+                  <div className="mt-auto flex items-center text-xs font-bold text-accent opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 pt-4 uppercase tracking-widest">
+                    View Project <ArrowRight className="w-4 h-4 ml-2" />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+        )}
+
       </Container>
     </div>
   );

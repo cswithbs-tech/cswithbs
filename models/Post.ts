@@ -15,7 +15,7 @@ export interface IPost extends Document {
   views: number;
   likes: number;
   featured: boolean;
-  status: "draft" | "published" | "archived" | "scheduled";
+  status: "draft" | "pending_approval" | "published" | "archived" | "scheduled";
   scheduledPublishDate?: Date;
   isFreePreview: boolean;
   isRestricted?: boolean; // Manual override for Data Wall access control
@@ -51,7 +51,7 @@ const PostSchema: Schema = new Schema(
     featured: { type: Boolean, default: false },
     status: {
       type: String,
-      enum: ["draft", "published", "archived", "scheduled"],
+      enum: ["draft", "pending_approval", "published", "archived", "scheduled"],
       default: "draft",
     },
     // Schedule Field

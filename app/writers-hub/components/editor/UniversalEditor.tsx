@@ -755,6 +755,7 @@ export default function UniversalEditor({
         router={router}
         onHistory={() => setShowRevisions(true)}
         showHistory={isEdit}
+        isSuperAdmin={isSuperAdmin}
       />
 
       <RevisionsModal

@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import dbConnect from "@/lib/db";
 import User from "@/models/User";
 import Setting from "@/models/Setting";
+import Notification from "@/models/Notification";
 import bcrypt from "bcryptjs";
 
 import GoogleProvider from "next-auth/providers/google";
@@ -72,12 +73,26 @@ export const authOptions: NextAuthOptions = {
                         if (!registrationOpen) {
                             return '/login?error=RegistrationClosed';
                         }
-                        await User.create({
+                        const newUser = await User.create({
                             name: user.name,
                             email: user.email,
                             image: user.image,
                             roles: ['USER'], 
                         });
+
+                        // Send personalized welcome notification
+                        try {
+                            const firstName = user.name?.split(' ')[0] || 'there';
+                            await Notification.create({
+                                type: "PERSONAL",
+                                recipient: newUser._id,
+                                title: "Welcome to CSwithBS! 🎉",
+                                message: `Hi ${firstName}! We're thrilled to have you here. Explore our notes, subjects, and feel free to customize your profile.`,
+                                link: `/profile/${newUser._id}`
+                            });
+                        } catch (notifError) {
+                            console.error("Failed to send social welcome notification:", notifError);
+                        }
                     }
                     return true;
                 } catch (error) {

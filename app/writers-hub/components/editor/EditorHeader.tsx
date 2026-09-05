@@ -33,6 +33,7 @@ interface EditorHeaderProps {
   onHistory: () => void;
   showHistory: boolean;
   contentType?: "post" | "note";
+  isSuperAdmin?: boolean;
 }
 
 export function EditorHeader({
@@ -50,6 +51,7 @@ export function EditorHeader({
   isSubmitting,
   router,
   contentType = "post",
+  isSuperAdmin = false,
 }: EditorHeaderProps) {
   const [showSchedulePopover, setShowSchedulePopover] = useState(false);
   const [showConflictConfirm, setShowConflictConfirm] = useState(false);
@@ -104,7 +106,7 @@ export function EditorHeader({
                 }`}
               ></span>
               <span className="capitalize text-zinc-300">
-                {status === "scheduled" ? "Scheduled" : `${status} Mode`}
+                {status === "scheduled" ? "Scheduled" : status === "pending_approval" ? "Pending Review" : `${status} Mode`}
               </span>
             </div>
           </h1>
@@ -199,25 +201,27 @@ export function EditorHeader({
 
         <div className="relative">
           <div className="flex items-center -space-x-px">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={handleScheduleClick}
-              disabled={isSubmitting}
-              className={`rounded-r-none border border-white/10 px-3 z-0 hover:z-10 relative
-                ${
-                  showSchedulePopover
-                    ? "bg-accent/50 text-accent border-accent/30"
-                    : "bg-black/40 text-zinc-400 hover:text-accent hover:bg-accent/20"
-                }`}
-              title="Schedule Post"
-            >
-              <CalendarClock size={18} />
-            </Button>
+            {isSuperAdmin && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleScheduleClick}
+                disabled={isSubmitting}
+                className={`rounded-r-none border border-white/10 px-3 z-0 hover:z-10 relative
+                  ${
+                    showSchedulePopover
+                      ? "bg-accent/50 text-accent border-accent/30"
+                      : "bg-black/40 text-zinc-400 hover:text-accent hover:bg-accent/20"
+                  }`}
+                title="Schedule Post"
+              >
+                <CalendarClock size={18} />
+              </Button>
+            )}
             <Button
               variant="primary"
               size="sm"
-              className="rounded-l-none px-6 font-bold text-black border-l border-white/10 bg-gradient-to-r from-accent to-amber-400 hover:from-accent hover:to-amber-300 z-0 hover:z-10"
+              className={`${isSuperAdmin ? 'rounded-l-none' : 'rounded-lg'} px-6 font-bold text-black border-l border-white/10 bg-gradient-to-r from-accent to-amber-400 hover:from-accent hover:to-amber-300 z-0 hover:z-10`}
               onClick={handlePublishClick}
               disabled={isSubmitting}
             >
@@ -227,6 +231,8 @@ export function EditorHeader({
                     <span className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                     <span>...</span>
                   </>
+                ) : !isSuperAdmin ? (
+                  "Submit for Review"
                 ) : status === "scheduled" ? (
                   "Update Schedule"
                 ) : (

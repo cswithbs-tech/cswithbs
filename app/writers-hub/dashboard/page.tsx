@@ -81,20 +81,7 @@ export default function WritersHubDashboard() {
         </div>
       </div>
 
-      {/* Access Control Notice */}
-      {userRole === "WRITER" && (
-        <div className="bg-blue-900/10 border border-blue-900/30 rounded-xl p-4 flex items-start gap-4">
-          <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center shrink-0">
-            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-blue-400 mb-1">Writer Access Active</h3>
-            <p className="text-xs text-blue-200/60">
-              You currently have Writer access. You can create new content and edit your own posts and notes. You cannot edit content authored by other users.
-            </p>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

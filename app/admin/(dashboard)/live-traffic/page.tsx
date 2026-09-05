@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -24,6 +24,32 @@ export default function LiveTrafficPage() {
   const [activeVisitorId, setActiveVisitorId] = useState<string | null>(null);
   const [journeyData, setJourneyData] = useState<any[]>([]);
   const [journeyLoading, setJourneyLoading] = useState(false);
+
+  // Drag-to-scroll implementation
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeft(scrollRef.current.scrollLeft);
+  };
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // Scroll-fast multiplier
+    scrollRef.current.scrollLeft = scrollLeft - walk;
+  };
 
   useEffect(() => {
     const fetchTraffic = async () => {
@@ -92,7 +118,7 @@ export default function LiveTrafficPage() {
               </h1>
             </div>
             <p className="text-zinc-500 text-sm ml-11">
-              Detailed view of the 100 most recent visitors. Auto-updates every 30s.
+              Detailed view of the 100 most recent visitors. Auto-updates every 30s. Drag the table to scroll horizontally.
             </p>
           </div>
           
@@ -105,26 +131,33 @@ export default function LiveTrafficPage() {
         </div>
 
         {/* Table Container */}
-        <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-zinc-900 border-b border-zinc-800 text-zinc-400 uppercase font-semibold text-xs tracking-wider">
+        <div className="bg-[#0f0f11] border border-zinc-800/80 rounded-2xl overflow-hidden shadow-2xl relative">
+          <div 
+            ref={scrollRef}
+            onMouseDown={handleMouseDown}
+            onMouseLeave={handleMouseLeave}
+            onMouseUp={handleMouseUp}
+            onMouseMove={handleMouseMove}
+            className={`overflow-x-auto select-none [&::-webkit-scrollbar]:h-2.5 [&::-webkit-scrollbar-track]:bg-zinc-900/80 [&::-webkit-scrollbar-thumb]:bg-zinc-700/80 hover:[&::-webkit-scrollbar-thumb]:bg-zinc-500 [&::-webkit-scrollbar-thumb]:rounded-full transition-all ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          >
+            <table className="w-full text-left text-sm whitespace-nowrap border-collapse">
+              <thead className="bg-[#121215] border-b border-zinc-800/80 text-zinc-400 uppercase font-semibold text-xs tracking-wider">
                 <tr>
-                  <th className="px-6 py-4">Location & ISP</th>
-                  <th className="px-6 py-4">Active Page & Campaign</th>
-                  <th className="px-6 py-4">Device</th>
-                  <th className="px-6 py-4">Browser & OS</th>
-                  <th className="px-6 py-4 text-center">Sessions</th>
-                  <th className="px-6 py-4 text-right">Exact Last Seen</th>
-                  <th className="px-6 py-4 text-right">Journey</th>
+                  <th className="px-4 py-3 sticky left-0 z-20 bg-[#121215] border-r border-zinc-800/80 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.5)]">Location & ISP</th>
+                  <th className="px-4 py-3">Active Page & Campaign</th>
+                  <th className="px-4 py-3">Device</th>
+                  <th className="px-4 py-3">Browser & OS</th>
+                  <th className="px-4 py-3 text-center">Sessions</th>
+                  <th className="px-4 py-3 text-right">Exact Last Seen</th>
+                  <th className="px-4 py-3 text-right">Journey</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-800/50 text-zinc-300">
+              <tbody className="divide-y divide-zinc-800/40 text-zinc-300">
                 {visitors.length > 0 ? (
                   visitors.map((v, i) => (
-                    <tr key={v._id || i} className="hover:bg-zinc-800/30 transition-colors">
-                      {/* Location & ISP */}
-                      <td className="px-6 py-4">
+                    <tr key={v._id || i} className="group hover:bg-zinc-800/30 transition-colors">
+                      {/* Location & ISP (Sticky) */}
+                      <td className="px-4 py-3 sticky left-0 z-10 bg-[#0f0f11] group-hover:bg-[#18181b] border-r border-zinc-800/40 shadow-[4px_0_15px_-3px_rgba(0,0,0,0.5)] transition-colors">
                         <div className="flex items-center gap-2 font-medium text-white mb-1">
                           <MapPin className="w-4 h-4 text-zinc-500 shrink-0" />
                           <span className="truncate max-w-[200px]">
@@ -132,7 +165,7 @@ export default function LiveTrafficPage() {
                           </span>
                         </div>
                         {v.isp && v.isp !== "Unknown" && (
-                           <div className="flex items-center gap-1.5 text-xs text-zinc-500 ml-6">
+                           <div className="flex items-center gap-1.5 text-[11px] text-zinc-500 ml-6">
                               <Server className="w-3 h-3" />
                               <span className="truncate max-w-[180px]">{v.isp}</span>
                            </div>
@@ -140,7 +173,7 @@ export default function LiveTrafficPage() {
                       </td>
                       
                       {/* Page & UTM */}
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <span className="truncate max-w-[250px] inline-block text-zinc-300 font-medium" title={v.path}>
                           {v.path}
                         </span>
@@ -153,7 +186,7 @@ export default function LiveTrafficPage() {
                       </td>
                       
                       {/* Device */}
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-2 text-zinc-400">
                           {getDeviceIcon(v.device)}
                           {v.device}
@@ -161,21 +194,21 @@ export default function LiveTrafficPage() {
                       </td>
                       
                       {/* Browser & OS */}
-                      <td className="px-6 py-4 text-zinc-400">
+                      <td className="px-4 py-3 text-zinc-400">
                         {v.browser} <span className="text-zinc-600 px-1">•</span> {v.os}
                       </td>
 
                       {/* Total Visits */}
-                      <td className="px-6 py-4 text-center">
-                        <span className="px-2.5 py-1 bg-zinc-800 rounded-md text-xs font-mono font-medium text-zinc-300">
+                      <td className="px-4 py-3 text-center">
+                        <span className="px-2.5 py-1 bg-zinc-800 rounded-md text-xs font-mono font-medium text-zinc-300 border border-zinc-700/50">
                           {v.visitCount}
                         </span>
                       </td>
                       
                       {/* Exact Last Seen */}
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 py-3 text-right">
                         <div className="flex flex-col items-end gap-1 text-zinc-400">
-                          <span className="font-mono text-white text-xs">
+                          <span className="font-mono text-white text-[11px]">
                             {format(new Date(v.lastSeen), "MMM dd • hh:mm:ss a")}
                           </span>
                           {v.timezone && v.timezone !== 'Unknown' && (
@@ -185,10 +218,10 @@ export default function LiveTrafficPage() {
                       </td>
                       
                       {/* Journey Action */}
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 py-3 text-right">
                         <button 
                           onClick={() => openJourney(v.visitorId)}
-                          className="px-3 py-1.5 bg-white/5 hover:bg-accent/10 hover:text-accent border border-white/10 hover:border-accent/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ml-auto"
+                          className="px-3 py-1.5 bg-white/5 hover:bg-accent/10 hover:text-accent border border-white/10 hover:border-accent/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ml-auto cursor-pointer"
                         >
                           <Activity className="w-3.5 h-3.5" />
                           View Journey
@@ -198,7 +231,7 @@ export default function LiveTrafficPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-6 py-12 text-center text-zinc-500">
+                    <td colSpan={7} className="px-4 py-12 text-center text-zinc-500">
                       {loading ? "Loading visitor data..." : "No recent visitors found."}
                     </td>
                   </tr>
@@ -226,7 +259,7 @@ export default function LiveTrafficPage() {
                 </div>
                 <button 
                   onClick={() => setJourneyModalOpen(false)}
-                  className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-400 transition-colors"
+                  className="p-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg text-zinc-400 transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>

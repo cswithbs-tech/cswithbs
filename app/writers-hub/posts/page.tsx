@@ -222,6 +222,11 @@ export default async function PostsPage(props: {
                         Draft
                       </span>
                     )}
+                    {post.status === "pending_approval" && (
+                      <span className="text-[9px] font-extrabold text-orange-400 tracking-wider uppercase px-1.5 py-0.5 bg-orange-500/10 rounded border border-orange-500/20 whitespace-nowrap">
+                        Pending
+                      </span>
+                    )}
                   </div>
                   
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-zinc-500">
@@ -283,8 +288,19 @@ export default async function PostsPage(props: {
                 <div className="flex items-center gap-4 mt-4 md:mt-0 md:border-l md:border-white/5 md:pl-6">
                   {canEdit ? (
                     <div className="flex items-center gap-2">
-                       <FeaturedToggle id={post._id} initialFeatured={post.featured} />
-                       <QuickStatusToggle id={post._id} initialStatus={post.status} />
+                       {isSuperOrAdmin && <FeaturedToggle id={post._id} initialFeatured={post.featured} />}
+                       {isSuperOrAdmin ? (
+                         <QuickStatusToggle id={post._id} initialStatus={post.status} />
+                       ) : (
+                         <span className={`text-[11px] font-medium px-2 py-1 rounded border ${
+                            post.status === 'published' ? 'bg-green-500/10 text-green-400 border-green-500/20' :
+                            post.status === 'pending_approval' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                            post.status === 'scheduled' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                            'bg-zinc-500/10 text-zinc-400 border-zinc-500/20'
+                         }`}>
+                           {post.status.replace('_', ' ').toUpperCase()}
+                         </span>
+                       )}
                     </div>
                   ) : (
                     <div className="w-[100px]" /> /* spacer */

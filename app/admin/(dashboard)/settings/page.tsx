@@ -14,6 +14,8 @@ import {
   Mail,
   Clock,
   User,
+  Activity,
+  X,
 } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 import { useRouter } from "next/navigation";
@@ -92,9 +94,9 @@ export default function SettingsPage() {
           social_instagram: data.social_instagram?.value || "",
           admin_email: data.admin_email?.value || "",
           posts_per_page: data.posts_per_page?.value || "10",
-          home_quote_text: data.home_quote_text?.value || "When information is everywhere, understanding becomes rare. CSwithBS slows the pace, inviting readers to think, question, and connect ideas across science, history, and culture — not to follow trends, but to build perspective.",
-          home_quote_author: data.home_quote_author?.value || "CSwithBS Editorial",
-          home_quote_link: data.home_quote_link?.value || "/blog",
+          home_quote_text: data.home_quote_text?.value || "",
+          home_quote_author: data.home_quote_author?.value || "",
+          home_quote_link: data.home_quote_link?.value || "",
           general_notification_active: !!data.general_notification_active?.value,
           general_notification: data.general_notification?.value || "",
           general_notification_type: data.general_notification_type?.value || "info",
@@ -370,14 +372,17 @@ export default function SettingsPage() {
         </div>
 
         {/* --- 2. Real-time Notification Banner --- */}
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40">
-          <div className="flex items-start justify-between mb-6">
+        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+          
+          <div className="flex items-start justify-between mb-6 relative">
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <span className="text-blue-500">🔔</span> Live Notification Bar
+                <span className="p-1.5 bg-blue-500/10 text-blue-400 rounded-lg"><Zap size={16} /></span>
+                Live Push Notification
               </h3>
               <p className="text-zinc-400 text-sm max-w-lg">
-                Instantly push a banner URL/alert to all active users without them reloading.
+                Instantly push a floating alert to all active users without them needing to refresh the page.
               </p>
             </div>
             <Toggle 
@@ -387,106 +392,96 @@ export default function SettingsPage() {
             />
           </div>
 
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              {(["info", "warning", "success", "error"] as const).map((type) => (
-                <button
-                  key={type}
-                  onClick={() => handleChange("general_notification_type", type)}
-                  className={`px-3 py-1 text-xs font-bold uppercase rounded-md border ${
-                    formState.general_notification_type === type
-                      ? "bg-zinc-100 text-black border-white"
-                      : "bg-zinc-900 text-zinc-500 border-zinc-700 hover:border-zinc-500"
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
+          <div className="space-y-6 relative">
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider">Alert Type</label>
+              <div className="flex flex-wrap gap-2">
+                {(["info", "warning", "success", "error"] as const).map((type) => {
+                   const colors = {
+                     info: "hover:border-blue-500 hover:text-blue-400",
+                     warning: "hover:border-amber-500 hover:text-amber-400",
+                     success: "hover:border-emerald-500 hover:text-emerald-400",
+                     error: "hover:border-rose-500 hover:text-rose-400",
+                   };
+                   const activeColors = {
+                     info: "bg-blue-500/10 border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]",
+                     warning: "bg-amber-500/10 border-amber-500 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.2)]",
+                     success: "bg-emerald-500/10 border-emerald-500 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.2)]",
+                     error: "bg-rose-500/10 border-rose-500 text-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.2)]",
+                   };
+                   
+                   const isActive = formState.general_notification_type === type;
+
+                   return (
+                    <button
+                      key={type}
+                      onClick={() => handleChange("general_notification_type", type)}
+                      className={`px-4 py-2 text-xs font-bold uppercase rounded-lg border transition-all duration-300 ${
+                        isActive 
+                          ? activeColors[type]
+                          : `bg-zinc-900/50 text-zinc-500 border-zinc-700/50 ${colors[type]}`
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider">Notification Message</label>
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider">Message Content</label>
               <input
                 type="text"
                 value={formState.general_notification || ""}
                 onChange={(e) => handleChange("general_notification", e.target.value)}
-                placeholder="e.g. New Feature Released: Check out the dashboard!"
-                className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
+                placeholder="e.g. 🚀 New Feature Released: Check out the dashboard!"
+                className="w-full bg-black/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
               />
             </div>
+            
+            {/* Live Preview Pill */}
+            {formState.general_notification_active && (
+              <div className="pt-4 border-t border-zinc-800/50">
+                 <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Live Preview</label>
+                 <div className="flex justify-center p-6 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-black/20 rounded-xl border border-zinc-800/50 relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40 pointer-events-none" />
+                    <div className={`relative px-4 py-2 rounded-full border shadow-2xl flex items-center gap-3 max-w-sm w-full backdrop-blur-md ${
+                       formState.general_notification_type === 'info' ? 'bg-blue-500/10 border-blue-500/30 text-blue-50' :
+                       formState.general_notification_type === 'warning' ? 'bg-amber-500/10 border-amber-500/30 text-amber-50' :
+                       formState.general_notification_type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-50' :
+                       'bg-rose-500/10 border-rose-500/30 text-rose-50'
+                    }`}>
+                       <div className={`w-2 h-2 rounded-full animate-pulse ${
+                         formState.general_notification_type === 'info' ? 'bg-blue-400' :
+                         formState.general_notification_type === 'warning' ? 'bg-amber-400' :
+                         formState.general_notification_type === 'success' ? 'bg-emerald-400' :
+                         'bg-rose-400'
+                       }`} />
+                       <span className="text-sm font-medium truncate flex-1">{formState.general_notification || "(No message set)"}</span>
+                       <X size={14} className="text-white/50 cursor-pointer" />
+                    </div>
+                 </div>
+              </div>
+            )}
           </div>
           <AuditTrail keys={["general_notification_active", "general_notification", "general_notification_type"]} />
         </div>
 
-        {/* --- 2.5 Homepage Interactions (Featured Quote) --- */}
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40">
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <span className="text-purple-500">✨</span> Homepage Interactions
-            </h3>
-            <p className="text-zinc-400 text-sm">Customize the "Featured Quote" section on the homepage.</p>
-          </div>
 
-          <div className="space-y-6">
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center">
-                <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider">Quote Text</label>
-                <span className={`text-xs ${
-                  (formState.home_quote_text || "").split(/\s+/).filter((w: string) => w.length > 0).length > 70
-                    ? "text-red-500 font-bold"
-                    : "text-zinc-500"
-                }`}>
-                  {(formState.home_quote_text || "").split(/\s+/).filter((w: string) => w.length > 0).length} / 70 words
-                </span>
-              </div>
-              <textarea
-                value={formState.home_quote_text || ""}
-                onChange={(e) => handleChange("home_quote_text", e.target.value)}
-                placeholder="Type a meaningful quote..."
-                rows={4}
-                className={`w-full bg-black/50 border rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:ring-1 transition-all resize-none ${
-                  (formState.home_quote_text || "").split(/\s+/).filter((w: string) => w.length > 0).length > 70
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500"
-                    : "border-zinc-700 focus:border-purple-500/50 focus:ring-purple-500/50"
-                }`}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider">Quote Author</label>
-                <input
-                  type="text"
-                  value={formState.home_quote_author || ""}
-                  onChange={(e) => handleChange("home_quote_author", e.target.value)}
-                  placeholder="e.g. CSwithBS Editorial"
-                  className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider">Link (Optional)</label>
-                <input
-                  type="text"
-                  value={formState.home_quote_link || ""}
-                  onChange={(e) => handleChange("home_quote_link", e.target.value)}
-                  placeholder="/blog/my-post"
-                  className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all"
-                />
-              </div>
-            </div>
-          </div>
-          <AuditTrail keys={["home_quote_text", "home_quote_author", "home_quote_link"]} />
-        </div>
 
         {/* --- 3. Global Announcement (Static) --- */}
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40">
-          <div className="flex items-start justify-between mb-6">
+        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+          
+          <div className="flex items-start justify-between mb-6 relative">
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <span className="text-accent">📢</span> Global Announcement (Static)
+                <span className="p-1.5 bg-amber-500/10 text-amber-400 rounded-lg"><Activity size={16} /></span>
+                Static Announcement Bar
               </h3>
               <p className="text-zinc-400 text-sm max-w-lg">
-                Display a banner message at the top of every page. Useful for important updates or downtime notices.
+                Display a persistent edge-to-edge banner across all pages. Best for downtime notices or major events.
               </p>
             </div>
             <Toggle 
@@ -496,21 +491,31 @@ export default function SettingsPage() {
             />
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider">Banner Message</label>
+          <div className="space-y-6 relative">
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider">Banner Message</label>
               <input
                 type="text"
                 value={formState.announcement_message || ""}
                 onChange={(e) => handleChange("announcement_message", e.target.value)}
                 placeholder="e.g. 🛠️ Scheduled maintenance on Friday at 10 PM EST."
-                className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
+                className="w-full bg-black/50 border border-zinc-700/50 rounded-xl px-4 py-3 text-sm text-zinc-200 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 transition-all"
               />
             </div>
+            
+            {/* Live Preview Edge-to-edge */}
             {formState.announcement_active && (
-              <div className="p-3 bg-accent/10 border border-accent/20 rounded-lg flex items-center gap-3 mt-4">
-                <span className="text-xs font-mono text-accent font-bold px-2 py-0.5 bg-accent/10 rounded border border-accent/20">PREVIEW</span>
-                <span className="text-sm text-accent/90 truncate">{formState.announcement_message || "(No message set)"}</span>
+              <div className="pt-4 border-t border-zinc-800/50">
+                <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider mb-3">Live Preview</label>
+                <div className="w-full bg-gradient-to-r from-zinc-900 via-zinc-800 to-zinc-900 border border-zinc-700/50 rounded-lg py-2 px-4 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.05)_50%,transparent_100%)] animate-[shimmer_3s_infinite]" />
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                    <span className="text-xs uppercase tracking-widest font-bold text-zinc-300">
+                      {formState.announcement_message || "(No message set)"}
+                    </span>
+                  </div>
+                </div>
               </div>
             )}
           </div>

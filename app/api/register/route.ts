@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import Setting from '@/models/Setting';
+import Notification from '@/models/Notification';
 
 export async function POST(request: Request) {
   try {
@@ -30,12 +31,25 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    await User.create({
+    const newUser = await User.create({
         name,
         email,
         password: hashedPassword,
         roles: ['USER']
     });
+
+    // Send personalized welcome notification
+    try {
+        await Notification.create({
+            type: "PERSONAL",
+            recipient: newUser._id,
+            title: "Welcome to CSwithBS! 🎉",
+            message: `Hi ${name.split(' ')[0]}! We're thrilled to have you here. Explore our notes, subjects, and feel free to customize your profile.`,
+            link: `/profile/${newUser._id}`
+        });
+    } catch (notifError) {
+        console.error("Failed to send welcome notification:", notifError);
+    }
 
     return NextResponse.json({ message: 'User created successfully' }, { status: 201 });
 

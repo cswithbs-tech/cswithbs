@@ -26,6 +26,13 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Title and Slug are required, even for drafts.' }, { status: 400 });
     }
 
+    const isSuperOrAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('SUPER_ADMIN');
+    if (body.status === 'published' || body.status === 'scheduled') {
+        if (!isSuperOrAdmin) {
+            body.status = 'pending_approval';
+        }
+    }
+
     if (body.status === 'published') {
         if (!body.excerpt || !body.content || !body.image) {
              return NextResponse.json({ error: 'Published posts require Content, Excerpt, and a Featured Image.' }, { status: 400 });

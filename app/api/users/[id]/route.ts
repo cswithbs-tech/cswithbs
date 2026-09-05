@@ -3,6 +3,7 @@ import dbConnect from '@/lib/db';
 import User from '@/models/User';
 import Post from '@/models/Post';
 import Category from '@/models/Category';
+import Collaboration from '@/models/Collaboration';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
@@ -29,6 +30,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     .populate({ path: "category", model: Category, select: "name" })
     .lean();
 
+    // Fetch Collaborations
+    const collaborations = await Collaboration.find({
+        student: user._id,
+        status: 'published'
+    })
+    .sort({ createdAt: -1 })
+    .lean();
+
     return NextResponse.json({
         ...user.toObject(),
         posts: posts.map(p => ({
@@ -36,6 +45,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
             _id: p._id.toString(),
             createdAt: p.createdAt.toISOString(),
             category: p.category?.name || "Uncategorized" // Flatten object to string
+        })),
+        collaborations: collaborations.map(c => ({
+            ...c,
+            _id: c._id.toString(),
+            createdAt: c.createdAt.toISOString()
         }))
     });
   } catch (error: any) {

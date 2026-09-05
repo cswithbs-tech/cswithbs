@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 interface QuickStatusToggleProps {
   id: string;
-  initialStatus: "published" | "draft" | "archived";
+  initialStatus: "published" | "draft" | "archived" | "pending_approval" | "scheduled";
 }
 
 export const QuickStatusToggle = ({
@@ -20,7 +20,7 @@ export const QuickStatusToggle = ({
   const router = useRouter();
 
   const handleUpdate = async (
-    newStatus: "published" | "draft" | "archived",
+    newStatus: "published" | "draft" | "archived" | "pending_approval",
   ) => {
     // If it's already in that status, do nothing
     if (newStatus === status) {
@@ -69,6 +69,10 @@ export const QuickStatusToggle = ({
             ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20"
             : status === "archived"
               ? "bg-rose-500/10 border-rose-500/20 text-rose-500 hover:bg-rose-500/20"
+            : status === "pending_approval"
+              ? "bg-orange-500/10 border-orange-500/20 text-orange-500 hover:bg-orange-500/20"
+            : status === "scheduled"
+              ? "bg-blue-500/10 border-blue-500/20 text-blue-400 hover:bg-blue-500/20"
               : "bg-zinc-500/10 border-zinc-500/20 text-zinc-400 hover:bg-zinc-500/20"
         } ${isLoading ? "opacity-50 cursor-wait" : ""}`}
       >
@@ -78,11 +82,15 @@ export const QuickStatusToggle = ({
               ? "bg-emerald-500"
               : status === "archived"
                 ? "bg-rose-500"
+              : status === "pending_approval"
+                ? "bg-orange-500"
+              : status === "scheduled"
+                ? "bg-blue-500"
                 : "bg-zinc-500"
           }`}
         ></span>
         <span className="text-xs font-semibold capitalize tracking-wide select-none">
-          {status}
+          {status.replace('_', ' ')}
         </span>
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -125,6 +133,15 @@ export const QuickStatusToggle = ({
             >
               <span className="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
               Draft
+            </button>
+            <button
+              onClick={() => handleUpdate("pending_approval")}
+              className={`text-left px-3 py-2 text-xs font-medium rounded hover:bg-white/5 flex items-center gap-2 ${
+                status === "pending_approval" ? "text-orange-500" : "text-zinc-300"
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+              Pending
             </button>
             <button
               onClick={() => handleUpdate("archived")}

@@ -14,6 +14,7 @@ import {
   ListTree,
   Image as ImageIcon,
   Library,
+  ClipboardCheck,
 } from "lucide-react";
 
 const sidebarLinks = [
@@ -61,6 +62,11 @@ const sidebarLinks = [
 const adminOnlyLinks = [
   {
     header: "Admin",
+    label: "Approvals Queue",
+    href: "/writers-hub/approvals",
+    icon: <ClipboardCheck className="w-5 h-5" />,
+  },
+  {
     label: "Curriculum",
     href: "/writers-hub/curriculum",
     icon: <Library className="w-5 h-5" />,
@@ -69,6 +75,11 @@ const adminOnlyLinks = [
     label: "Academic Notes",
     href: "/writers-hub/notes",
     icon: <BookOpen className="w-5 h-5" />,
+  },
+  {
+    label: "Collaborations",
+    href: "/writers-hub/collaborations",
+    icon: <UserCog className="w-5 h-5" />,
   }
 ];
 

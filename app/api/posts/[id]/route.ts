@@ -98,6 +98,13 @@ export async function PATCH(
             return NextResponse.json({ error: "Unauthorized: You can only edit your own posts." }, { status: 403 });
         }
 
+        const isSuperOrAdmin = user?.roles?.includes('ADMIN') || user?.roles?.includes('SUPER_ADMIN');
+        if (body.status === 'published' || body.status === 'scheduled') {
+            if (!isSuperOrAdmin) {
+                body.status = 'pending_approval';
+            }
+        }
+
         // VALIDATION UPDATES
         // If they are trying to publish, ensure requirements are met
         if (body.status === 'published') {

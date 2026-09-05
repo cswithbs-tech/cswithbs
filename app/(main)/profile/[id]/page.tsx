@@ -23,7 +23,11 @@ import {
   Star,
   GraduationCap,
   Building,
-  Clock
+  Clock,
+  FileText,
+  Presentation,
+  ChevronRight,
+  AlignLeft
 } from "lucide-react";
 import { UserBadge } from "@/app/components/ui/UserBadge";
 import { BlogCard } from "@/app/components/BlogCard";
@@ -318,6 +322,46 @@ export default function UserProfilePage({
               ))}
             </div>
           </div>
+        )}
+
+        {/* Collaborative Research */}
+        {user.collaborations && user.collaborations.length > 0 && (
+        <div className="bg-[#0D0D0D] border border-white/5 rounded-2xl p-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <FileText className="text-accent" />
+              Collaborative Works
+            </h2>
+            <a href="/research/collaborations" className="text-sm font-medium text-accent hover:underline flex items-center gap-1">
+              View All <ChevronRight size={14} />
+            </a>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             {user.collaborations.map((collab: any) => (
+               <a key={collab._id} href={`/research/collaborations/${collab.slug}`} className="group flex gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-white/10 hover:border-accent/30 transition-all">
+                  <div className={`w-24 h-32 shrink-0 bg-black rounded-lg overflow-hidden relative flex flex-col items-center justify-center ${!collab.image ? 'border border-white/10' : ''}`}>
+                     {collab.image ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={collab.image} alt={collab.title} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500" />
+                     ) : (
+                        <AlignLeft size={24} className="text-zinc-600 opacity-50 mb-2" />
+                     )}
+                     <div className="absolute top-1 left-1 bg-black/60 backdrop-blur-md rounded px-1.5 py-0.5 text-[10px] font-bold text-white border border-white/10 flex items-center gap-1">
+                       {collab.type === 'Poster' ? <FileText size={10} className="text-blue-400" /> : <AlignLeft size={10} className="text-amber-400" />} {collab.type}
+                     </div>
+                  </div>
+                  <div className="flex flex-col justify-center space-y-1">
+                     <p className="text-[10px] font-bold text-accent tracking-widest uppercase">{collab.event}</p>
+                     <h3 className="text-sm font-bold text-zinc-100 leading-snug group-hover:text-white transition-colors line-clamp-2">
+                       {collab.title}
+                     </h3>
+                     <p className="text-xs text-zinc-400">Mentored by {collab.mentor}</p>
+                  </div>
+               </a>
+             ))}
+          </div>
+        </div>
         )}
 
         {/* Public Activity Feed (Visible only for Writers/Admins) */}
