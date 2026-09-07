@@ -6,7 +6,7 @@ import {
   BookOpen, Bell, Bookmark, Zap, MessageSquare, Target, User,
   CheckCircle, XCircle, AlertTriangle, ChevronRight, Mail,
   ArrowRight, Sparkles, Shield, Clock, Star, Layers, GraduationCap,
-  LifeBuoy, Info
+  LifeBuoy, Info, PenTool
 } from "lucide-react";
 
 const sections = [
@@ -16,6 +16,7 @@ const sections = [
   { id: "features", label: "Current Features" },
   { id: "profile", label: "Complete Your Profile" },
   { id: "coming-soon", label: "Coming Soon" },
+  { id: "write-for-us", label: "Write for Us" },
   { id: "contact", label: "Contact & Support" },
 ];
 
@@ -387,6 +388,49 @@ export default function GuidePage() {
                   <p className="text-sm text-zinc-500 leading-relaxed">{f.desc}</p>
                 </div>
               ))}
+            </div>
+          </section>
+
+          {/* ── WRITE FOR US ── */}
+          <section>
+            <SectionAnchor id="write-for-us" />
+            <div className="flex items-center gap-3 mb-6">
+               <div className="w-9 h-9 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center">
+                <PenTool className="w-4 h-4 text-teal-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">Write for CSWITHBS</h2>
+            </div>
+            <div className="bg-[#111]/80 border border-white/5 rounded-2xl p-6 md:p-8 space-y-6">
+              <p className="text-zinc-300 text-[15px] leading-relaxed">
+                Are you passionate about Computer Science, software engineering, or tech culture? We are always looking for students and professionals to share their knowledge on our platform. 
+              </p>
+              
+              <div className="space-y-4 mt-4">
+                <h3 className="text-white font-semibold">How it works:</h3>
+                <ul className="space-y-3 text-zinc-400 text-sm">
+                  <li className="flex gap-3">
+                    <span className="text-teal-400 font-bold">1.</span>
+                    <span>Submit your application using the contact form below. Tell us what topics you are interested in covering.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="text-teal-400 font-bold">2.</span>
+                    <span>If approved, your account will be upgraded to <strong className="text-white">WRITER</strong>, unlocking the Writers Hub dashboard. Make sure to keep an eye on your notification bell! We will notify you when your access is granted or when your submitted articles are published.</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="text-teal-400 font-bold">3.</span>
+                    <span>Write your article using our custom editor. All submissions go into an Admin Queue for final review before being published.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="pt-6 border-t border-white/5">
+                <Link
+                  href="/contact?subject=writer_access"
+                  className="inline-flex items-center gap-2 bg-teal-600 text-white text-sm font-semibold px-6 py-3 rounded-xl hover:bg-teal-500 transition-all shadow-[0_0_15px_rgba(20,184,166,0.3)]"
+                >
+                  Apply to be a Writer <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           </section>
 

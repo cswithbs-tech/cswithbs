@@ -131,13 +131,14 @@ export async function POST(request: Request) {
             try {
                 const subjectDoc = await Subject.findById(body.subject);
                 const subjectName = subjectDoc ? subjectDoc.name : 'a Course';
+                const subjectSlug = subjectDoc ? subjectDoc.slug : 'unknown';
 
                 await Notification.create({
                     type: 'NEW_COURSE',
                     recipient: null, // Global
                     title: `New Note in ${subjectName}`,
                     message: note.title,
-                    link: `/notes/${note.slug}`
+                    link: `/courses/${subjectSlug}/${note.slug}`
                 });
             } catch (notifError) {
                 console.error("Failed to auto-broadcast note notification:", notifError);

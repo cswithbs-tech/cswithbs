@@ -180,6 +180,7 @@ export async function PATCH(
         const isPublishingNow = body.status === 'published';
         if (!wasPublished && isPublishingNow) {
             try {
+                // Global broadcast
                 await Notification.create({
                     type: 'NEW_BLOG',
                     recipient: null, // Global
@@ -187,8 +188,17 @@ export async function PATCH(
                     message: finalPost.excerpt || 'Check out our latest blog post!',
                     link: `/blog/${finalPost.slug}`
                 });
+
+                // Personal notification to author
+                await Notification.create({
+                    type: 'PERSONAL',
+                    recipient: finalPost.author,
+                    title: 'Your post was approved! 🎉',
+                    message: `Your article "${finalPost.title}" has been published to the site.`,
+                    link: `/blog/${finalPost.slug}`
+                });
             } catch (notifError) {
-                console.error("Failed to auto-broadcast post notification:", notifError);
+                console.error("Failed to send post notifications:", notifError);
             }
         }
 

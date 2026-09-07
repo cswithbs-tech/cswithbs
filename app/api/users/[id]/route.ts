@@ -4,6 +4,7 @@ import User from '@/models/User';
 import Post from '@/models/Post';
 import Category from '@/models/Category';
 import Collaboration from '@/models/Collaboration';
+import Notification from '@/models/Notification';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
@@ -176,6 +177,25 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       // currently allowing it since there are no explicit restrictions.
 
       const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
+
+      // Notify user if WRITER role was added
+      if (
+          newRoles && 
+          newRoles.includes('WRITER') && 
+          (!targetUser.roles || !targetUser.roles.includes('WRITER'))
+      ) {
+          try {
+              await Notification.create({
+                  type: 'PERSONAL',
+                  recipient: targetUser._id,
+                  title: 'Writer Access Granted! 🎉',
+                  message: 'Congratulations! You now have access to the Writers Hub. You can start writing and submitting articles for review.',
+                  link: '/writers-hub/dashboard'
+              });
+          } catch (notifErr) {
+              console.error("Failed to send writer access notification:", notifErr);
+          }
+      }
   
       return NextResponse.json({ message: 'User updated successfully', user: updatedUser });
     } catch (error: any) {

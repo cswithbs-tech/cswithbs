@@ -2,20 +2,27 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "./ui/Button";
+import { Info } from "lucide-react";
+import { ConfirmDialog } from "./ui/ConfirmDialog";
 
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { useToast } from "../context/ToastContext";
 
 export const ContactForm = () => {
   const { showToast } = useToast();
   const { data: session } = useSession();
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   
+  const searchParams = useSearchParams();
+  const initialSubject = searchParams?.get("subject") || "";
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
-    subject: "",
+    subject: initialSubject,
     message: "",
   });
 
@@ -54,7 +61,11 @@ export const ContactForm = () => {
       });
 
       if (res.ok) {
-        showToast("Message sent successfully!", "success");
+        if (formData.subject === "writer_access") {
+          setShowSuccessModal(true);
+        } else {
+          showToast("Message sent successfully!", "success");
+        }
         setFormData({
           firstName: "",
           lastName: "",
@@ -156,6 +167,7 @@ export const ContactForm = () => {
           <option value="general">General Inquiry</option>
           <option value="support">Technical Support</option>
           <option value="collaboration">Collaboration</option>
+          <option value="writer_access">Request Writer Access</option>
           <option value="feedback">Feedback</option>
         </select>
       </div>
@@ -172,8 +184,8 @@ export const ContactForm = () => {
           name="message"
           value={formData.message}
           onChange={handleChange}
-          rows={3}
-          placeholder="How can we help you?"
+          rows={4}
+          placeholder={formData.subject === "writer_access" ? "Please tell us a bit about yourself, your background in CS/Tech, and what topics you are interested in writing about for CSWITHBS..." : "How can we help you?"}
           className={`${inputClasses} resize-none`}
           required
         />
@@ -185,8 +197,22 @@ export const ContactForm = () => {
         className="mt-2 w-full md:w-auto"
         disabled={loading}
       >
-        {loading ? "Submitting..." : "Raise a Ticket"}
+        {loading ? "Submitting..." : formData.subject === "writer_access" ? "Submit Application" : "Raise a Ticket"}
       </Button>
+
+      <ConfirmDialog
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        onConfirm={() => {
+          setShowSuccessModal(false);
+          window.location.href = "/blog";
+        }}
+        title="Application Submitted!"
+        description="We've received your request to become a writer. Please ensure your profile is complete and up-to-date. We will notify you via the notification bell once your application is reviewed."
+        variant="info"
+        confirmText="Go to Blog"
+        cancelText="Close"
+      />
     </form>
   );
 };

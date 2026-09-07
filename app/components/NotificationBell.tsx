@@ -125,6 +125,33 @@ export const NotificationBell = () => {
     }
   };
 
+  const handleDismissAll = async () => {
+    if (notifications.length === 0) return;
+    try {
+      const allIds = notifications.map(n => n._id);
+      
+      // Optimistic update
+      mutate(
+        {
+          ...data,
+          notifications: [],
+          unreadCount: 0,
+        },
+        false
+      );
+
+      await fetch("/api/notifications/dismiss-all", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notificationIds: allIds }),
+      });
+
+      mutate();
+    } catch (error) {
+      console.error("Failed to dismiss all notifications", error);
+    }
+  };
+
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.isRead) {
       await handleMarkAsRead(notification._id);
@@ -176,14 +203,24 @@ export const NotificationBell = () => {
                 </span>
               )}
             </h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllAsRead}
-                className="text-[10px] font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-1"
-              >
-                <Check className="w-3 h-3" /> Mark all read
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-[10px] font-medium text-zinc-400 hover:text-white transition-colors flex items-center gap-1"
+                >
+                  <Check className="w-3 h-3" /> Mark all read
+                </button>
+              )}
+              {notifications.length > 0 && (
+                <button
+                  onClick={handleDismissAll}
+                  className="text-[10px] font-medium text-zinc-400 hover:text-red-400 transition-colors flex items-center gap-1"
+                >
+                  <X className="w-3 h-3" /> Dismiss all
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="max-h-[400px] overflow-y-auto custom-scrollbar">

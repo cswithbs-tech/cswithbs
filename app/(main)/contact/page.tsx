@@ -1,5 +1,6 @@
 import { Container } from "../../components/ui/Container";
 import { ContactForm } from "../../components/ContactForm";
+import { Suspense } from "react";
 import { Metadata } from "next";
 import {
   Mail,
@@ -145,7 +146,9 @@ export default function ContactPage() {
                 <p className="text-zinc-400 mb-8 text-sm">
                   Raise a ticket below and we will get back to you.
                 </p>
-                <ContactForm />
+                <Suspense fallback={<div className="h-96 flex items-center justify-center text-zinc-500">Loading form...</div>}>
+                  <ContactForm />
+                </Suspense>
               </div>
             </div>
           </div>

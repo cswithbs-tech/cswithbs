@@ -76,13 +76,14 @@ export async function PATCH(
             try {
                 const subjectDoc = await Subject.findById(finalNote.subject);
                 const subjectName = subjectDoc ? subjectDoc.name : 'a Course';
+                const subjectSlug = subjectDoc ? subjectDoc.slug : 'unknown';
 
                 await Notification.create({
                     type: 'NEW_COURSE',
                     recipient: null, // Global
                     title: `New Note in ${subjectName}`,
                     message: finalNote.title,
-                    link: `/notes/${finalNote.slug}`
+                    link: `/courses/${subjectSlug}/${finalNote.slug}`
                 });
             } catch (notifError) {
                 console.error("Failed to auto-broadcast note notification:", notifError);

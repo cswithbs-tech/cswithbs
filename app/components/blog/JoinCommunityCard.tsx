@@ -1,19 +1,13 @@
 "use client";
 
-import { useToast } from "@/app/context/ToastContext";
+import Link from "next/link";
 import { PenTool } from "lucide-react";
 
 export function JoinCommunityCard() {
-  const { showToast } = useToast();
-
-  const handleClick = () => {
-    showToast("Community writing program coming soon!", "info");
-  };
-
   return (
-    <div
-      className="relative group overflow-hidden rounded-2xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900 transition-colors p-1 cursor-pointer"
-      onClick={handleClick}
+    <Link
+      href="/contact?subject=writer_access"
+      className="relative group overflow-hidden rounded-2xl border border-white/5 bg-zinc-900/50 hover:bg-zinc-900 transition-colors p-1 cursor-pointer block"
     >
       <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-transparent to-blue-500/10 group-hover:opacity-100 opacity-50 transition-opacity" />
 
@@ -39,6 +33,6 @@ export function JoinCommunityCard() {
           <span className="-ml-0.5 mt-0.5 text-lg leading-none">↗</span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
