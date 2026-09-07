@@ -95,13 +95,12 @@ export function WelcomeModal() {
             className="absolute inset-0 bg-black/70 backdrop-blur-md"
           />
 
-          {/* Modal Container */}
           <motion.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-            className={`relative w-full ${isImageOnly ? 'max-w-2xl' : 'max-w-4xl'} bg-[#0f0f11]/90 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(var(--color-accent),0.15)] flex flex-col ${!isImageOnly && 'md:flex-row'} max-h-[90vh]`}
+            className={`relative w-full ${isImageOnly ? 'max-w-3xl' : 'max-w-[950px]'} bg-[#0a0a0c] border border-white/10 rounded-[2rem] overflow-hidden shadow-2xl flex flex-col ${!isImageOnly && 'md:flex-row'} max-h-[90vh]`}
           >
             {/* Ambient Background Glow */}
             <div className="absolute -inset-24 bg-accent/5 opacity-100 blur-3xl transition-opacity duration-700 pointer-events-none" />
@@ -114,8 +113,8 @@ export function WelcomeModal() {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Image Section with Ken Burns Zoom Effect */}
-            <div className={`relative shrink-0 overflow-hidden ${isImageOnly ? 'w-full aspect-[4/3] sm:aspect-[16/10]' : 'w-full md:w-1/2 aspect-[4/3] md:aspect-auto'}`}>
+            {/* Image Section */}
+            <div className={`relative shrink-0 overflow-hidden bg-black ${isImageOnly ? 'w-full aspect-[4/3] sm:aspect-[16/9]' : 'w-full md:w-[45%] aspect-video md:aspect-square'}`}>
                <motion.div 
                  initial={{ scale: 1.15 }}
                  animate={{ scale: 1 }}
@@ -136,11 +135,17 @@ export function WelcomeModal() {
                )}
             </div>
 
-            {/* Content Section (Only if not Image-Only) */}
+            {/* Content Section */}
             {!isImageOnly && (
-              <div className="p-8 md:p-12 w-full md:w-1/2 flex flex-col justify-center items-start text-left overflow-y-auto z-10">
-                <motion.div variants={itemVariants} className="w-full">
-                  <h2 className="text-3xl md:text-4xl font-black text-white font-display uppercase tracking-tight leading-[1.1]">
+              <div className="p-8 md:p-12 w-full md:w-[55%] flex flex-col justify-center items-start text-left overflow-y-auto z-10 bg-gradient-to-br from-[#151518] to-[#0a0a0c] relative">
+                {/* Subtle light flair */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none" />
+
+                <motion.div variants={itemVariants} className="w-full relative">
+                  <div className="inline-block px-3 py-1 mb-5 rounded-full bg-white/5 border border-white/10">
+                    <span className="text-[11px] font-bold tracking-widest text-zinc-300 uppercase">Announcement</span>
+                  </div>
+                  <h2 className="text-3xl md:text-[2.5rem] font-black text-white font-display uppercase tracking-tight leading-[1.1]">
                     {poster.title}
                   </h2>
                 </motion.div>
@@ -158,13 +163,10 @@ export function WelcomeModal() {
                     <Link
                       href={poster.link}
                       onClick={handleActionClick}
-                      className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-accent hover:bg-accent/90 text-black font-bold py-4 px-8 rounded-xl transition-all shadow-[0_0_20px_rgba(var(--color-accent),0.2)] hover:shadow-[0_0_35px_rgba(var(--color-accent),0.4)] overflow-hidden"
+                      className="group relative w-full sm:w-auto inline-flex items-center justify-center gap-3 bg-white hover:bg-zinc-200 text-black font-bold py-4 px-8 rounded-full transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.1)] overflow-hidden"
                     >
-                      {/* Shimmer Effect */}
-                      <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                      
-                      <span className="relative z-10 text-base uppercase tracking-wide">Learn More</span>
-                      <ArrowRight className="w-5 h-5 relative z-10 transform group-hover:translate-x-1 transition-transform" />
+                      <span className="relative z-10 text-sm uppercase tracking-wider">Learn More</span>
+                      <ArrowRight className="w-4 h-4 relative z-10 transform group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </motion.div>
                 )}
