@@ -9,6 +9,8 @@ import {
   GraduationCap,
   Tag,
   Lock,
+  Link as LinkIcon,
+  Download
 } from "lucide-react";
 import dbConnect from "@/lib/db";
 import Subject from "@/models/Subject";
@@ -19,6 +21,7 @@ import { Container } from "@/app/components/ui/Container";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { DataWall } from "@/app/components/DataWall";
+import { ResourceLink } from "./components/ResourceLink";
 
 export const revalidate = 60;
 export const dynamicParams = true; // Allow new courses to be accessed dynamically
@@ -353,6 +356,21 @@ export default async function CourseIndexPage({
                         <p className="text-sm text-zinc-600 italic mt-4 text-center py-6 border border-dashed border-white/5 rounded-xl">
                           No notes added to this chapter yet.
                         </p>
+                      )}
+
+                      {/* Chapter Resources */}
+                      {chapter.resources && chapter.resources.length > 0 && (
+                        <div className="mt-6 pt-6 border-t border-white/5">
+                          <h4 className="text-xs font-bold text-white uppercase tracking-widest mb-3 flex items-center gap-2">
+                            <BookOpen className="w-3.5 h-3.5" style={{ color: accentColor }} />
+                            Study Materials
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {chapter.resources.map((res: any, rIdx: number) => (
+                              <ResourceLink key={rIdx} resource={res} accentColor={accentColor} />
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </details>

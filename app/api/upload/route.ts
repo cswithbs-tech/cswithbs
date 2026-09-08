@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const folderName = (formData.get('folder') as string) || 'general'; // Default to 'general'
 
     // Simple validation for allowed folders to keep things organized
-    const allowedFolders = ['avatars', 'posts', 'general'];
+    const allowedFolders = ['avatars', 'posts', 'resources', 'general'];
     const targetFolder = allowedFolders.includes(folderName) ? `cswithbs/${folderName}` : 'cswithbs/misc';
 
     if (!file) {
@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       cloudinary.uploader.upload_stream(
         {
           folder: targetFolder,
+          resource_type: "auto",
         },
         (error, result) => {
           if (error) {
