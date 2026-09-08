@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Image as ImageIcon, Plus, Trash2, CheckCircle, XCircle, Link as LinkIcon, Upload, Bell, MessageSquare, AlertTriangle, Info, Star } from "lucide-react";
+import { Image as ImageIcon, Plus, Trash2, CheckCircle, XCircle, Link as LinkIcon, Upload, Bell, MessageSquare, AlertTriangle, Info, Star, Edit2 } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -17,6 +17,7 @@ export default function PopupsPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
+  const [linkText, setLinkText] = useState("");
   const [targetAudience, setTargetAudience] = useState<"ALL" | "GUESTS" | "LOGGED_IN">("ALL");
   const [imageUrl, setImageUrl] = useState("");
   
@@ -30,6 +31,25 @@ export default function PopupsPage() {
 
   const [uploading, setUploading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [editingPosterId, setEditingPosterId] = useState<string | null>(null);
+
+  const handleEditPoster = (poster: any) => {
+    setEditingPosterId(poster._id);
+    setTitle(poster.title || "");
+    setDescription(poster.description || "");
+    setLink(poster.link || "");
+    setLinkText(poster.linkText || "");
+    setTargetAudience(poster.targetAudience || "ALL");
+    setImageUrl(poster.imageUrl || "");
+    setViewMode("POSTERS");
+    setActiveTab("CREATE");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPosterId(null);
+    setTitle(""); setDescription(""); setLink(""); setLinkText(""); setImageUrl(""); setTargetAudience("ALL");
+    setActiveTab("MANAGE");
+  };
   
   // Manage State
   const [posters, setPosters] = useState<any[]>([]);
@@ -110,26 +130,40 @@ export default function PopupsPage() {
 
     try {
       setCreating(true);
-      const res = await fetch("/api/admin/posters", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title || "Untitled Flyer",
-          description,
-          link,
-          targetAudience,
-          imageUrl: imageUrl || "https://via.placeholder.com/800x600?text=No+Image",
-          isActive: false 
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create poster");
-
-      showToast("Poster created successfully!", "success");
       
-      setTitle(""); setDescription(""); setLink(""); setImageUrl(""); setTargetAudience("ALL");
+      const payload = {
+        title: title || "Untitled Flyer",
+        description,
+        link,
+        linkText,
+        targetAudience,
+        imageUrl: imageUrl || "https://via.placeholder.com/800x600?text=No+Image",
+      };
+
+      if (editingPosterId) {
+        const res = await fetch(`/api/admin/posters/${editingPosterId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to update poster");
+        showToast("Poster updated successfully!", "success");
+      } else {
+        const res = await fetch("/api/admin/posters", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...payload, isActive: false })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to create poster");
+        showToast("Poster created successfully!", "success");
+      }
+      
+      setEditingPosterId(null);
+      setTitle(""); setDescription(""); setLink(""); setLinkText(""); setImageUrl(""); setTargetAudience("ALL");
       setActiveTab("MANAGE");
+      fetchPosters();
     } catch (error: any) {
       showToast(error.message, "error");
     } finally {
@@ -269,10 +303,10 @@ export default function PopupsPage() {
             Manage {viewMode === "POSTERS" ? "Posters" : "Toasts"}
         </button>
         <button
-            onClick={() => setActiveTab("CREATE")}
+            onClick={() => { setActiveTab("CREATE"); setEditingPosterId(null); setTitle(""); setDescription(""); setLink(""); setLinkText(""); setImageUrl(""); setTargetAudience("ALL"); }}
             className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${activeTab === "CREATE" ? "bg-white/10 border-white/20 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
         >
-            Create New {viewMode === "POSTERS" ? "Poster" : "Toast"}
+            {editingPosterId ? "Edit Poster" : `Create New ${viewMode === "POSTERS" ? "Poster" : "Toast"}`}
         </button>
       </div>
 
@@ -297,7 +331,19 @@ export default function PopupsPage() {
                     {uploading ? "Uploading..." : "Select Image"}
                     <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
                   </label>
-                  {imageUrl && <span className="text-sm text-green-400 flex items-center gap-1"><CheckCircle className="w-4 h-4" /> Uploaded</span>}
+                  {imageUrl && (
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-10 h-10 rounded-md overflow-hidden bg-black/50 border border-white/10 shrink-0">
+                        <Image src={imageUrl} alt="Preview" fill className="object-cover" />
+                      </div>
+                      <span className="text-xs text-zinc-400 truncate max-w-[150px]" title={imageUrl}>
+                        {imageUrl.split('/').pop()}
+                      </span>
+                      <button type="button" onClick={() => setImageUrl("")} className="text-red-400 hover:text-red-300" title="Remove image">
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
               <div>
@@ -315,11 +361,22 @@ export default function PopupsPage() {
                   <input type="text" value={link} onChange={(e) => setLink(e.target.value)} placeholder="/courses or external link" className="w-full bg-black/50 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white focus:outline-none focus:border-accent" />
                 </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-zinc-400 mb-2">Button Label <span className="text-zinc-600">(Optional — defaults to "Learn More")</span></label>
+                <input type="text" value={linkText} onChange={(e) => setLinkText(e.target.value)} placeholder="e.g. Apply Now, Join Us, Read More" className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent" />
+              </div>
             </div>
-            <Button className="w-full py-4 text-base shadow-[0_0_20px_rgba(var(--color-accent),0.3)]" disabled={(!title && !imageUrl) || creating || uploading} onClick={handleCreatePoster}>
-              <Plus className="w-5 h-5 mr-2" />
-              {creating ? "Creating..." : "Create Poster"}
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button className="w-full py-4 text-base shadow-[0_0_20px_rgba(var(--color-accent),0.3)]" disabled={(!title && !imageUrl) || creating || uploading} onClick={handleCreatePoster}>
+                <Plus className="w-5 h-5 mr-2" />
+                {creating ? (editingPosterId ? "Updating..." : "Creating...") : (editingPosterId ? "Update Poster" : "Create Poster")}
+              </Button>
+              {editingPosterId && (
+                <Button variant="outline" className="w-full border-white/10 text-zinc-400 hover:text-white" onClick={handleCancelEdit}>
+                  Cancel Edit
+                </Button>
+              )}
+            </div>
           </div>
           {/* Preview Panel Omitted for Brevity but functional */}
         </div>
@@ -425,7 +482,10 @@ export default function PopupsPage() {
                     <button onClick={() => handleToggleActive(poster._id, poster.isActive, "POSTER")} className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${poster.isActive ? "bg-white/10 text-white hover:bg-white/20" : "bg-accent/10 text-accent hover:bg-accent/20"}`}>
                       {poster.isActive ? "Deactivate" : "Set Active"}
                     </button>
-                    <button onClick={() => { setDeleteId(poster._id); setDeleteType("POSTER"); }} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => handleEditPoster(poster)} className="p-1.5 text-zinc-500 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Edit Poster"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => { setDeleteId(poster._id); setDeleteType("POSTER"); }} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                    </div>
                   </div>
                 </div>
               </div>

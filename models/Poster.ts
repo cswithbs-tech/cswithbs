@@ -5,6 +5,7 @@ export interface IPoster extends Document {
   description?: string;
   imageUrl: string;
   link?: string;
+  linkText?: string;
   isActive: boolean;
   targetAudience: "ALL" | "GUESTS" | "LOGGED_IN";
   createdAt: Date;
@@ -25,6 +26,9 @@ const PosterSchema = new Schema(
       required: true,
     },
     link: {
+      type: String,
+    },
+    linkText: {
       type: String,
     },
     isActive: {
