@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { X, Image as ImageIcon, Upload, Loader2, Search } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import Image from "next/image";
 
@@ -17,6 +17,7 @@ export const MediaLibraryModal = ({
   onUpload,
 }: MediaLibraryModalProps) => {
   const [media, setMedia] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,6 +51,10 @@ export const MediaLibraryModal = ({
     if (e.target.value) e.target.value = "";
   };
 
+  const filteredMedia = media.filter((item) =>
+    item.filename.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (!isOpen) return null;
 
   return (
@@ -66,12 +71,24 @@ export const MediaLibraryModal = ({
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <ImageIcon className="text-cyan-400" /> Media Library
           </h2>
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search images..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-white/5 border border-white/10 rounded-lg pl-9 pr-4 py-1.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-cyan-500/50 focus:bg-white/10 transition-all w-64"
+              />
+            </div>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-white/10">
@@ -80,13 +97,13 @@ export const MediaLibraryModal = ({
               <Loader2 className="animate-spin mb-2" size={24} />
               <p>Loading media...</p>
             </div>
-          ) : media.length === 0 ? (
+          ) : filteredMedia.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-gray-500">
               <p>No media found.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {media.map((item) => (
+              {filteredMedia.map((item) => (
                 <div
                   key={item._id}
                   onClick={() => {
