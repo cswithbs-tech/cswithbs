@@ -189,14 +189,16 @@ export async function PATCH(
                     link: `/blog/${finalPost.slug}`
                 });
 
-                // Personal notification to author
-                await Notification.create({
-                    type: 'PERSONAL',
-                    recipient: finalPost.author,
-                    title: 'Your post was approved! 🎉',
-                    message: `Your article "${finalPost.title}" has been published to the site.`,
-                    link: `/blog/${finalPost.slug}`
-                });
+                // Personal notification to author (only if someone else approved it)
+                if (finalPost.author.toString() !== user.id) {
+                    await Notification.create({
+                        type: 'PERSONAL',
+                        recipient: finalPost.author,
+                        title: 'Your post was approved! 🎉',
+                        message: `Your article "${finalPost.title}" has been published to the site.`,
+                        link: `/blog/${finalPost.slug}`
+                    });
+                }
             } catch (notifError) {
                 console.error("Failed to send post notifications:", notifError);
             }

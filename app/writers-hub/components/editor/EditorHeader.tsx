@@ -24,9 +24,8 @@ interface EditorHeaderProps {
   setIsZenMode: (val: boolean) => void;
   setShowGuide: (val: boolean) => void;
   onPreview: () => void;
-  onSaveDraft: () => void;
+  onSubmitStatus: (status: string) => void;
   onScheduleConfirm: (date: string) => void;
-  onPublish: () => void;
   onValidate: () => boolean;
   isSubmitting: boolean;
   router: any;
@@ -44,9 +43,8 @@ export function EditorHeader({
   setIsZenMode,
   setShowGuide,
   onPreview,
-  onSaveDraft,
+  onSubmitStatus,
   onScheduleConfirm,
-  onPublish,
   onValidate,
   isSubmitting,
   router,
@@ -75,13 +73,74 @@ export function EditorHeader({
     setShowSchedulePopover(!showSchedulePopover);
   };
 
-  const handlePublishClick = () => {
-    if (status === "scheduled") {
+  const handlePublishClick = (action: string) => {
+    if (status === "scheduled" && action === "published") {
       setShowConflictConfirm(true);
     } else {
-      if (onValidate()) onPublish();
+      if (onValidate()) onSubmitStatus(action);
     }
   };
+
+  const getButtonConfig = () => {
+    if (isSuperAdmin) {
+      switch (status) {
+        case "published":
+          return {
+            primaryText: "Update Published",
+            primaryAction: "published",
+            secondaryText: "Revert to Draft",
+            secondaryAction: "draft",
+          };
+        case "scheduled":
+          return {
+            primaryText: "Update Schedule",
+            primaryAction: "scheduled",
+            secondaryText: "Revert to Draft",
+            secondaryAction: "draft",
+          };
+        case "pending_approval":
+          return {
+            primaryText: "Publish Now",
+            primaryAction: "published",
+            secondaryText: "Save Changes",
+            secondaryAction: "pending_approval",
+          };
+        default: // draft
+          return {
+            primaryText: "Publish Now",
+            primaryAction: "published",
+            secondaryText: "Save Draft",
+            secondaryAction: "draft",
+          };
+      }
+    } else {
+      switch (status) {
+        case "pending_approval":
+          return {
+            primaryText: "Update Submission",
+            primaryAction: "pending_approval",
+            secondaryText: "Revert to Draft",
+            secondaryAction: "draft",
+          };
+        case "published":
+          return {
+            primaryText: "Submit Edits for Review",
+            primaryAction: "pending_approval",
+            secondaryText: null,
+            secondaryAction: null,
+          };
+        default: // draft
+          return {
+            primaryText: "Submit for Review",
+            primaryAction: "pending_approval",
+            secondaryText: "Save Draft",
+            secondaryAction: "draft",
+          };
+      }
+    }
+  };
+
+  const btnConfig = getButtonConfig();
 
   return (
     <div className="sticky top-0 z-[100] bg-[#000000]/95 backdrop-blur-xl border-b border-white/5 -mx-4 lg:-mx-8 -mt-4 lg:-mt-8 px-4 lg:px-8 py-6 mb-8 flex items-center justify-between shadow-2xl shadow-black/50">
@@ -189,15 +248,17 @@ export function EditorHeader({
 
         <div className="h-6 w-px bg-white/10 mx-1"></div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onSaveDraft}
-          disabled={isSubmitting}
-          className="text-zinc-300 border-zinc-700 hover:bg-zinc-800"
-        >
-          Save Draft
-        </Button>
+        {btnConfig.secondaryText && btnConfig.secondaryAction && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onSubmitStatus(btnConfig.secondaryAction!)}
+            disabled={isSubmitting}
+            className="text-zinc-300 border-zinc-700 hover:bg-zinc-800"
+          >
+            {btnConfig.secondaryText}
+          </Button>
+        )}
 
         <div className="relative">
           <div className="flex items-center -space-x-px">
@@ -222,7 +283,7 @@ export function EditorHeader({
               variant="primary"
               size="sm"
               className={`${isSuperAdmin ? 'rounded-l-none' : 'rounded-lg'} px-6 font-bold text-black border-l border-white/10 bg-gradient-to-r from-accent to-amber-400 hover:from-accent hover:to-amber-300 z-0 hover:z-10`}
-              onClick={handlePublishClick}
+              onClick={() => handlePublishClick(btnConfig.primaryAction)}
               disabled={isSubmitting}
             >
               <span className="flex items-center gap-2">
@@ -231,12 +292,8 @@ export function EditorHeader({
                     <span className="w-3 h-3 border-2 border-black/30 border-t-black rounded-full animate-spin" />
                     <span>...</span>
                   </>
-                ) : !isSuperAdmin ? (
-                  "Submit for Review"
-                ) : status === "scheduled" ? (
-                  "Update Schedule"
                 ) : (
-                  "Publish Now"
+                  btnConfig.primaryText
                 )}
               </span>
             </Button>
@@ -291,7 +348,7 @@ export function EditorHeader({
         isOpen={showConflictConfirm}
         onClose={() => setShowConflictConfirm(false)}
         onConfirm={() => {
-          onPublish();
+          onSubmitStatus("published");
           setShowConflictConfirm(false);
         }}
         title="Publish immediately?"

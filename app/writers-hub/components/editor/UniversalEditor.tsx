@@ -523,15 +523,10 @@ export default function UniversalEditor({
           `${contentType === 'note' ? 'Note' : 'Post'} ${finalStatus === "published" ? "Published" : "Saved"} successfully!`,
           "success",
         );
-        if (finalStatus === "published") {
-          router.push(listPath);
-          router.refresh();
-        } else {
-          if (!isEdit && data._id) {
-            router.replace(editPath);
-          }
-          router.refresh();
+        if (!isEdit && data._id) {
+          router.replace(editPath);
         }
+        router.refresh();
       } else {
         const error = await res.json();
         showToast(error.error || "Failed to save", "error");
@@ -729,7 +724,7 @@ export default function UniversalEditor({
         setIsZenMode={setIsZenMode}
         setShowGuide={setShowGuide}
         onPreview={handlePreview}
-        onSaveDraft={() => handleSubmit("draft")}
+        onSubmitStatus={(status) => handleSubmit(status)}
         onScheduleConfirm={handleScheduleConfirm}
         onValidate={() => {
           if (!formData.title) {
@@ -750,7 +745,6 @@ export default function UniversalEditor({
           }
           return true;
         }}
-        onPublish={() => handleSubmit("published")}
         isSubmitting={isSubmitting}
         router={router}
         onHistory={() => setShowRevisions(true)}
