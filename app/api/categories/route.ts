@@ -27,6 +27,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    // Check if the user is an Admin or Writer to allow category creation
     const session = await getServerSession(authOptions);
     if (!session || !session.user || !((session.user as any).roles?.includes('ADMIN') || (session.user as any).roles?.includes('SUPER_ADMIN') || (session.user as any).roles?.includes('WRITER'))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
