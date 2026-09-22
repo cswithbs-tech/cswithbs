@@ -13,13 +13,17 @@ export async function GET() {
 
     await dbConnect();
     
-    const user = await User.findById((session.user as any).id).select('-password');
+    const user = await User.findById((session.user as any).id);
     
     if (!user) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json(user);
+    const userData = user.toObject();
+    const hasPassword = !!userData.password;
+    delete userData.password;
+
+    return NextResponse.json({ ...userData, hasPassword });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

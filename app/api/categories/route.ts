@@ -2,6 +2,8 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Category from '@/models/Category';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function GET(req: Request) {
   try {
@@ -25,6 +27,11 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user || !((session.user as any).roles?.includes('ADMIN') || (session.user as any).roles?.includes('SUPER_ADMIN') || (session.user as any).roles?.includes('WRITER'))) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     await dbConnect();
     const body = await req.json();
     const { name, genre, language } = body;
