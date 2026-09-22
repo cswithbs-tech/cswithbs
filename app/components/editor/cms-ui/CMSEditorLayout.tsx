@@ -10,6 +10,7 @@ import { YoutubeModal } from "../components/YoutubeModal";
 import { TableOfContents } from "../components/TableOfContents";
 import { StatsModal } from "../components/StatsModal";
 import { SearchReplace } from "../components/SearchReplace";
+import { MediaLibraryModal } from "../components/MediaLibraryModal";
 import { twMerge } from "tailwind-merge";
 import { Loader2, CheckCircle2, Columns, Info } from "lucide-react";
 import "../editor.css";
@@ -40,6 +41,12 @@ interface CMSEditorLayoutProps {
       isOpen: boolean;
       onClose: () => void;
       onOpen: () => void;
+    };
+    media?: {
+      isOpen: boolean;
+      onClose: () => void;
+      onSelect: (url: string) => void;
+      onUpload: (file: File) => void;
     };
   };
 }
@@ -134,6 +141,15 @@ export const CMSEditorLayout = ({
                 isOpen={modals.stats.isOpen}
                 onClose={modals.stats.onClose}
               />
+
+              {modals.media && (
+                <MediaLibraryModal
+                  isOpen={modals.media.isOpen}
+                  onClose={modals.media.onClose}
+                  onSelect={modals.media.onSelect}
+                  onUpload={modals.media.onUpload}
+                />
+              )}
 
               <SearchReplace editor={editor} />
 

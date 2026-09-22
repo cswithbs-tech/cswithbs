@@ -642,37 +642,11 @@ export const Toolbar = ({
 }: ToolbarProps & { onImageUpload?: (file: File) => Promise<string> }) => {
   if (!editor) return null;
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (onImageUpload) {
-        // Fire and forget, parent Editor handles optimistic UI
-        onImageUpload(file);
-      } else {
-        const url = URL.createObjectURL(file);
-        editor.chain().focus().setImage({ src: url }).run();
-      }
-    }
-    // Reset value so same file can be selected again
-    if (event.target.value) {
-      event.target.value = "";
-    }
-  };
-
   const triggerImageUpload = () => {
-    fileInputRef.current?.click();
+    window.dispatchEvent(new Event("open-media-modal"));
   };
 
-  useEffect(() => {
-    const handleTrigger = () => {
-      triggerImageUpload();
-    };
-    window.addEventListener("trigger-image-upload", handleTrigger);
-    return () =>
-      window.removeEventListener("trigger-image-upload", handleTrigger);
-  }, []);
+
 
   const setLink = () => {
     if (onOpenLinkModal) {
@@ -799,13 +773,6 @@ export const Toolbar = ({
           <ToolbarButton onClick={triggerImageUpload} title="Image">
             <ImageIcon size={20} />
           </ToolbarButton>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImageUpload}
-            accept="image/*"
-            className="hidden"
-          />
           <ToolbarButton
             onClick={addYoutubeVideo}
             isActive={editor.isActive("youtube")}

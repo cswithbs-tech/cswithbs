@@ -127,8 +127,8 @@ export const getSuggestionItems = ({ query }: { query: string }) => {
         // EASIER: Just click the toolbar button programmatically if we can find it,
         // OR better: dispatch a custom event that the Toolbar listens to.
 
-        // Let's use a simpler approach: dispatch a custom event "trigger-image-upload"
-        window.dispatchEvent(new Event("trigger-image-upload"));
+        // Let's use a simpler approach: dispatch a custom event "open-media-modal"
+        window.dispatchEvent(new Event("open-media-modal"));
       },
     },
     {

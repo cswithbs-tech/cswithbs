@@ -69,24 +69,6 @@ export const ToolbarMinimal = ({
 }: ToolbarMinimalProps) => {
   if (!editor) return null;
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      if (onImageUpload) {
-        // Now just fire and forget, the Editor component handles the optimistic UI
-        onImageUpload(file);
-      } else {
-        const url = URL.createObjectURL(file);
-        editor.chain().focus().setImage({ src: url }).run();
-      }
-    }
-    if (event.target.value) {
-      event.target.value = "";
-    }
-  };
-
   const setLink = () => {
     if (onOpenLinkModal) {
       onOpenLinkModal();
@@ -206,18 +188,11 @@ export const ToolbarMinimal = ({
         </ToolbarButton>
 
         <ToolbarButton
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => window.dispatchEvent(new Event("open-media-modal"))}
           title="Image"
         >
           <ImageIcon size={18} />
         </ToolbarButton>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleImageUpload}
-          accept="image/*"
-          className="hidden"
-        />
       </div>
     </div>
   );

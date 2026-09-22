@@ -15,6 +15,7 @@ import { SearchReplace } from "./components/SearchReplace";
 import { Toolbar } from "./components/Toolbar";
 import { ToolbarMinimal } from "./components/ToolbarMinimal";
 import { TableMenu } from "./components/TableMenu";
+import { MediaLibraryModal } from "./components/MediaLibraryModal";
 import { CMSEditorLayout } from "./cms-ui/CMSEditorLayout";
 import { twMerge } from "tailwind-merge";
 import { EDITOR_PROSE_STYLES } from "./editorStyles";
@@ -58,6 +59,17 @@ export const Editor = forwardRef<any, EditorProps>(
     const [linkModalData, setLinkModalData] = useState({ text: "", url: "" });
     const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
     const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
+    const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+
+    useEffect(() => {
+      const handleOpenMedia = () => setIsMediaModalOpen(true);
+      window.addEventListener("open-media-modal", handleOpenMedia);
+      return () => window.removeEventListener("open-media-modal", handleOpenMedia);
+    }, []);
+
+    const handleMediaSelect = (url: string) => {
+      editor?.chain().focus().setImage({ src: url }).run();
+    };
 
     // Optimistic Image Upload Handler
     const handleImageFile = async (file: File, overrideView?: any): Promise<string> => {
@@ -310,6 +322,12 @@ export const Editor = forwardRef<any, EditorProps>(
               onClose: () => setIsStatsModalOpen(false),
               onOpen: () => setIsStatsModalOpen(true),
             },
+            media: {
+              isOpen: isMediaModalOpen,
+              onClose: () => setIsMediaModalOpen(false),
+              onSelect: handleMediaSelect,
+              onUpload: (file) => handleImageFile(file),
+            },
           }}
         />
       );
@@ -404,6 +422,12 @@ export const Editor = forwardRef<any, EditorProps>(
             editor={editor}
             isOpen={isStatsModalOpen}
             onClose={() => setIsStatsModalOpen(false)}
+          />
+          <MediaLibraryModal
+            isOpen={isMediaModalOpen}
+            onClose={() => setIsMediaModalOpen(false)}
+            onSelect={handleMediaSelect}
+            onUpload={(file) => handleImageFile(file)}
           />
           <SearchReplace editor={editor} />
         </div>
