@@ -27,7 +27,8 @@ export const Footer = async () => {
     });
 
     settings.forEach((s) => {
-      if (s.key === "site_title" && s.value && s.value !== "CSWITHBS") siteTitle = s.value;
+      if (s.key === "site_title" && s.value && s.value !== "CSWITHBS")
+        siteTitle = s.value;
       if (s.key === "site_tagline" && s.value) siteTagline = s.value;
       if (s.key.startsWith("social_") && s.value) {
         socialLinks[s.key] = s.value;
@@ -43,11 +44,14 @@ export const Footer = async () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
           {/* Brand Column */}
           <div className="flex flex-col gap-4">
-            <Link
-              href="/"
-              className="mb-2 flex items-center"
-            >
-              <Image src="/images/logo.svg" alt="CSWITHBS Logo" width={160} height={40} className="h-8 md:h-9 w-auto object-contain" />
+            <Link href="/" className="mb-2 flex items-center">
+              <Image
+                src="/images/logo.svg"
+                alt="CSWITHBS Logo"
+                width={160}
+                height={40}
+                className="h-8 md:h-9 w-auto object-contain"
+              />
             </Link>
             <p className="text-sm text-muted leading-relaxed">{siteTagline}</p>
             <div className="flex gap-4 mt-2">
@@ -164,14 +168,6 @@ export const Footer = async () => {
               </li>
               <li>
                 <Link
-                  href="/blog"
-                  className="hover:text-accent transition-colors"
-                >
-                  Blog & Articles
-                </Link>
-              </li>
-              <li>
-                <Link
                   href="/archive"
                   className="hover:text-accent transition-colors"
                 >
@@ -182,42 +178,46 @@ export const Footer = async () => {
           </div>
 
           <div>
-            <h4 className="font-bold text-white mb-6">Popular Tags</h4>
-            <ul className="flex flex-col gap-3 text-sm text-muted">
-              <li>
-                <Link href="/courses?tag=Programming" className="hover:text-accent transition-colors">
-                  Programming
-                </Link>
-              </li>
-              <li>
-                <Link href="/courses?tag=BCA" className="hover:text-accent transition-colors">
-                  BCA
-                </Link>
-              </li>
-              <li>
-                <Link href="/courses?tag=1st+Semester" className="hover:text-accent transition-colors">
-                  1st Semester
-                </Link>
-              </li>
-              <li>
-                <Link href="/courses?tag=Algorithms" className="hover:text-accent transition-colors">
-                  Algorithms
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-white mb-6">About</h4>
+            <h4 className="font-bold text-white mb-6">Discover</h4>
             <ul className="flex flex-col gap-3 text-sm text-muted">
               <li>
                 <Link
                   href="/about"
                   className="hover:text-accent transition-colors"
                 >
-                  About Me
+                  About
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/blog"
+                  className="hover:text-accent transition-colors"
+                >
+                  Blog & Articles
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/gallery"
+                  className="hover:text-accent transition-colors"
+                >
+                  Image Gallery
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/research/collaborations"
+                  className="hover:text-accent transition-colors"
+                >
+                  Collaborative Works
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-white mb-6">Support & Legal</h4>
+            <ul className="flex flex-col gap-3 text-sm text-muted">
               <li>
                 <Link
                   href="/contact"

@@ -129,6 +129,8 @@ export async function PATCH(
         // PERMISSION: Only Super Admin and Admin can change the Author
         if (!user.roles?.includes('SUPER_ADMIN') && !user.roles?.includes('ADMIN')) {
             delete body.author;
+        } else if (!body.author) {
+            delete body.author; // Prevent erasing the author if sent as empty string
         }
 
         // Recalculate read time if content is being updated
@@ -189,8 +191,10 @@ export async function PATCH(
                     link: `/blog/${finalPost.slug}`
                 });
 
+                console.log(`[DEBUG NOTIFICATION] finalPost.author = ${finalPost.author}, user.id = ${user.id}`);
                 // Personal notification to author (only if someone else approved it)
-                if (finalPost.author.toString() !== user.id) {
+                if (String(finalPost.author) !== String(user.id)) {
+                    console.log("[DEBUG NOTIFICATION] Sending 'Your post was approved!' because author !== user.id");
                     await Notification.create({
                         type: 'PERSONAL',
                         recipient: finalPost.author,

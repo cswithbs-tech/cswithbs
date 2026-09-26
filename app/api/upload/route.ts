@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     const folderName = (formData.get('folder') as string) || 'general'; // Default to 'general'
 
     // Simple validation for allowed folders to keep things organized
-    const allowedFolders = ['avatars', 'posts', 'resources', 'general'];
+    const allowedFolders = ['avatars', 'posts', 'resources', 'general', 'gallery'];
     const targetFolder = allowedFolders.includes(folderName) ? `cswithbs/${folderName}` : 'cswithbs/misc';
 
     if (!file) {
