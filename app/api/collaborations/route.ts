@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { title, slug, type, abstract, image, student, event, mentor, status } = body;
+    const { title, slug, type, abstract, image, student, coAuthors, event, mentor, status, isFeatured } = body;
 
     if (!title || !slug || !type || !abstract || !student || !event || !mentor) {
       return NextResponse.json(
@@ -66,9 +66,11 @@ export async function POST(req: NextRequest) {
       abstract,
       image: type === 'Poster' ? image : undefined,
       student,
+      coAuthors,
       event,
       mentor,
       status: status || 'published',
+      isFeatured: isFeatured || false,
     });
 
     return NextResponse.json(newCollaboration, { status: 201 });

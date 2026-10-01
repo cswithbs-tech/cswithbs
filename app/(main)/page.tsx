@@ -10,6 +10,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import Subscriber from "@/models/Subscriber";
 import { Code, Database, Cpu, Network, BookOpen, ChevronRight, FileText, Users, ArrowRight } from "lucide-react";
+import { ShowcaseCard } from "@/app/components/ui/ShowcaseCard";
 
 // Fetch notes for the study materials section
 async function getLandingData() {
@@ -44,11 +45,20 @@ async function getLandingData() {
       .select("title slug excerpt image category createdAt readTime")
       .lean();
 
-    let collaborations = await Collaboration.find({ status: "published" })
+    let collaborations = await Collaboration.find({ status: "published", isFeatured: true })
       .sort({ createdAt: -1 })
-      .limit(3)
+      .limit(4)
       .populate("student", "name")
       .lean();
+    
+    // Fallback if no featured items yet
+    if (collaborations.length === 0) {
+      collaborations = await Collaboration.find({ status: "published" })
+        .sort({ createdAt: -1 })
+        .limit(4)
+        .populate("student", "name")
+        .lean();
+    }
 
     return {
       latest: notes.map((n: any) => ({
@@ -76,6 +86,7 @@ async function getLandingData() {
         _id: c._id.toString(),
         slug: c.slug,
         title: c.title,
+        abstract: c.abstract,
         type: c.type,
         image: c.image || null,
         event: c.event,
@@ -356,7 +367,7 @@ export default async function LandingPage() {
           <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
             <div>
                <h2 className="text-sm font-mono text-accent uppercase tracking-widest mb-3">// Student Showcase</h2>
-               <h3 className="text-3xl md:text-4xl font-serif font-bold text-white">Collaborative Research</h3>
+               <h3 className="text-3xl md:text-4xl font-serif font-bold text-white">Collaborative Work</h3>
             </div>
             <Link
               href="/research/collaborations"
@@ -366,54 +377,9 @@ export default async function LandingPage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {collaborations.map((project: any) => (
-              <Link 
-                key={project.slug} 
-                href={`/research/collaborations/${project.slug}`}
-                className="group flex flex-col bg-[#0a0a0a] border border-white/5 rounded-2xl overflow-hidden hover:border-accent/30 transition-all duration-300 relative"
-              >
-                {/* Glowing Hover Effect */}
-                <div className="absolute inset-0 bg-accent/0 group-hover:bg-accent/5 transition-colors z-0 pointer-events-none"></div>
-
-                {/* Cover Image or Empty State */}
-                <div className="relative h-48 w-full overflow-hidden shrink-0 z-10 flex items-center justify-center bg-[#050505]">
-                  {project.image ? (
-                    <img
-                      src={project.image}
-                      alt={project.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-80 group-hover:opacity-100"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-[#0a0a0a] group-hover:bg-white/[0.02] transition-colors">
-                       <FileText size={48} className="text-zinc-700" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent"></div>
-                  <div className="absolute top-4 left-4 z-20">
-                     <span className="px-3 py-1 bg-black/60 backdrop-blur-md border border-white/10 rounded-full text-[10px] font-mono text-white uppercase tracking-wider">
-                       {project.type}
-                     </span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex flex-col flex-1 z-10">
-                  <div className="flex items-center gap-3 text-xs font-mono text-zinc-500 mb-4">
-                    <span>{project.event}</span>
-                    <span>&bull;</span>
-                    <span>{project.student}</span>
-                  </div>
-                  
-                  <h4 className="text-lg font-bold text-white mb-3 font-serif group-hover:text-accent transition-colors line-clamp-2">
-                    {project.title}
-                  </h4>
-                  
-                  <div className="mt-auto flex items-center text-xs font-mono text-accent opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 pt-4">
-                    View Project <ChevronRight className="w-3 h-3 ml-1" />
-                  </div>
-                </div>
-              </Link>
+              <ShowcaseCard key={project.slug} project={project} />
             ))}
           </div>
         </Container>

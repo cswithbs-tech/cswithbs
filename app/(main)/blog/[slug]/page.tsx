@@ -445,6 +445,7 @@ export default async function BlogPostPage({
                 <NewsletterForm
                   initialEmail={initialEmail}
                   isSubscribed={isSubscribed}
+                  variant="sidebar"
                 />
               </div>
             </div>

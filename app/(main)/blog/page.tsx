@@ -9,6 +9,10 @@ import Post from "@/models/Post";
 import Category from "@/models/Category";
 import User from "@/models/User"; // Required for population
 import { JoinCommunityCard } from "@/app/components/blog/JoinCommunityCard";
+import { NewsletterForm } from "@/app/components/NewsletterForm";
+import Subscriber from "@/models/Subscriber";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 import { Metadata } from "next";
 
@@ -248,6 +252,19 @@ export default async function BlogPage(props: {
     error,
   } = await getBlogData(searchParams);
 
+  const session = await getServerSession(authOptions);
+  let initialEmail = "";
+  let isSubscribed = false;
+
+  if (session?.user?.email) {
+    initialEmail = session.user.email;
+    await dbConnect();
+    const sub = await Subscriber.findOne({ email: initialEmail });
+    if (sub) {
+      isSubscribed = true;
+    }
+  }
+
   // Logic to get some tags/categories for the sidebar cloud - use real ACTIVE categories
   const popularTags = categoriesForClient
     .filter((c) => (c as any).isActive)
@@ -420,16 +437,7 @@ export default async function BlogPage(props: {
                     Join 10,000+ readers getting our best stories on programming,
                     software design, and tech delivered every Sunday.
                   </p>
-                  <div className="flex flex-col gap-3">
-                    <input
-                      type="email"
-                      placeholder="your@email.com"
-                      className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-accent focus:bg-white/10 w-full transition-all outline-none"
-                    />
-                    <button className="bg-accent text-black w-full px-4 py-3 rounded-xl font-bold text-sm hover:bg-accent/90 transition-transform active:scale-95">
-                      Subscribe Free
-                    </button>
-                  </div>
+                  <NewsletterForm variant="sidebar" initialEmail={initialEmail} isSubscribed={isSubscribed} />
                 </div>
 
                 {/* 1.5. Join Community Card */}

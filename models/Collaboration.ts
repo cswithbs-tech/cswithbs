@@ -7,9 +7,11 @@ export interface ICollaboration extends Document {
   abstract: string;
   image?: string;
   student: mongoose.Types.ObjectId;
+  coAuthors?: mongoose.Types.ObjectId[];
   event: string;
   mentor: string;
   status: 'draft' | 'published';
+  isFeatured: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,9 +24,11 @@ const CollaborationSchema = new Schema(
     abstract: { type: String, required: true },
     image: { type: String }, // Optional, mainly for Poster
     student: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    coAuthors: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     event: { type: String, required: true },
     mentor: { type: String, required: true },
     status: { type: String, enum: ['draft', 'published'], default: 'published' },
+    isFeatured: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

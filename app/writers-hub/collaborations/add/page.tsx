@@ -14,8 +14,10 @@ export default function AddCollaborationPage() {
   const [abstract, setAbstract] = useState("");
   const [image, setImage] = useState("");
   const [student, setStudent] = useState("");
+  const [coAuthors, setCoAuthors] = useState<string[]>([]);
   const [event, setEvent] = useState("");
   const [mentor, setMentor] = useState("");
+  const [isFeatured, setIsFeatured] = useState(false);
   
   const [users, setUsers] = useState<any[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
@@ -61,9 +63,11 @@ export default function AddCollaborationPage() {
         abstract,
         image: type === "Poster" ? image : undefined,
         student,
+        coAuthors,
         event,
         mentor,
-        status: "published"
+        status: "published",
+        isFeatured
       };
 
       const res = await fetch("/api/collaborations", {
@@ -165,6 +169,27 @@ export default function AddCollaborationPage() {
             <p className="text-xs text-zinc-500 mt-1">This links the work directly to their public profile.</p>
           </div>
 
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm font-bold text-zinc-300">Co-Authors (Optional)</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-48 overflow-y-auto p-4 bg-black border border-white/10 rounded-xl">
+               {users.filter(u => u.id !== student).map(u => (
+                  <label key={u.id} className="flex items-center gap-3 p-2 hover:bg-white/5 rounded-lg cursor-pointer transition-colors border border-transparent hover:border-white/5">
+                    <input 
+                      type="checkbox" 
+                      checked={coAuthors.includes(u.id)} 
+                      onChange={(e) => {
+                         if (e.target.checked) setCoAuthors([...coAuthors, u.id]);
+                         else setCoAuthors(coAuthors.filter(id => id !== u.id));
+                      }} 
+                      className="w-4 h-4 accent-accent cursor-pointer" 
+                    />
+                    <span className="text-sm text-zinc-300">{u.name}</span>
+                  </label>
+               ))}
+            </div>
+            <p className="text-xs text-zinc-500 mt-1">Select users who collaborated on this work. They will be linked automatically.</p>
+          </div>
+
           <div className="space-y-2">
             <label className="text-sm font-bold text-zinc-300">Event / Conference Name</label>
             <input 
@@ -187,6 +212,19 @@ export default function AddCollaborationPage() {
               className="w-full bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-accent transition-colors"
               placeholder="e.g. Dr. B. Singh"
             />
+          </div>
+
+          <div className="space-y-2 flex items-center gap-3 pt-6">
+            <input 
+              type="checkbox" 
+              id="isFeatured"
+              checked={isFeatured}
+              onChange={(e) => setIsFeatured(e.target.checked)}
+              className="w-5 h-5 accent-accent cursor-pointer"
+            />
+            <label htmlFor="isFeatured" className="text-sm font-bold text-zinc-300 cursor-pointer">
+              Feature on Homepage & Research Page
+            </label>
           </div>
 
           {type === "Poster" && (

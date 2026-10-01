@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronRight, FileText, Search, AlignLeft } from "lucide-react";
 import { useState } from "react";
+import { ShowcaseCard } from "@/app/components/ui/ShowcaseCard";
 
 export default function CollaborationsGallery({ initialData }: { initialData: any[] }) {
   const [filter, setFilter] = useState("All");
@@ -72,62 +73,9 @@ export default function CollaborationsGallery({ initialData }: { initialData: an
             <p className="text-zinc-500">Try adjusting your search or filter criteria.</p>
           </div>
         ) : (
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredItems.map((item) => (
-              <Link 
-                href={`/research/collaborations/${item.slug}`} 
-                key={item._id}
-                className="block break-inside-avoid group relative rounded-2xl overflow-hidden border border-zinc-800/50 bg-zinc-900/20 hover:border-accent/30 transition-all duration-500"
-              >
-                {/* Image Container */}
-                <div className={`relative w-full overflow-hidden bg-zinc-900 flex items-center justify-center ${item.type === 'Abstract' ? 'aspect-video' : 'aspect-[3/4]'}`}>
-                  {item.image ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img 
-                      src={item.image} 
-                      alt={item.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-80 group-hover:opacity-100"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-zinc-900 flex flex-col items-center justify-center text-zinc-700 p-6 text-center">
-                       <AlignLeft size={48} className="mb-4 opacity-50" />
-                       <span className="font-bold uppercase tracking-widest text-xs">Text-Only Abstract</span>
-                    </div>
-                  )}
-                  
-                  {/* Type Badge */}
-                  <div className="absolute top-4 left-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white uppercase tracking-wider">
-                    {item.type === "Poster" ? <FileText size={14} className="text-blue-400" /> : <AlignLeft size={14} className="text-amber-400" />}
-                    {item.type}
-                  </div>
-                </div>
-
-                {/* Content / Info Overlay */}
-                <div className={`p-5 space-y-3 relative ${item.image ? 'bg-gradient-to-t from-black via-black/95 to-transparent -mt-12 pt-16' : 'bg-black/90'}`}>
-                  <p className="text-xs font-bold text-accent tracking-widest uppercase">{item.event}</p>
-                  <h3 className="text-lg font-bold text-zinc-100 leading-snug group-hover:text-white transition-colors line-clamp-2 font-display">
-                    {item.title}
-                  </h3>
-                  
-                  <div className="flex items-center justify-between pt-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center overflow-hidden text-xs font-bold text-zinc-400">
-                        {item.student?.image ? (
-                           /* eslint-disable-next-line @next/next/no-img-element */
-                           <img src={item.student.image} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                           item.student?.name?.charAt(0)
-                        )}
-                      </div>
-                      <span className="text-sm font-medium text-zinc-400">{item.student?.name}</span>
-                    </div>
-                    
-                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center text-white/50 group-hover:bg-accent group-hover:text-black transition-all duration-300">
-                      <ChevronRight size={16} />
-                    </div>
-                  </div>
-                </div>
-              </Link>
+              <ShowcaseCard key={item._id} project={item} />
             ))}
           </div>
         )}

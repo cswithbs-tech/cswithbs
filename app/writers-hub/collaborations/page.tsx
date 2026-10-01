@@ -97,10 +97,18 @@ export default function CollaborationsListPage() {
                     <td className="px-6 py-4 text-zinc-400">{collab.event}</td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="p-1.5 text-zinc-400 hover:text-white rounded bg-white/5 hover:bg-white/10 transition-colors">
+                        <Link href={`/writers-hub/collaborations/edit/${collab._id}`} className="p-1.5 text-zinc-400 hover:text-white rounded bg-white/5 hover:bg-white/10 transition-colors">
                           <Edit2 size={14} />
-                        </button>
-                        <button className="p-1.5 text-zinc-400 hover:text-red-400 rounded bg-white/5 hover:bg-red-500/10 transition-colors">
+                        </Link>
+                        <button 
+                          onClick={async () => {
+                            if (confirm("Are you sure you want to delete this collaboration?")) {
+                              await fetch(`/api/collaborations/${collab._id}`, { method: 'DELETE' });
+                              fetchCollaborations();
+                            }
+                          }}
+                          className="p-1.5 text-zinc-400 hover:text-red-400 rounded bg-white/5 hover:bg-red-500/10 transition-colors"
+                        >
                           <Trash2 size={14} />
                         </button>
                       </div>
