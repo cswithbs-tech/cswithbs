@@ -278,6 +278,10 @@ export default function ProfilePage() {
   if (status === "loading" || (loading && !initialData.name)) return <GlobalLoading />;
   if (!session) return null;
 
+  const isWriter = (session.user as any)?.roles?.some((r: string) => 
+    ["SUPER_ADMIN", "ADMIN", "WRITER", "admin", "super_admin", "writer"].includes(r)
+  );
+
   return (
     <Container className="pt-32 pb-20 min-h-screen">
       <div className="flex flex-col md:flex-row gap-8">
@@ -401,10 +405,20 @@ export default function ProfilePage() {
                                 <div className="p-2 bg-accent text-black rounded-lg">
                                     <PenTool className="w-5 h-5" />
                                 </div>
-                                <h3 className="font-bold text-white">Join the Writers Hub</h3>
+                                <h3 className="font-bold text-white">{isWriter ? "Writers Dashboard" : "Join the Writers Hub"}</h3>
                             </div>
-                            <p className="text-zinc-400 text-sm mb-6 flex-1">Have insights to share? Write articles, build your portfolio, and reach thousands of tech enthusiasts.</p>
-                            <Button variant="primary" onClick={() => showToast("Writers Hub public registration is coming soon!", "info")} className="w-full text-xs shadow-[0_0_15px_rgba(var(--color-accent),0.2)]">Become a Writer</Button>
+                            <p className="text-zinc-400 text-sm mb-6 flex-1">
+                                {isWriter 
+                                  ? "Welcome to your writing workspace! Head over to the Writers Hub to draft new posts, manage your articles, and track views."
+                                  : "Have insights to share? Write articles, build your portfolio, and reach thousands of tech enthusiasts."}
+                            </p>
+                            <Button 
+                                variant="primary" 
+                                onClick={() => router.push(isWriter ? "/writers-hub/dashboard" : "/contact?subject=writer_access")} 
+                                className="w-full text-xs shadow-[0_0_15px_rgba(var(--color-accent),0.2)]"
+                            >
+                                {isWriter ? "Go to Writers Hub" : "Become a Writer"}
+                            </Button>
                         </div>
                     </div>
                 </div>

@@ -52,6 +52,23 @@ export const NotificationBell = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isOpen]);
 
+  // Handle scrolling to close
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    
+    const handleScroll = () => {
+      if (Math.abs(window.scrollY - lastScrollY) > 10) {
+        if (isOpen) setIsOpen(false);
+      }
+      lastScrollY = window.scrollY;
+    };
+
+    if (isOpen) {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isOpen]);
+
   const handleMarkAsRead = async (id: string) => {
     try {
       // Optimistic update

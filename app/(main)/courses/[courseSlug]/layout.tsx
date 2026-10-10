@@ -97,8 +97,6 @@ export default async function CourseLayout({
     
     if (user.isCourseRestricted) {
       isCourseLockedForUser = true;
-    } else if (!hasCompleteProfile && !isPrivileged && isAdvanced) {
-      isCourseLockedForUser = true;
     }
   }
 

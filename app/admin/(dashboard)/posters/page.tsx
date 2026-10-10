@@ -5,6 +5,7 @@ import { Image as ImageIcon, Plus, Trash2, CheckCircle, XCircle, Link as LinkIco
 import { useToast } from "@/app/context/ToastContext";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
+import { MediaPickerModal } from "@/app/components/ui/MediaPickerModal";
 import Image from "next/image";
 
 export default function PopupsPage() {
@@ -20,6 +21,7 @@ export default function PopupsPage() {
   const [linkText, setLinkText] = useState("");
   const [targetAudience, setTargetAudience] = useState<"ALL" | "GUESTS" | "LOGGED_IN">("ALL");
   const [imageUrl, setImageUrl] = useState("");
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
   
   // Create Toast State
   const [toastTitle, setToastTitle] = useState("");
@@ -32,6 +34,19 @@ export default function PopupsPage() {
   const [uploading, setUploading] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editingPosterId, setEditingPosterId] = useState<string | null>(null);
+  const [editingToastId, setEditingToastId] = useState<string | null>(null);
+
+  const handleEditToast = (toast: any) => {
+    setEditingToastId(toast._id);
+    setToastTitle(toast.title || "");
+    setToastMessage(toast.message || "");
+    setToastIcon(toast.icon || "info");
+    setToastLinkText(toast.linkText || "");
+    setToastLinkUrl(toast.linkUrl || "");
+    setToastAudience(toast.targetAudience || "ALL");
+    setViewMode("TOASTS");
+    setActiveTab("CREATE");
+  };
 
   const handleEditPoster = (poster: any) => {
     setEditingPosterId(poster._id);
@@ -45,9 +60,16 @@ export default function PopupsPage() {
     setActiveTab("CREATE");
   };
 
-  const handleCancelEdit = () => {
+  const resetForms = () => {
     setEditingPosterId(null);
     setTitle(""); setDescription(""); setLink(""); setLinkText(""); setImageUrl(""); setTargetAudience("ALL");
+    
+    setEditingToastId(null);
+    setToastTitle(""); setToastMessage(""); setToastIcon("info"); setToastLinkText(""); setToastLinkUrl(""); setToastAudience("ALL");
+  };
+
+  const handleCancelEdit = () => {
+    resetForms();
     setActiveTab("MANAGE");
   };
   
@@ -179,27 +201,40 @@ export default function PopupsPage() {
 
     try {
       setCreating(true);
-      const res = await fetch("/api/admin/toasts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      
+      const payload = {
           title: toastTitle,
           message: toastMessage,
           icon: toastIcon,
           linkText: toastLinkText,
           linkUrl: toastLinkUrl,
           targetAudience: toastAudience,
-          isActive: false 
-        })
-      });
+      };
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create toast");
-
-      showToast("Toast created successfully!", "success");
+      if (editingToastId) {
+          const res = await fetch(`/api/admin/toasts/${editingToastId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to update toast");
+          showToast("Toast updated successfully!", "success");
+      } else {
+          const res = await fetch("/api/admin/toasts", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, isActive: false })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to create toast");
+          showToast("Toast created successfully!", "success");
+      }
       
+      setEditingToastId(null);
       setToastTitle(""); setToastMessage(""); setToastIcon("info"); setToastLinkText(""); setToastLinkUrl(""); setToastAudience("ALL");
       setActiveTab("MANAGE");
+      fetchToasts();
     } catch (error: any) {
       showToast(error.message, "error");
     } finally {
@@ -303,10 +338,10 @@ export default function PopupsPage() {
             Manage {viewMode === "POSTERS" ? "Posters" : "Toasts"}
         </button>
         <button
-            onClick={() => { setActiveTab("CREATE"); setEditingPosterId(null); setTitle(""); setDescription(""); setLink(""); setLinkText(""); setImageUrl(""); setTargetAudience("ALL"); }}
+            onClick={() => { resetForms(); setActiveTab("CREATE"); }}
             className={`px-4 py-2 rounded-full border text-sm font-medium transition-all ${activeTab === "CREATE" ? "bg-white/10 border-white/20 text-white" : "border-transparent text-zinc-500 hover:text-zinc-300"}`}
         >
-            {editingPosterId ? "Edit Poster" : `Create New ${viewMode === "POSTERS" ? "Poster" : "Toast"}`}
+            {viewMode === "POSTERS" ? (editingPosterId ? "Edit Poster" : "Create New Poster") : (editingToastId ? "Edit Toast" : "Create New Toast")}
         </button>
       </div>
 
@@ -325,21 +360,33 @@ export default function PopupsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-2">Image Upload *</label>
-                <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl cursor-pointer text-sm font-medium transition-colors">
-                    {uploading ? <div className="w-4 h-4 rounded-full border-2 border-zinc-400 border-t-transparent animate-spin" /> : <Upload className="w-4 h-4" />}
-                    {uploading ? "Uploading..." : "Select Image"}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
-                  </label>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-2 px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl cursor-pointer text-sm font-medium transition-colors w-full sm:w-auto justify-center">
+                      {uploading ? <div className="w-4 h-4 rounded-full border-2 border-zinc-400 border-t-transparent animate-spin" /> : <Upload className="w-4 h-4" />}
+                      {uploading ? "Uploading..." : "Upload New"}
+                      <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
+                    </label>
+                    <span className="text-zinc-600 text-sm font-medium">or</span>
+                    <button 
+                      type="button"
+                      onClick={() => setIsMediaPickerOpen(true)}
+                      className="flex items-center gap-2 px-4 py-3 bg-accent/10 hover:bg-accent/20 text-accent border border-accent/20 rounded-xl cursor-pointer text-sm font-bold transition-colors w-full sm:w-auto justify-center"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                      Choose from Gallery
+                    </button>
+                  </div>
+                  
                   {imageUrl && (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 p-2 bg-white/5 border border-white/10 rounded-xl ml-0 sm:ml-auto">
                       <div className="relative w-10 h-10 rounded-md overflow-hidden bg-black/50 border border-white/10 shrink-0">
                         <Image src={imageUrl} alt="Preview" fill className="object-cover" />
                       </div>
                       <span className="text-xs text-zinc-400 truncate max-w-[150px]" title={imageUrl}>
                         {imageUrl.split('/').pop()}
                       </span>
-                      <button type="button" onClick={() => setImageUrl("")} className="text-red-400 hover:text-red-300" title="Remove image">
+                      <button type="button" onClick={() => setImageUrl("")} className="text-red-400 hover:text-red-300 p-1" title="Remove image">
                         <XCircle className="w-4 h-4" />
                       </button>
                     </div>
@@ -424,10 +471,17 @@ export default function PopupsPage() {
                  </div>
               </div>
             </div>
-            <Button className="w-full py-4 text-base shadow-[0_0_20px_rgba(var(--color-accent),0.3)]" disabled={!toastTitle || !toastMessage || creating} onClick={handleCreateToast}>
-              <Plus className="w-5 h-5 mr-2" />
-              {creating ? "Creating..." : "Create Mini Toast"}
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button className="w-full py-4 text-base shadow-[0_0_20px_rgba(var(--color-accent),0.3)]" disabled={!toastTitle || !toastMessage || creating} onClick={handleCreateToast}>
+                <Plus className="w-5 h-5 mr-2" />
+                {creating ? (editingToastId ? "Updating..." : "Creating...") : (editingToastId ? "Update Mini Toast" : "Create Mini Toast")}
+              </Button>
+              {editingToastId && (
+                <Button variant="outline" className="w-full border-white/10 text-zinc-400 hover:text-white" onClick={handleCancelEdit}>
+                  Cancel Edit
+                </Button>
+              )}
+            </div>
           </div>
           
           <div className="lg:col-span-5 relative">
@@ -457,13 +511,13 @@ export default function PopupsPage() {
             <div className="col-span-full p-12 text-center flex flex-col items-center bg-[#111111]/80 rounded-2xl border border-white/10">
               <ImageIcon className="w-12 h-12 text-zinc-700 mb-4" />
               <p className="text-zinc-400">No posters created yet.</p>
-              <Button onClick={() => setActiveTab("CREATE")} className="mt-4" variant="outline">Create Poster</Button>
+              <Button onClick={() => { resetForms(); setActiveTab("CREATE"); }} className="mt-4" variant="outline">Create Poster</Button>
             </div>
           ) : viewMode === "TOASTS" && toasts.length === 0 ? (
             <div className="col-span-full p-12 text-center flex flex-col items-center bg-[#111111]/80 rounded-2xl border border-white/10">
               <Bell className="w-12 h-12 text-zinc-700 mb-4" />
               <p className="text-zinc-400">No toasts created yet.</p>
-              <Button onClick={() => setActiveTab("CREATE")} className="mt-4" variant="outline">Create Toast</Button>
+              <Button onClick={() => { resetForms(); setActiveTab("CREATE"); }} className="mt-4" variant="outline">Create Toast</Button>
             </div>
           ) : viewMode === "POSTERS" ? (
             posters.map((poster) => (
@@ -508,7 +562,10 @@ export default function PopupsPage() {
                   <button onClick={() => handleToggleActive(toast._id, toast.isActive, "TOAST")} className={`text-xs px-3 py-1.5 rounded-full font-medium transition-colors ${toast.isActive ? "bg-white/10 text-white hover:bg-white/20" : "bg-accent/10 text-accent hover:bg-accent/20"}`}>
                     {toast.isActive ? "Deactivate" : "Set Active"}
                   </button>
-                  <button onClick={() => { setDeleteId(toast._id); setDeleteType("TOAST"); }} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                  <div className="flex items-center gap-1">
+                      <button onClick={() => handleEditToast(toast)} className="p-1.5 text-zinc-500 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Edit Toast"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => { setDeleteId(toast._id); setDeleteType("TOAST"); }} className="p-1.5 text-zinc-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                  </div>
                 </div>
               </div>
             ))
@@ -525,6 +582,12 @@ export default function PopupsPage() {
         confirmText="Yes, Delete"
         variant="danger"
         isLoading={loading}
+      />
+
+      <MediaPickerModal 
+        isOpen={isMediaPickerOpen}
+        onClose={() => setIsMediaPickerOpen(false)}
+        onSelect={(url) => setImageUrl(url)}
       />
     </div>
   );

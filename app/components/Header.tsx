@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -25,6 +26,8 @@ export const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -71,6 +74,15 @@ export const Header = () => {
     };
   }, [isMobileMenuOpen]);
 
+  const pathname = usePathname();
+
+  // Close all menus when route changes
+  useEffect(() => {
+    setIsDropdownOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsMobileProfileOpen(false);
+  }, [pathname]);
+
   const [siteTitle, setSiteTitle] = useState("CSwithBS");
 
   useEffect(() => {
@@ -86,6 +98,48 @@ export const Header = () => {
       .catch((err) => console.error("Header site title fetch error", err));
   }, []);
 
+  // Scroll-Aware Header Logic
+  useEffect(() => {
+    const controlNavbar = () => {
+      if (typeof window !== "undefined") {
+        const currentScrollY = window.scrollY;
+
+        // Close dropdowns on any significant scroll
+        if (Math.abs(currentScrollY - lastScrollY) > 10) {
+          setIsDropdownOpen(false);
+        }
+
+        // At the very top, always show
+        if (currentScrollY < 50) {
+          setIsVisible(true);
+        }
+        // Scrolling down (require at least 10px movement to avoid jitter)
+        else if (currentScrollY > lastScrollY + 10) {
+          // --- TEMPORARILY DISABLED HEADER AUTO-HIDE (Future Feature) ---
+          // if (!isMobileMenuOpen) {
+          //   setIsVisible(false);
+          // }
+        }
+        // Scrolling up (require at least 10px movement)
+        else if (currentScrollY < lastScrollY - 10) {
+          setIsVisible(true);
+        }
+
+        // Only update lastScrollY if we actually moved significantly
+        if (Math.abs(currentScrollY - lastScrollY) > 10) {
+          setLastScrollY(currentScrollY);
+        }
+      }
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", controlNavbar);
+      return () => {
+        window.removeEventListener("scroll", controlNavbar);
+      };
+    }
+  }, [lastScrollY, isMobileMenuOpen]);
+
   const navLinks = [
     { label: "Home", href: "/" },
     { label: "About", href: "/about" },
@@ -96,7 +150,11 @@ export const Header = () => {
   ];
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-md">
+    <header 
+      className={`fixed top-0 z-50 w-full border-b border-white/10 bg-background/80 backdrop-blur-md transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${
+        isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+      }`}
+    >
       <Container>
         <div className="flex h-20 items-center justify-between">
           {/* Logo */}
@@ -167,64 +225,66 @@ export const Header = () => {
                   </div>
                 </button>
 
-                {/* Dropdown Menu */}
-                {isDropdownOpen && (
-                  <div className="absolute md:right-[-30px] right-0 mt-5 w-56 bg-black/80 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl py-2 flex flex-col z-50 overflow-hidden">
-                    <div className="px-4 py-3 border-b border-white/5 mb-2">
-                      <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-1">
-                        Signed in as
-                      </p>
-                      <p className="text-sm text-white font-bold truncate">
-                        {session.user?.email}
-                      </p>
-                    </div>
+                {/* Dropdown Menu (Animated) */}
+                <div 
+                  className={`absolute md:right-[-30px] right-0 mt-5 w-60 bg-[#050505]/95 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(var(--color-accent),0.05)] py-2 flex flex-col z-50 overflow-hidden origin-top transition-all duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                    isDropdownOpen ? "opacity-100 scale-100 translate-y-0 pointer-events-auto" : "opacity-0 scale-90 -translate-y-6 pointer-events-none"
+                  }`}
+                >
+                  <div className="px-4 py-3 border-b border-white/5 mb-2">
+                    <p className="text-xs text-zinc-500 font-medium uppercase tracking-wider mb-1">
+                      Signed in as
+                    </p>
+                    <p className="text-sm text-white font-bold truncate">
+                      {session.user?.email}
+                    </p>
+                  </div>
 
-                    {(session.user as any).roles?.some((r: string) =>
-                      ["ADMIN", "SUPER_ADMIN"].includes(r),
-                    ) && (
-                      <Link
-                        href="/admin/dashboard"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
-                      >
-                        <LayoutDashboard className="w-4 h-4 text-zinc-400" />
-                        Admin Dashboard
-                      </Link>
-                    )}
-
-                    {(session.user as any).roles?.some((r: string) =>
-                      ["ADMIN", "SUPER_ADMIN", "WRITER"].includes(r),
-                    ) && (
-                      <Link
-                        href="/writers-hub/dashboard"
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
-                      >
-                        <PenTool className="w-4 h-4 text-zinc-400" />
-                        Writers Hub
-                      </Link>
-                    )}
-
+                  {(session.user as any).roles?.some((r: string) =>
+                    ["ADMIN", "SUPER_ADMIN"].includes(r),
+                  ) && (
                     <Link
-                      href={`/profile/${(session.user as any).id}`}
+                      href="/admin/dashboard"
                       onClick={() => setIsDropdownOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
-                      <User className="w-4 h-4 text-zinc-400" />
-                      View Profile
+                      <LayoutDashboard className="w-4 h-4 text-zinc-400" />
+                      Admin Dashboard
                     </Link>
+                  )}
 
-                    <div className="h-px bg-white/5 my-2 w-full"></div>
-
-                    <button
-                      onClick={() => signOut()}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-left w-full"
+                  {(session.user as any).roles?.some((r: string) =>
+                    ["ADMIN", "SUPER_ADMIN", "WRITER"].includes(r),
+                  ) && (
+                    <Link
+                      href="/writers-hub/dashboard"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
                     >
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
-                    </button>
-                  </div>
-                )}
+                      <PenTool className="w-4 h-4 text-zinc-400" />
+                      Writers Hub
+                    </Link>
+                  )}
+
+                  <Link
+                    href={`/profile/${(session.user as any).id}`}
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-zinc-400" />
+                    View Profile
+                  </Link>
+
+                  <div className="h-px bg-white/5 my-2 w-full"></div>
+
+                  <button
+                    onClick={() => { signOut(); setIsDropdownOpen(false); }}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors text-left w-full"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
                 </div>
               </div>
             ) : (
@@ -285,6 +345,9 @@ export const Header = () => {
 
       {/* Mobile Menu Overlay */}
       <div 
+        onClick={(e) => {
+          if (e.target === e.currentTarget) setIsMobileMenuOpen(false);
+        }}
         className={`fixed inset-0 top-0 left-0 w-full h-screen bg-[#0a0a0a]/95 backdrop-blur-3xl z-40 flex flex-col overflow-y-auto transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
