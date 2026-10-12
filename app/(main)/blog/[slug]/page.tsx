@@ -446,6 +446,7 @@ export default async function BlogPostPage({
                   initialEmail={initialEmail}
                   isSubscribed={isSubscribed}
                   variant="sidebar"
+                  source="blog-post"
                 />
               </div>
             </div>

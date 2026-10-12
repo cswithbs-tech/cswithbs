@@ -64,12 +64,11 @@ export default function ContactPage() {
                   <p className="text-zinc-400 mb-2 text-sm leading-relaxed max-w-xs">
                     For reporting site issues or technical feedback.
                   </p>
-                  {/* UPDATE HERE: Change your technical support email below */}
                   <a
-                    href="mailto:support.cswithbs@gmail.com"
+                    href="mailto:support@cswithbs.com"
                     className="text-white hover:text-accent font-medium transition-colors"
                   >
-                    support.cswithbs@gmail.com
+                    support@cswithbs.com
                   </a>
                 </div>
               </div>

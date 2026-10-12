@@ -42,7 +42,7 @@ export async function GET() {
     },
     author: {
       name: "CSWITHBS Team",
-      email: "support.cswithbs@gmail.com",
+      email: "support@cswithbs.com",
       link: "https://www.cswithbs.com/about"
     }
   });

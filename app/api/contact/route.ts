@@ -23,6 +23,20 @@ export async function POST(req: Request) {
       message,
     });
 
+    // Send email notification to admin & acknowledgment to user (asynchronous)
+    try {
+      const { sendContactFormEmails } = await import("@/lib/email");
+      sendContactFormEmails({
+        firstName,
+        lastName,
+        email,
+        subject,
+        message,
+      }).catch((mailErr) => console.error("Contact Email Dispatch Error:", mailErr));
+    } catch (importErr) {
+      console.error("Email service not available:", importErr);
+    }
+
     return NextResponse.json({ message: "Message sent successfully", contact: newContact }, { status: 201 });
   } catch (error) {
     console.error("Error sending message:", error);

@@ -437,7 +437,7 @@ export default async function BlogPage(props: {
                     Join 10,000+ readers getting our best stories on programming,
                     software design, and tech delivered every Sunday.
                   </p>
-                  <NewsletterForm variant="sidebar" initialEmail={initialEmail} isSubscribed={isSubscribed} />
+                  <NewsletterForm variant="sidebar" initialEmail={initialEmail} isSubscribed={isSubscribed} source="blog" />
                 </div>
 
                 {/* 1.5. Join Community Card */}

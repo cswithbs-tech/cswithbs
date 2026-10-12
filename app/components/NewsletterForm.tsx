@@ -8,9 +8,10 @@ interface NewsletterFormProps {
   initialEmail?: string;
   isSubscribed?: boolean;
   variant?: 'default' | 'sidebar';
+  source?: string;
 }
 
-export const NewsletterForm = ({ initialEmail = '', isSubscribed = false, variant = 'default' }: NewsletterFormProps) => {
+export const NewsletterForm = ({ initialEmail = '', isSubscribed = false, variant = 'default', source = 'homepage' }: NewsletterFormProps) => {
   const [email, setEmail] = useState(initialEmail);
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
@@ -23,7 +24,7 @@ export const NewsletterForm = ({ initialEmail = '', isSubscribed = false, varian
       const res = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, source }),
       });
       
       const data = await res.json();

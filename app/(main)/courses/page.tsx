@@ -371,6 +371,7 @@ export default async function CoursesLandingPage() {
               <NewsletterForm
                 initialEmail={newsletter.initialEmail}
                 isSubscribed={newsletter.isSubscribed}
+                source="courses"
               />
             </div>
           </div>

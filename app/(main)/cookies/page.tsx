@@ -59,7 +59,7 @@ export default function CookiePolicyPage() {
 
         <h2>6. Where can I get further information?</h2>
         <p>
-          If you have any questions about our use of cookies or other technologies, please email us at <strong>support.cswithbs@gmail.com</strong>.
+          If you have any questions about our use of cookies or other technologies, please email us at <strong>support@cswithbs.com</strong>.
         </p>
       </Container>
     </div>
