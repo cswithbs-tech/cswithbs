@@ -40,35 +40,58 @@ export async function GET() {
         : "ADMIN",
     })).filter((u: any) => Boolean(u.email));
 
-    // Fetch both sent and received emails from Resend in parallel
-    const [sentRes, receivedRes] = await Promise.allSettled([
-      resend.emails.list(),
-      (resend.emails as any).receiving?.list
-        ? (resend.emails as any).receiving.list()
-        : Promise.resolve({ data: [] }),
-    ]);
-
-    const emailItems =
-      sentRes.status === "fulfilled"
-        ? (sentRes.value as any)?.data?.data || (sentRes.value as any)?.data || []
-        : [];
-
-    const receivedItems =
-      receivedRes.status === "fulfilled"
-        ? (receivedRes.value as any)?.data?.data || (receivedRes.value as any)?.data || []
-        : [];
-
     // Resend free tier resets daily at 00:00:00 UTC (5:30 AM IST)
     const now = new Date();
     const todayUTCString = now.toISOString().split("T")[0]; // e.g. "2026-10-13"
 
+    // Fetch all sent emails for today from Resend with pagination (default list() only returned 20!)
+    let allSentEmails: any[] = [];
+    let sentCursor: string | undefined = undefined;
+    let hasMoreSent = true;
+
+    while (hasMoreSent) {
+      try {
+        const res: any = await resend.emails.list({
+          limit: 100,
+          ...(sentCursor ? { after: sentCursor } : {}),
+        });
+        const items = res?.data?.data || res?.data || [];
+        if (!items.length) break;
+
+        allSentEmails.push(...items);
+
+        const lastItem = items[items.length - 1];
+        // If the oldest email in this batch was created before today (UTC), no need to fetch earlier days
+        if (!lastItem?.created_at || !lastItem.created_at.startsWith(todayUTCString)) {
+          break;
+        }
+
+        hasMoreSent = Boolean(res?.data?.has_more);
+        sentCursor = lastItem.id;
+      } catch (err) {
+        console.error("Error fetching sent emails page from Resend:", err);
+        break;
+      }
+    }
+
+    // Fetch received emails from Resend (with limit: 100)
+    let allReceivedEmails: any[] = [];
+    try {
+      if ((resend.emails as any).receiving?.list) {
+        const recRes: any = await (resend.emails as any).receiving.list({ limit: 100 });
+        allReceivedEmails = recRes?.data?.data || recRes?.data || [];
+      }
+    } catch (recErr) {
+      console.warn("Resend receiving.list not available or error:", recErr);
+    }
+
     // Filter emails dispatched and received today (UTC)
-    const emailsSentToday = emailItems.filter((item: any) => {
+    const emailsSentToday = allSentEmails.filter((item: any) => {
       if (!item.created_at) return false;
       return item.created_at.startsWith(todayUTCString);
     });
 
-    const emailsReceivedToday = receivedItems.filter((item: any) => {
+    const emailsReceivedToday = allReceivedEmails.filter((item: any) => {
       if (!item.created_at) return false;
       return item.created_at.startsWith(todayUTCString);
     });
@@ -89,7 +112,7 @@ export async function GET() {
     const hoursUntilReset = Math.max(0, Math.round((nextResetUTC.getTime() - now.getTime()) / (1000 * 60 * 60)));
 
     // Cleaned recent email list for display
-    const recentActivity = emailItems.slice(0, 15).map((item: any) => ({
+    const recentActivity = allSentEmails.slice(0, 15).map((item: any) => ({
       id: item.id,
       to: Array.isArray(item.to) ? item.to.join(", ") : item.to,
       from: item.from,
