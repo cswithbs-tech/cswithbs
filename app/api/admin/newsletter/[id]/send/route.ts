@@ -48,11 +48,19 @@ export async function POST(
       );
     }
 
+    // Check if fully completed
+    const existingRecipients = (newsletter.sentRecipients || []).map((e: string) => e.toLowerCase());
+    const alreadySentSet = new Set(existingRecipients);
+
     if (!testEmail && !individualEmail && newsletter.status === "sent") {
-      return NextResponse.json(
-        { error: "Newsletter has already been sent to subscribers." },
-        { status: 400 },
-      );
+      const allActive = await Subscriber.find({ active: { $ne: false } }).select("email").lean();
+      const unreceived = allActive.filter((s: any) => !alreadySentSet.has(s.email.toLowerCase()));
+      if (unreceived.length === 0) {
+        return NextResponse.json(
+          { error: "Newsletter has already been delivered to all active subscribers." },
+          { status: 400 },
+        );
+      }
     }
 
     // ==================================================================
@@ -93,6 +101,15 @@ export async function POST(
           { error: `Failed to send to ${individualEmail}: ${error.message}` },
           { status: 500 }
         );
+      }
+
+      // Add to sentRecipients so this individual doesn't get duplicate during broadcasts
+      const cleanEmail = individualEmail.toLowerCase();
+      if (!newsletter.sentRecipients) newsletter.sentRecipients = [];
+      if (!newsletter.sentRecipients.includes(cleanEmail)) {
+        newsletter.sentRecipients.push(cleanEmail);
+        newsletter.recipientCount = newsletter.sentRecipients.length;
+        await newsletter.save();
       }
 
       return NextResponse.json({
@@ -153,22 +170,45 @@ export async function POST(
     }
 
     // ==================================================================
-    // MODE B: BROADCAST VIA RESEND (Preferred)
+    // MODE B: BROADCAST VIA RESEND WITH RECIPIENT TRACKING & BATCHING
     // ==================================================================
     if (resend) {
       // 1. Fetch all active subscribers
-      const subscribers = await Subscriber.find({ active: { $ne: false } }).select("email").lean();
+      const allSubscribers = await Subscriber.find({ active: { $ne: false } }).select("email").lean();
 
-      if (!subscribers || subscribers.length === 0) {
+      if (!allSubscribers || allSubscribers.length === 0) {
         return NextResponse.json(
           { error: "No active subscribers found in the database to receive this newsletter." },
           { status: 400 }
         );
       }
 
-      // Map registered user names for personal greetings
-      const subscriberEmails = subscribers.map((s: any) => s.email.toLowerCase());
-      const registeredUsers = await User.find({ email: { $in: subscriberEmails } }).select("email name").lean();
+      // 2. Filter out subscribers who ALREADY received this newsletter
+      const deliveredSet = new Set((newsletter.sentRecipients || []).map((e: string) => e.toLowerCase()));
+      const pendingSubscribers = allSubscribers.filter(
+        (sub: any) => !deliveredSet.has(sub.email.toLowerCase())
+      );
+
+      if (pendingSubscribers.length === 0) {
+        newsletter.status = "sent";
+        await newsletter.save();
+        return NextResponse.json({
+          success: true,
+          alreadyCompleted: true,
+          recipientCount: newsletter.sentRecipients.length,
+          message: `All ${allSubscribers.length} subscribers have already received this campaign!`,
+        });
+      }
+
+      // 3. Determine how many to send in this run (optional batchLimit)
+      const requestedBatchLimit = typeof body?.batchLimit === "number" && body.batchLimit > 0 ? body.batchLimit : 0;
+      const targets = requestedBatchLimit > 0
+        ? pendingSubscribers.slice(0, requestedBatchLimit)
+        : pendingSubscribers;
+
+      // 4. Map registered user names for personal greetings
+      const targetEmails = targets.map((s: any) => s.email.toLowerCase());
+      const registeredUsers = await User.find({ email: { $in: targetEmails } }).select("email name").lean();
       const nameMap = new Map<string, string>();
       for (const u of registeredUsers) {
         if (u.email && u.name) {
@@ -176,12 +216,18 @@ export async function POST(
         }
       }
 
-      // 2. Chunk into batches of 100 (Resend batch limit)
-      const BATCH_SIZE = 100;
-      let totalSent = 0;
+      if (!newsletter.sentRecipients) {
+        newsletter.sentRecipients = [];
+      }
 
-      for (let i = 0; i < subscribers.length; i += BATCH_SIZE) {
-        const chunk = subscribers.slice(i, i + BATCH_SIZE);
+      // 5. Send in chunks of up to 100 (Resend batch API limit)
+      const CHUNK_SIZE = 100;
+      let sentThisRun = 0;
+      let quotaErrorOccurred = false;
+      let quotaErrorMessage = "";
+
+      for (let i = 0; i < targets.length; i += CHUNK_SIZE) {
+        const chunk = targets.slice(i, i + CHUNK_SIZE);
         const batchPayload = chunk.map((sub: any) => {
           const recipientName = nameMap.get(sub.email.toLowerCase()) || "";
           return {
@@ -199,26 +245,84 @@ export async function POST(
           };
         });
 
-        const { error } = await resend.batch.send(batchPayload);
-        if (error) {
-          console.error(`Resend batch error at chunk ${i}:`, error);
-          throw new Error(`Failed to send batch: ${error.message}`);
+        try {
+          const { error } = await resend.batch.send(batchPayload);
+          if (error) {
+            console.error(`Resend batch send error at chunk starting ${i}:`, error);
+            quotaErrorOccurred = true;
+            quotaErrorMessage = error.message || "Sending failed";
+            break; // Stop loop, but preserve all previously sent recipients!
+          }
+
+          // Successfully sent chunk -> track them in DB immediately
+          for (const sub of chunk) {
+            const clean = sub.email.toLowerCase();
+            if (!newsletter.sentRecipients.includes(clean)) {
+              newsletter.sentRecipients.push(clean);
+            }
+          }
+          sentThisRun += chunk.length;
+          newsletter.recipientCount = newsletter.sentRecipients.length;
+          await newsletter.save();
+        } catch (err: any) {
+          console.error(`Unexpected error during batch chunk ${i}:`, err);
+          quotaErrorOccurred = true;
+          quotaErrorMessage = err.message || "Network / provider error";
+          break;
         }
-        totalSent += chunk.length;
       }
 
-
-      // 3. Update Newsletter Record
-      newsletter.status = "sent";
+      // 6. Update Newsletter status and counters
+      const remainingCount = allSubscribers.length - newsletter.sentRecipients.length;
+      newsletter.recipientCount = newsletter.sentRecipients.length;
       newsletter.sentAt = new Date();
-      newsletter.recipientCount = totalSent;
+
+      if (remainingCount <= 0) {
+        newsletter.status = "sent";
+      } else {
+        newsletter.status = "partially_sent";
+      }
       await newsletter.save();
+
+      // If nothing could be sent due to quota
+      if (quotaErrorOccurred && sentThisRun === 0) {
+        return NextResponse.json(
+          {
+            error: `Resend sending failed: ${quotaErrorMessage}. Daily quota may be reached. You can resume sending to the remaining ${remainingCount} subscribers tomorrow!`,
+            isQuotaError: true,
+            status: newsletter.status,
+            sentThisRun: 0,
+            deliveredCount: newsletter.sentRecipients.length,
+            remainingCount,
+          },
+          { status: 429 }
+        );
+      }
+
+      // If partially sent due to quota or batchLimit
+      if (quotaErrorOccurred && sentThisRun > 0) {
+        return NextResponse.json({
+          success: true,
+          partial: true,
+          sentThisRun,
+          deliveredCount: newsletter.sentRecipients.length,
+          totalTarget: allSubscribers.length,
+          remainingCount,
+          status: newsletter.status,
+          message: `Sent to ${sentThisRun} subscribers! Daily limit reached (${quotaErrorMessage}). ${remainingCount} subscribers remaining. You can resume tomorrow!`,
+        });
+      }
 
       return NextResponse.json({
         success: true,
-        provider: "resend",
-        recipientCount: totalSent,
-        message: `Newsletter successfully sent to ${totalSent} subscribers!`,
+        sentThisRun,
+        deliveredCount: newsletter.sentRecipients.length,
+        totalTarget: allSubscribers.length,
+        remainingCount,
+        status: newsletter.status,
+        message: remainingCount > 0
+          ? `Batch of ${sentThisRun} sent successfully! ${remainingCount} subscribers remaining for the next run.`
+          : `Newsletter successfully delivered to all ${newsletter.sentRecipients.length} subscribers!`,
       });
     }
 

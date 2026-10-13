@@ -13,7 +13,7 @@ const NewsletterSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["draft", "sent", "scheduled"],
+      enum: ["draft", "sent", "partially_sent", "scheduled"],
       default: "draft",
     },
     sentAt: {
@@ -22,6 +22,10 @@ const NewsletterSchema = new mongoose.Schema(
     recipientCount: {
       type: Number,
       default: 0,
+    },
+    sentRecipients: {
+      type: [String],
+      default: [],
     },
     providerId: {
       type: String, // ID returned by Buttondown/Resend

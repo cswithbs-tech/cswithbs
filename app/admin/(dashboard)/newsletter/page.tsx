@@ -23,6 +23,8 @@ import {
   UserCheck,
   Radio,
   Check,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -35,9 +37,10 @@ type Newsletter = {
   _id: string;
   subject: string;
   content: string; // HTML
-  status: "draft" | "sent" | "scheduled";
+  status: "draft" | "sent" | "partially_sent" | "scheduled";
   sentAt?: string;
   recipientCount?: number;
+  sentRecipients?: string[];
   stats?: { opens: number; clicks: number };
   createdAt: string;
 };
@@ -52,13 +55,18 @@ export default function NewsletterPage() {
 
   // Composer State
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [currentNewsletter, setCurrentNewsletter] = useState<Newsletter | null>(null);
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState(""); // This will be HTML from editor
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
-  const [confirmSend, setConfirmSend] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // Quota-friendly Dispatch Modal State
+  const [showDispatchModal, setShowDispatchModal] = useState(false);
+  const [batchLimitOption, setBatchLimitOption] = useState<"safe" | "all" | "custom">("safe");
+  const [customBatchLimit, setCustomBatchLimit] = useState<number>(70);
 
   // Audience Target Selection State ("all" vs "individual")
   const [targetType, setTargetType] = useState<"all" | "individual">("all");
@@ -190,8 +198,21 @@ export default function NewsletterPage() {
     }
   };
 
+  const fetchSingleNewsletter = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/newsletter/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentNewsletter(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch single newsletter:", e);
+    }
+  };
+
   const handleEdit = (n: Newsletter) => {
     setDraftId(n._id);
+    setCurrentNewsletter(n);
     setSubject(n.subject);
     setContent(n.content);
     setView("compose");
@@ -199,6 +220,7 @@ export default function NewsletterPage() {
 
   const handleNew = () => {
     setDraftId(null);
+    setCurrentNewsletter(null);
     setSubject("");
     setContent("");
     setView("compose");
@@ -230,6 +252,7 @@ export default function NewsletterPage() {
       if (res.ok) {
         const saved = await res.json();
         setDraftId(saved._id);
+        setCurrentNewsletter(saved);
         if (!silent) {
           showToast("Draft saved successfully", "success");
         }
@@ -348,6 +371,10 @@ export default function NewsletterPage() {
       const data = await res.json();
       if (res.ok) {
         showToast(data.message || `Email sent successfully to ${targetEmail}!`, "success");
+        if (currentId) {
+          fetchSingleNewsletter(currentId);
+        }
+        fetchNewsletters();
       } else {
         showToast(data.error || "Failed to send email", "error");
       }
@@ -358,36 +385,52 @@ export default function NewsletterPage() {
     }
   };
 
-  // Live Broadcast Flow
+  // Live Broadcast Flow (Quota-Friendly Dispatch Modal)
   const handleSend = async () => {
-    if (!draftId) {
-      const savedId = await handleSaveDraft(true);
-      if (!savedId) return;
+    let currentId = draftId;
+    if (!currentId) {
+      currentId = await handleSaveDraft(true);
+      if (!currentId) return;
+    } else {
+      await handleSaveDraft(true);
     }
-    setConfirmSend(true);
+    setShowDispatchModal(true);
   };
 
-  const executeSend = async () => {
-    setConfirmSend(false);
+  const executeSend = async (batchLimit?: number) => {
+    setShowDispatchModal(false);
     setIsSending(true);
     try {
+      const payload: any = {};
+      if (typeof batchLimit === "number" && batchLimit > 0) {
+        payload.batchLimit = batchLimit;
+      }
+
       const res = await fetch(`/api/admin/newsletter/${draftId}/send`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
 
       if (res.ok) {
         showToast(
-          data.message || `Newsletter blasted to ${activeSubscriberCount} subscribers!`,
+          data.message || `Newsletter sent successfully!`,
           "success"
         );
-        setView("list");
+        if (data.status === "sent" || data.remainingCount === 0) {
+          setView("list");
+        } else if (draftId) {
+          fetchSingleNewsletter(draftId);
+        }
         fetchNewsletters();
       } else {
         showToast(data.error || "Failed to blast newsletter", "error");
+        if (draftId) {
+          fetchSingleNewsletter(draftId);
+        }
+        fetchNewsletters();
       }
     } catch (e) {
       showToast("Network error while blasting newsletter", "error");
@@ -417,6 +460,11 @@ export default function NewsletterPage() {
       setConfirmDeleteId(null);
     }
   };
+
+  const currentSentCount = currentNewsletter?.sentRecipients?.length ?? currentNewsletter?.recipientCount ?? 0;
+  const remainingCount = Math.max(0, activeSubscriberCount - currentSentCount);
+  const isPartiallySent = currentNewsletter?.status === "partially_sent";
+  const isFullySent = currentNewsletter?.status === "sent" && remainingCount === 0;
 
   return (
     <div className="p-8 max-w-7xl mx-auto min-h-screen">
@@ -483,15 +531,22 @@ export default function NewsletterPage() {
                           className={`uppercase font-bold tracking-wider px-2 py-0.5 rounded text-[10px] ${
                             n.status === "sent"
                               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                              : n.status === "partially_sent"
+                              ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                              : "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20"
                           }`}
                         >
-                          {n.status}
+                          {n.status === "partially_sent" ? "Partially Sent" : n.status}
                         </span>
                         <span>Created: {new Date(n.createdAt).toLocaleDateString()}</span>
                         {n.status === "sent" && n.sentAt && (
                           <span className="text-zinc-400">
                             Sent: {new Date(n.sentAt).toLocaleDateString()}
+                          </span>
+                        )}
+                        {n.status === "partially_sent" && (
+                          <span className="text-amber-400 font-mono">
+                            Delivered: {n.sentRecipients?.length ?? n.recipientCount ?? 0} / {activeSubscriberCount} ({Math.max(0, activeSubscriberCount - (n.sentRecipients?.length ?? n.recipientCount ?? 0))} left)
                           </span>
                         )}
                         {n.status === "sent" && typeof n.recipientCount === "number" && (
@@ -592,15 +647,27 @@ export default function NewsletterPage() {
               {targetType === "all" ? (
                 <Button
                   onClick={handleSend}
-                  disabled={isSending}
-                  className="bg-amber-500 hover:bg-amber-400 text-black font-semibold shadow-lg shadow-amber-500/20"
+                  disabled={isSending || (isFullySent && remainingCount === 0)}
+                  className={`font-semibold shadow-lg ${
+                    isPartiallySent
+                      ? "bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20"
+                      : isFullySent
+                      ? "bg-emerald-600/90 hover:bg-emerald-600 text-white shadow-emerald-500/20"
+                      : "bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20"
+                  }`}
                 >
                   {isSending ? (
                     <Loader2 className="animate-spin mr-2" size={16} />
+                  ) : isFullySent ? (
+                    <CheckCircle2 size={16} className="mr-2" />
                   ) : (
                     <Send size={16} className="mr-2" />
                   )}
-                  Blast Now ({activeSubscriberCount})
+                  {isPartiallySent
+                    ? `Resume Campaign (${remainingCount} left)`
+                    : isFullySent
+                    ? `Delivered (${currentSentCount} Sent)`
+                    : `Blast Now (${activeSubscriberCount})`}
                 </Button>
               ) : (
                 <Button
@@ -747,6 +814,48 @@ export default function NewsletterPage() {
               )}
             </div>
 
+            {/* Delivery Progress Banner if Partially Sent or Fully Sent */}
+            {isPartiallySent && (
+              <div className="bg-amber-500/10 border border-amber-500/25 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-lg backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                    <Clock size={16} />
+                  </div>
+                  <div>
+                    <p className="text-amber-300 font-semibold text-sm">
+                      Partially Delivered Campaign
+                    </p>
+                    <p className="text-zinc-400 mt-0.5">
+                      Delivered to <strong className="text-white">{currentSentCount}</strong> of <strong className="text-white">{activeSubscriberCount}</strong> subscribers. <span className="text-amber-400 font-medium">{remainingCount} subscribers</span> are pending for the next run.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={handleSend}
+                  className="bg-amber-500 hover:bg-amber-400 text-black font-semibold shrink-0 gap-1.5 h-9"
+                >
+                  <Send size={14} /> Resume Dispatch ({remainingCount} left)
+                </Button>
+              </div>
+            )}
+
+            {isFullySent && (
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3 text-xs shadow-lg backdrop-blur-sm">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                  <CheckCircle2 size={16} />
+                </div>
+                <div>
+                  <p className="text-emerald-300 font-semibold text-sm">
+                    Campaign Fully Delivered
+                  </p>
+                  <p className="text-zinc-400 mt-0.5">
+                    This campaign has been successfully delivered to all <strong className="text-white">{currentSentCount}</strong> subscribers.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Subject Input & Editor */}
             <div className="space-y-4">
               <div>
@@ -773,16 +882,221 @@ export default function NewsletterPage() {
         )}
       </AnimatePresence>
 
-      {/* Confirmation Modal to Blast */}
-      <ConfirmDialog
-        isOpen={confirmSend}
-        onClose={() => setConfirmSend(false)}
-        onConfirm={executeSend}
-        title="Blast Newsletter to Audience?"
-        description={`Are you sure you want to blast this email to ALL ${activeSubscriberCount} active subscribers via Resend (@cswithbs.com)? This action is permanent and cannot be undone.`}
-        variant="danger"
-        confirmText={`Blast to ${activeSubscriberCount} Subscribers`}
-      />
+      {/* Quota-Friendly Campaign Dispatch Modal */}
+      <AnimatePresence>
+        {showDispatchModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-zinc-900 border border-white/10 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative"
+            >
+              <button
+                onClick={() => setShowDispatchModal(false)}
+                className="absolute top-4 right-4 text-zinc-500 hover:text-white p-1"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+                  <Send size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-serif font-bold text-white">
+                    {isPartiallySent ? "Resume Campaign Dispatch" : "Broadcast Newsletter"}
+                  </h3>
+                  <p className="text-xs text-zinc-400">
+                    Resend Delivery &bull; Sender: newsletter@cswithbs.com
+                  </p>
+                </div>
+              </div>
+
+              {/* Status and Progress Bar */}
+              <div className="bg-black/50 border border-white/10 rounded-xl p-4 mb-5 space-y-3">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-zinc-400">Campaign Audience:</span>
+                  <span className="font-mono text-white font-medium">{activeSubscriberCount} active subscribers</span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-zinc-400">Already Delivered:</span>
+                  <span className="font-mono text-emerald-400 font-medium">
+                    {currentSentCount} subscribers ({activeSubscriberCount > 0 ? Math.round((currentSentCount / activeSubscriberCount) * 100) : 0}%)
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-zinc-400">Remaining to Send:</span>
+                  <span className="font-mono text-amber-400 font-bold">{remainingCount} subscribers</span>
+                </div>
+
+                {/* Progress bar */}
+                <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-gradient-to-r from-amber-500 to-emerald-400 h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${activeSubscriberCount > 0 ? Math.min(100, Math.round((currentSentCount / activeSubscriberCount) * 100)) : 0}%`,
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Quota Strategy Selector */}
+              {remainingCount > 0 ? (
+                <div className="space-y-3 mb-6">
+                  <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400">
+                    Daily Quota Sending Strategy:
+                  </label>
+
+                  {/* Option 1: Safe Batch (Recommended) */}
+                  <label
+                    onClick={() => setBatchLimitOption("safe")}
+                    className={`block p-3.5 rounded-xl border cursor-pointer transition-all ${
+                      batchLimitOption === "safe"
+                        ? "bg-amber-500/10 border-amber-500/50 text-white"
+                        : "bg-zinc-950/40 border-white/5 text-zinc-400 hover:border-white/10"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="batchOption"
+                        checked={batchLimitOption === "safe"}
+                        onChange={() => setBatchLimitOption("safe")}
+                        className="mt-1 accent-amber-500"
+                      />
+                      <div className="text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-white">
+                            Send Safe Batch Today ({Math.min(70, remainingCount)} Subscribers)
+                          </span>
+                          <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-1.5 py-0.5 rounded font-mono border border-emerald-500/20">
+                            Recommended
+                          </span>
+                        </div>
+                        <p className="text-zinc-400 mt-1 leading-relaxed">
+                          Keeps daily sending safely below Resend's 100/day free limit (leaving room for test &amp; welcome emails). You can resume the remaining {Math.max(0, remainingCount - Math.min(70, remainingCount))} tomorrow!
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+
+                  {/* Option 2: Send All Remaining */}
+                  <label
+                    onClick={() => setBatchLimitOption("all")}
+                    className={`block p-3.5 rounded-xl border cursor-pointer transition-all ${
+                      batchLimitOption === "all"
+                        ? "bg-amber-500/10 border-amber-500/50 text-white"
+                        : "bg-zinc-950/40 border-white/5 text-zinc-400 hover:border-white/10"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="batchOption"
+                        checked={batchLimitOption === "all"}
+                        onChange={() => setBatchLimitOption("all")}
+                        className="mt-1 accent-amber-500"
+                      />
+                      <div className="text-xs">
+                        <span className="font-semibold text-white">
+                          Send All Remaining ({remainingCount} Subscribers)
+                        </span>
+                        <p className="text-zinc-400 mt-1 leading-relaxed">
+                          Attempts to send to everyone right now in one broadcast.
+                        </p>
+                      </div>
+                    </div>
+                  </label>
+
+                  {/* Option 3: Custom Count */}
+                  <label
+                    onClick={() => setBatchLimitOption("custom")}
+                    className={`block p-3.5 rounded-xl border cursor-pointer transition-all ${
+                      batchLimitOption === "custom"
+                        ? "bg-amber-500/10 border-amber-500/50 text-white"
+                        : "bg-zinc-950/40 border-white/5 text-zinc-400 hover:border-white/10"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="radio"
+                        name="batchOption"
+                        checked={batchLimitOption === "custom"}
+                        onChange={() => setBatchLimitOption("custom")}
+                        className="mt-1 accent-amber-500"
+                      />
+                      <div className="text-xs w-full">
+                        <span className="font-semibold text-white">Custom Batch Limit</span>
+                        {batchLimitOption === "custom" && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <input
+                              type="number"
+                              min={1}
+                              max={remainingCount}
+                              value={customBatchLimit}
+                              onChange={(e) => setCustomBatchLimit(Math.max(1, Math.min(remainingCount, parseInt(e.target.value) || 1)))}
+                              className="bg-black/60 border border-white/20 rounded-lg px-3 py-1.5 text-xs text-white w-24 font-mono focus:outline-none focus:border-amber-500"
+                            />
+                            <span className="text-zinc-400 text-xs">subscribers in this run</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs text-center mb-6">
+                  <CheckCircle2 className="mx-auto mb-1.5" size={20} />
+                  This campaign has already been completely delivered to all active subscribers.
+                </div>
+              )}
+
+              {/* Modal Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-white/5">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowDispatchModal(false)}
+                  disabled={isSending}
+                  className="text-zinc-400 hover:text-white"
+                >
+                  Cancel
+                </Button>
+                {remainingCount > 0 && (
+                  <Button
+                    onClick={() => {
+                      const limit =
+                        batchLimitOption === "safe"
+                          ? Math.min(70, remainingCount)
+                          : batchLimitOption === "custom"
+                          ? customBatchLimit
+                          : 0; // 0 means all remaining
+                      executeSend(limit);
+                    }}
+                    disabled={isSending}
+                    className="bg-amber-500 hover:bg-amber-400 text-black font-semibold shadow-lg shadow-amber-500/20"
+                  >
+                    {isSending ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="animate-spin" size={16} /> Dispatching...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Send size={16} />
+                        {batchLimitOption === "safe"
+                          ? `Dispatch Next ${Math.min(70, remainingCount)} Subscribers`
+                          : batchLimitOption === "custom"
+                          ? `Dispatch Next ${customBatchLimit} Subscribers`
+                          : `Dispatch All ${remainingCount} Subscribers`}
+                      </span>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Confirmation Modal to Delete */}
       <ConfirmDialog

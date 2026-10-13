@@ -4,6 +4,40 @@ import Newsletter from "@/models/Newsletter";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    const userRoles = (session?.user as any)?.roles || [];
+    const hasSuperAdminRole = Array.isArray(userRoles)
+      ? userRoles.some((r) => ["SUPER_ADMIN", "super_admin"].includes(r))
+      : userRoles === "super_admin";
+    if (!session || !hasSuperAdminRole) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    const { id } = await params;
+    await dbConnect();
+    const newsletter = await Newsletter.findById(id);
+    if (!newsletter) {
+      return NextResponse.json(
+        { error: "Newsletter not found" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(newsletter);
+  } catch (error) {
+    console.error("Fetch newsletter error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -11,7 +45,9 @@ export async function PATCH(
   try {
     const session = await getServerSession(authOptions);
     const userRoles = (session?.user as any)?.roles || [];
-    const hasSuperAdminRole = Array.isArray(userRoles) ? userRoles.some((r) => ['SUPER_ADMIN', 'super_admin'].includes(r)) : userRoles === 'super_admin';
+    const hasSuperAdminRole = Array.isArray(userRoles)
+      ? userRoles.some((r) => ["SUPER_ADMIN", "super_admin"].includes(r))
+      : userRoles === "super_admin";
     if (!session || !hasSuperAdminRole) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
@@ -51,7 +87,9 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions);
     const userRoles = (session?.user as any)?.roles || [];
-    const hasSuperAdminRole = Array.isArray(userRoles) ? userRoles.some((r) => ['SUPER_ADMIN', 'super_admin'].includes(r)) : userRoles === 'super_admin';
+    const hasSuperAdminRole = Array.isArray(userRoles)
+      ? userRoles.some((r) => ["SUPER_ADMIN", "super_admin"].includes(r))
+      : userRoles === "super_admin";
     if (!session || !hasSuperAdminRole) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
