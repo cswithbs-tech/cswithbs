@@ -77,6 +77,8 @@ export default function NewsletterPage() {
   const [quotaData, setQuotaData] = useState<{
     dailyLimit: number;
     sentToday: number;
+    receivedToday?: number;
+    totalUsedToday?: number;
     remainingToday: number;
     percentUsed: number;
     resetTime: string;
@@ -594,7 +596,7 @@ export default function NewsletterPage() {
                 : "text-emerald-400"
             } />
             <span>
-              Resend Quota: <strong className="font-mono text-white">{quotaData?.sentToday ?? 0}/100</strong>
+              Resend Quota: <strong className="font-mono text-white">{(quotaData?.totalUsedToday ?? quotaData?.sentToday ?? 0)}/100</strong>
             </span>
             <span className="text-[11px] opacity-80 font-mono">
               ({quotaData?.remainingToday ?? 100} left)
@@ -1631,16 +1633,25 @@ export default function NewsletterPage() {
                   {/* Metric 1 */}
                   <div className="bg-zinc-900/70 border border-white/10 rounded-xl p-4">
                     <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 block mb-1">
-                      Sent Today (UTC)
+                      Daily Quota Used
                     </span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-bold font-mono text-white">
-                        {quotaData?.sentToday ?? 0}
+                        {quotaData?.totalUsedToday ?? quotaData?.sentToday ?? 0}
                       </span>
                       <span className="text-xs text-zinc-500 font-mono">
                         / {quotaData?.dailyLimit ?? 100}
                       </span>
                     </div>
+                    {Boolean(quotaData?.receivedToday && quotaData.receivedToday > 0) ? (
+                      <p className="text-[11px] text-zinc-400 mt-1">
+                        {quotaData?.sentToday ?? 0} sent · {quotaData?.receivedToday} received
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-zinc-500 mt-1">
+                        {quotaData?.sentToday ?? 0} sent today (UTC)
+                      </p>
+                    )}
                     <div className="mt-2 w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${

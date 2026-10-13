@@ -40,32 +40,44 @@ export async function GET() {
         : "ADMIN",
     })).filter((u: any) => Boolean(u.email));
 
-    // Fetch recent emails from Resend (up to 100)
-    const { data: resendList, error } = await resend.emails.list();
+    // Fetch both sent and received emails from Resend in parallel
+    const [sentRes, receivedRes] = await Promise.allSettled([
+      resend.emails.list(),
+      (resend.emails as any).receiving?.list
+        ? (resend.emails as any).receiving.list()
+        : Promise.resolve({ data: [] }),
+    ]);
 
-    if (error) {
-      console.error("Resend quota list error:", error);
-      return NextResponse.json(
-        { error: error.message || "Failed to query Resend" },
-        { status: 502 }
-      );
-    }
+    const emailItems =
+      sentRes.status === "fulfilled"
+        ? (sentRes.value as any)?.data?.data || (sentRes.value as any)?.data || []
+        : [];
 
-    const emailItems = (resendList as any)?.data || [];
+    const receivedItems =
+      receivedRes.status === "fulfilled"
+        ? (receivedRes.value as any)?.data?.data || (receivedRes.value as any)?.data || []
+        : [];
 
     // Resend free tier resets daily at 00:00:00 UTC (5:30 AM IST)
     const now = new Date();
     const todayUTCString = now.toISOString().split("T")[0]; // e.g. "2026-10-13"
 
-    // Filter emails dispatched today (UTC)
+    // Filter emails dispatched and received today (UTC)
     const emailsSentToday = emailItems.filter((item: any) => {
+      if (!item.created_at) return false;
+      return item.created_at.startsWith(todayUTCString);
+    });
+
+    const emailsReceivedToday = receivedItems.filter((item: any) => {
       if (!item.created_at) return false;
       return item.created_at.startsWith(todayUTCString);
     });
 
     const DAILY_LIMIT = 100;
     const sentTodayCount = emailsSentToday.length;
-    const remainingTodayCount = Math.max(0, DAILY_LIMIT - sentTodayCount);
+    const receivedTodayCount = emailsReceivedToday.length;
+    const totalUsedToday = sentTodayCount + receivedTodayCount;
+    const remainingTodayCount = Math.max(0, DAILY_LIMIT - totalUsedToday);
 
     // Calculate time until next 00:00 UTC reset
     const nextResetUTC = new Date(Date.UTC(
@@ -90,8 +102,10 @@ export async function GET() {
     return NextResponse.json({
       dailyLimit: DAILY_LIMIT,
       sentToday: sentTodayCount,
+      receivedToday: receivedTodayCount,
+      totalUsedToday,
       remainingToday: remainingTodayCount,
-      percentUsed: Math.min(100, Math.round((sentTodayCount / DAILY_LIMIT) * 100)),
+      percentUsed: Math.min(100, Math.round((totalUsedToday / DAILY_LIMIT) * 100)),
       resetTime: "00:00 UTC (5:30 AM IST)",
       hoursUntilReset,
       recentActivity,

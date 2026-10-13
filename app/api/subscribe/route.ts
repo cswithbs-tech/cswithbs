@@ -33,16 +33,9 @@ export async function POST(req: Request) {
     });
 
     // ----------------------------------------------------------------------
-    // SEND AUTOMATED WELCOME EMAIL (via Resend)
+    // AUTOMATED WELCOME EMAIL (Disabled: manual campaigns handled via Admin)
     // ----------------------------------------------------------------------
-    try {
-      const { sendSubscriberWelcomeEmail } = await import("@/lib/email");
-      sendSubscriberWelcomeEmail(cleanEmail).catch((mailErr) =>
-        console.error("Welcome Email Dispatch Error:", mailErr)
-      );
-    } catch (e) {
-      console.error("Failed to trigger welcome email:", e);
-    }
+    // Automated emails disabled to preserve sending quota for manual broadcasts.
 
     // ----------------------------------------------------------------------
     // HYBRID SYNC: Push to Buttondown (External Provider if configured)
@@ -68,7 +61,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ message: "Successfully subscribed! Check your inbox for confirmation.", success: true }, { status: 201 });
+    return NextResponse.json({ message: "Successfully subscribed to CSwithBS updates!", success: true }, { status: 201 });
   } catch (error) {
     console.error("Subscription error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
