@@ -36,6 +36,7 @@ export async function POST(
     }
 
     const testEmail = body?.testEmail?.trim();
+    const sendToAllAdmins = Boolean(body?.sendToAllAdmins);
     const individualEmail = body?.individualEmail?.trim();
 
     await dbConnect();
@@ -52,7 +53,7 @@ export async function POST(
     const existingRecipients = (newsletter.sentRecipients || []).map((e: string) => e.toLowerCase());
     const alreadySentSet = new Set(existingRecipients);
 
-    if (!testEmail && !individualEmail && newsletter.status === "sent") {
+    if (!testEmail && !sendToAllAdmins && !individualEmail && newsletter.status === "sent") {
       const allActive = await Subscriber.find({ active: { $ne: false } }).select("email").lean();
       const unreceived = allActive.filter((s: any) => !alreadySentSet.has(s.email.toLowerCase()));
       if (unreceived.length === 0) {
@@ -122,9 +123,9 @@ export async function POST(
     }
 
     // ==================================================================
-    // MODE A: SEND TEST EMAIL TO ADMIN
+    // MODE A: SEND TEST EMAIL (SINGLE EMAIL OR ALL ADMIN TEAM MEMBERS)
     // ==================================================================
-    if (testEmail) {
+    if (sendToAllAdmins || testEmail) {
       if (!resend) {
         return NextResponse.json(
           { error: "Resend API Key is missing. Please check RESEND_API_KEY in .env" },
@@ -132,6 +133,68 @@ export async function POST(
         );
       }
 
+      // Case 1: Send to all Admin & Super Admin accounts
+      if (sendToAllAdmins) {
+        const adminUsers = await User.find(
+          { roles: { $in: ["ADMIN", "SUPER_ADMIN"] } },
+          "name email"
+        ).lean();
+
+        const validAdmins = adminUsers.filter((u: any) => u.email && u.email.includes("@"));
+
+        if (validAdmins.length === 0) {
+          return NextResponse.json(
+            { error: "No admin team accounts found in the database." },
+            { status: 404 }
+          );
+        }
+
+        const batchPayload = validAdmins.map((admin: any) => {
+          const testHtml = wrapInEmailTemplate({
+            title: newsletter.subject,
+            preheader: "[ADMIN TEST PREVIEW] CSwithBS Newsletter",
+            recipientName: admin.name || "Admin Member",
+            contentHtml: `
+              <div style="background: #27272a; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: #fbbf24; border: 1px solid #3f3f46;">
+                ⚠️ <strong>Admin Team Test Preview:</strong> This preview was dispatched to all CSwithBS admin team members for review before subscriber broadcast.
+              </div>
+              ${newsletter.content}
+            `,
+            unsubscribeEmail: admin.email,
+            showUnsubscribe: true,
+            isNewsletter: true,
+          });
+
+          return {
+            from: SENDER_NEWSLETTER,
+            to: admin.email,
+            subject: `[ADMIN PREVIEW] ${newsletter.subject}`,
+            html: testHtml,
+          };
+        });
+
+        const { data, error } = await resend.batch.send(batchPayload);
+
+        if (error) {
+          return NextResponse.json(
+            { error: `Failed to dispatch test preview to admin team: ${error.message}` },
+            { status: 500 }
+          );
+        }
+
+        const adminEmailsList = validAdmins.map((a: any) => a.email);
+        return NextResponse.json({
+          success: true,
+          isTest: true,
+          toAdmins: true,
+          recipientCount: validAdmins.length,
+          recipients: adminEmailsList,
+          message: `Test email successfully sent to all ${validAdmins.length} admin team members (${adminEmailsList.join(", ")})!`,
+          id: data?.data?.[0]?.id,
+        });
+      }
+
+      // Case 2: Send to single test email
       const testHtml = wrapInEmailTemplate({
         title: newsletter.subject,
         preheader: "[TEST PREVIEW] CSwithBS Newsletter",
@@ -173,8 +236,18 @@ export async function POST(
     // MODE B: BROADCAST VIA RESEND WITH RECIPIENT TRACKING & BATCHING
     // ==================================================================
     if (resend) {
-      // 1. Fetch all active subscribers
-      const allSubscribers = await Subscriber.find({ active: { $ne: false } }).select("email").lean();
+      // 1. Fetch all admin emails to guarantee they are never included in broadcasts
+      const adminUsers = await User.find(
+        { roles: { $in: ["ADMIN", "SUPER_ADMIN"] } },
+        "email"
+      ).lean();
+      const adminEmails = adminUsers.map((u: any) => (u.email || "").toLowerCase().trim()).filter(Boolean);
+
+      // 2. Fetch all active subscribers excluding any admin emails
+      const allSubscribers = await Subscriber.find({
+        active: { $ne: false },
+        email: { $nin: adminEmails },
+      }).select("email").lean();
 
       if (!allSubscribers || allSubscribers.length === 0) {
         return NextResponse.json(

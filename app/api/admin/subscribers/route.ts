@@ -25,10 +25,18 @@ export async function GET(request: Request) {
     const query = searchParams.get('q')?.trim();
     const status = searchParams.get('status'); // 'all', 'active', 'inactive'
     const source = searchParams.get('source'); // 'all', 'homepage', 'registered-user', etc.
+    const sortParam = searchParams.get('sort') || 'alpha_asc'; // 'alpha_asc' (default), 'alpha_desc', 'newest', 'oldest'
     const isExport = searchParams.get('export') === 'true' || searchParams.get('all') === 'true';
 
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.max(1, parseInt(searchParams.get('limit') || '10', 10));
+
+    // 1. Fetch all admin/super admin emails to guarantee they are never included in subscribers
+    const adminUsers = await User.find(
+      { roles: { $in: ['ADMIN', 'SUPER_ADMIN'] } },
+      'email'
+    ).lean();
+    const adminEmails = adminUsers.map((u: any) => (u.email || '').toLowerCase().trim()).filter(Boolean);
 
     // Build filter
     const filter: any = {};
@@ -44,11 +52,41 @@ export async function GET(request: Request) {
       filter.source = source;
     }
 
+    // Always exclude admins and super admins
+    if (adminEmails.length > 0) {
+      if (filter.email) {
+        filter.$and = [
+          { email: filter.email },
+          { email: { $nin: adminEmails } },
+        ];
+        delete filter.email;
+      } else {
+        filter.email = { $nin: adminEmails };
+      }
+    }
+
+    // Determine sort order (Alphabetical A-Z by default)
+    let sortQuery: any = { email: 1 };
+    if (sortParam === 'alpha_desc') {
+      sortQuery = { email: -1 };
+    } else if (sortParam === 'newest') {
+      sortQuery = { createdAt: -1 };
+    } else if (sortParam === 'oldest') {
+      sortQuery = { createdAt: 1 };
+    } else {
+      sortQuery = { email: 1 };
+    }
+
     // Export mode: return raw array without pagination
     if (isExport) {
-      const allSubscribers = await Subscriber.find(filter).sort({ createdAt: -1 }).lean();
+      const allSubscribers = await Subscriber.find(filter)
+        .collation({ locale: 'en', strength: 2 })
+        .sort(sortQuery)
+        .lean();
       return NextResponse.json(allSubscribers);
     }
+
+    const baseAdminExclusion = adminEmails.length > 0 ? { email: { $nin: adminEmails } } : {};
 
     // Paginated fetch & stats in parallel
     const [
@@ -60,14 +98,15 @@ export async function GET(request: Request) {
       totalRegisteredUsers,
     ] = await Promise.all([
       Subscriber.find(filter)
-        .sort({ createdAt: -1 })
+        .collation({ locale: 'en', strength: 2 })
+        .sort(sortQuery)
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
       Subscriber.countDocuments(filter),
-      Subscriber.countDocuments({}),
-      Subscriber.countDocuments({ active: { $ne: false } }),
-      Subscriber.countDocuments({ active: false }),
+      Subscriber.countDocuments(baseAdminExclusion),
+      Subscriber.countDocuments({ ...baseAdminExclusion, active: { $ne: false } }),
+      Subscriber.countDocuments({ ...baseAdminExclusion, active: false }),
       User.countDocuments({}),
     ]);
 
@@ -86,6 +125,8 @@ export async function GET(request: Request) {
         active: activeCount,
         inactive: inactiveCount,
         registeredUsers: totalRegisteredUsers,
+        adminUsers: adminEmails.length,
+        studentUsers: Math.max(0, totalRegisteredUsers - adminEmails.length),
       },
     });
   } catch (error) {

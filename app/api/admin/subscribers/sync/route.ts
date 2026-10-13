@@ -21,16 +21,33 @@ export async function POST() {
 
     await dbConnect();
 
-    // 1. Fetch all registered users
-    const users = await User.find({}, 'email name createdAt').lean();
+    // 1. Fetch all admin/super admin users to strictly exclude them
+    const adminUsers = await User.find(
+      { roles: { $in: ['ADMIN', 'SUPER_ADMIN'] } },
+      'email'
+    ).lean();
+    const adminEmails = new Set(
+      adminUsers.map((u: any) => (u.email || '').toLowerCase().trim()).filter(Boolean)
+    );
 
-    // 2. Fetch all existing subscribers
+    // Safety purge: Ensure no admin/staff emails remain in Subscriber collection
+    if (adminEmails.size > 0) {
+      await Subscriber.deleteMany({ email: { $in: Array.from(adminEmails) } });
+    }
+
+    // 2. Fetch only registered non-admin users (students and regular learners)
+    const users = await User.find(
+      { roles: { $nin: ['ADMIN', 'SUPER_ADMIN'] } },
+      'email name createdAt'
+    ).lean();
+
+    // 3. Fetch all existing subscribers
     const existingSubscribers = await Subscriber.find({}, 'email').lean();
     const existingEmails = new Set(
       existingSubscribers.map((s: any) => s.email?.toLowerCase().trim())
     );
 
-    // 3. Find unique registered users that are NOT yet in subscribers
+    // 4. Find unique registered users that are NOT yet in subscribers and NOT admins
     const newSubscribersToInsert: any[] = [];
     const seenNewEmails = new Set<string>();
 
@@ -38,7 +55,11 @@ export async function POST() {
       if (!user.email) continue;
       const cleanEmail = user.email.toLowerCase().trim();
 
-      if (!existingEmails.has(cleanEmail) && !seenNewEmails.has(cleanEmail)) {
+      if (
+        !adminEmails.has(cleanEmail) &&
+        !existingEmails.has(cleanEmail) &&
+        !seenNewEmails.has(cleanEmail)
+      ) {
         seenNewEmails.add(cleanEmail);
         newSubscribersToInsert.push({
           email: cleanEmail,
@@ -49,7 +70,7 @@ export async function POST() {
       }
     }
 
-    // 4. Bulk insert if there are any new subscribers
+    // 5. Bulk insert if there are any new subscribers
     if (newSubscribersToInsert.length > 0) {
       try {
         const ops = newSubscribersToInsert.map((item) => ({
@@ -74,17 +95,20 @@ export async function POST() {
 
     const totalSubscribers = await Subscriber.countDocuments();
     const activeSubscribers = await Subscriber.countDocuments({ active: { $ne: false } });
+    const totalUsersCount = await User.countDocuments();
 
     return NextResponse.json({
       success: true,
       addedCount: newSubscribersToInsert.length,
-      totalRegisteredUsers: users.length,
+      totalRegisteredUsers: totalUsersCount,
+      adminCount: adminEmails.size,
+      studentUsersCount: users.length,
       totalSubscribers,
       activeSubscribers,
       message:
         newSubscribersToInsert.length > 0
-          ? `Successfully synced ${newSubscribersToInsert.length} new registered users into subscribers!`
-          : 'All registered users are already in your subscriber audience (no duplicates).',
+          ? `Successfully synced ${newSubscribersToInsert.length} new registered users into subscribers! (Excluding ${adminEmails.size} admin accounts)`
+          : `All student accounts are already synced (${adminEmails.size} admin accounts excluded).`,
     });
   } catch (error: any) {
     console.error('Subscriber sync error:', error);

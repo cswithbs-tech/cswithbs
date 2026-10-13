@@ -41,6 +41,8 @@ interface StatsData {
   active: number;
   inactive: number;
   registeredUsers: number;
+  adminUsers?: number;
+  studentUsers?: number;
 }
 
 export default function SubscribersPage() {
@@ -49,6 +51,7 @@ export default function SubscribersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"alpha_asc" | "alpha_desc" | "newest" | "oldest">("alpha_asc");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -59,6 +62,8 @@ export default function SubscribersPage() {
     active: 0,
     inactive: 0,
     registeredUsers: 0,
+    adminUsers: 0,
+    studentUsers: 0,
   });
 
   // Modal States
@@ -77,13 +82,14 @@ export default function SubscribersPage() {
 
   const { showToast } = useToast() || { showToast: console.log };
 
-  // Fetch Subscribers with pagination, search, and status filters
+  // Fetch Subscribers with pagination, search, status, and alphabetical sort
   const fetchSubscribers = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
+        sort: sortBy,
       });
 
       if (searchTerm.trim()) {
@@ -121,7 +127,7 @@ export default function SubscribersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, searchTerm, statusFilter, sourceFilter, showToast]);
+  }, [page, limit, searchTerm, statusFilter, sourceFilter, sortBy, showToast]);
 
   useEffect(() => {
     fetchSubscribers();
@@ -130,7 +136,7 @@ export default function SubscribersPage() {
   // Debounced search reset to page 1
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, statusFilter, sourceFilter, limit]);
+  }, [searchTerm, statusFilter, sourceFilter, limit, sortBy]);
 
   // Handle Sync Registered Users into Subscriber DB
   const handleSyncUsers = async () => {
@@ -411,10 +417,21 @@ export default function SubscribersPage() {
             <span className="text-xs uppercase font-mono text-indigo-400/80">Registered Users</span>
             <UserCheck size={16} className="text-indigo-400" />
           </div>
-          <div className="text-2xl font-bold text-indigo-300 font-mono">
-            {stats.registeredUsers}
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold text-indigo-300 font-mono">
+              {stats.registeredUsers}
+            </span>
+            <span className="text-xs text-zinc-500 font-mono">accounts</span>
           </div>
-          <p className="text-[11px] text-zinc-500 mt-1">Platform account holders</p>
+          <div className="flex items-center gap-1.5 mt-1.5 text-[11px] font-mono flex-wrap">
+            <span className="text-emerald-400 font-medium">
+              {stats.studentUsers ?? (stats.registeredUsers - (stats.adminUsers || 0))} Students
+            </span>
+            <span className="text-zinc-600">&bull;</span>
+            <span className="text-amber-400 font-medium">
+              {stats.adminUsers || 0} Admins (Excluded)
+            </span>
+          </div>
         </div>
       </div>
 
@@ -479,6 +496,21 @@ export default function SubscribersPage() {
             </button>
           </div>
 
+          {/* Sort selector (Alphabetical A-Z default) */}
+          <div className="flex items-center gap-1.5 text-xs text-zinc-400 bg-zinc-950 border border-zinc-800 px-3 py-1.5 rounded-lg">
+            <span>Sort:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-transparent text-white font-semibold focus:outline-none cursor-pointer"
+            >
+              <option value="alpha_asc" className="bg-zinc-900 text-white">Alphabetical (A → Z)</option>
+              <option value="alpha_desc" className="bg-zinc-900 text-white">Alphabetical (Z → A)</option>
+              <option value="newest" className="bg-zinc-900 text-white">Newest First</option>
+              <option value="oldest" className="bg-zinc-900 text-white">Oldest First</option>
+            </select>
+          </div>
+
           {/* Rows per page selector (10, 20, 50, 100) */}
           <div className="flex items-center gap-1.5 text-xs text-zinc-400 bg-zinc-950 border border-zinc-800 px-3 py-1.5 rounded-lg">
             <span>Show:</span>
@@ -505,21 +537,20 @@ export default function SubscribersPage() {
               <th className="px-6 py-4 font-medium">Email Address</th>
               <th className="px-6 py-4 font-medium">Source</th>
               <th className="px-6 py-4 font-medium">Status</th>
-              <th className="px-6 py-4 font-medium">Joined Date</th>
               <th className="px-6 py-4 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800/50">
             {loading ? (
               <tr>
-                <td colSpan={5} className="p-16 text-center">
+                <td colSpan={4} className="p-16 text-center">
                   <Loader2 className="w-8 h-8 text-amber-500 animate-spin mx-auto mb-4" />
                   <p className="text-zinc-400 text-sm">Loading subscribers...</p>
                 </td>
               </tr>
             ) : subscribers.length === 0 ? (
               <tr>
-                <td colSpan={5} className="p-16 text-center">
+                <td colSpan={4} className="p-16 text-center">
                   <Users className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
                   <p className="text-zinc-300 text-lg font-medium">
                     No subscribers found
@@ -574,16 +605,6 @@ export default function SubscribersPage() {
                           </>
                         )}
                       </button>
-                    </td>
-                    <td className="px-6 py-4 text-zinc-400 font-mono text-xs">
-                      <div className="flex items-center gap-2">
-                        <Calendar size={13} className="text-zinc-500" />
-                        {new Date(sub.createdAt).toLocaleDateString(undefined, {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
@@ -661,7 +682,7 @@ export default function SubscribersPage() {
         onClose={() => setConfirmSyncOpen(false)}
         onConfirm={handleSyncUsers}
         title="Sync Registered Users into Subscribers?"
-        description={`This will scan all ${stats.registeredUsers} registered user accounts in the database and automatically add any missing users into your newsletter audience. Existing subscribers will NOT be duplicated.`}
+        description={`This will scan all ${stats.registeredUsers} registered user accounts and import missing student accounts into your audience. All ${stats.adminUsers || 4} Super Admin & Admin accounts are automatically excluded to preserve your Resend quota. Existing subscribers will NOT be duplicated.`}
         variant="info"
         confirmText={isSyncing ? "Syncing..." : "Sync All Users Now"}
       />

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { resend } from "@/lib/email";
+import dbConnect from "@/lib/db";
+import User from "@/models/User";
 
 export async function GET() {
   try {
@@ -21,6 +23,22 @@ export async function GET() {
         { status: 500 }
       );
     }
+
+    await dbConnect();
+
+    // Fetch all admin/super admin team members
+    const adminUsers = await User.find(
+      { roles: { $in: ["ADMIN", "SUPER_ADMIN"] } },
+      "name email roles"
+    ).lean();
+
+    const adminTeam = adminUsers.map((u: any) => ({
+      name: u.name || "Admin Member",
+      email: (u.email || "").toLowerCase().trim(),
+      role: Array.isArray(u.roles) && u.roles.some((r: string) => ["SUPER_ADMIN", "super_admin"].includes(r))
+        ? "SUPER_ADMIN"
+        : "ADMIN",
+    })).filter((u: any) => Boolean(u.email));
 
     // Fetch recent emails from Resend (up to 100)
     const { data: resendList, error } = await resend.emails.list();
@@ -42,7 +60,6 @@ export async function GET() {
     // Filter emails dispatched today (UTC)
     const emailsSentToday = emailItems.filter((item: any) => {
       if (!item.created_at) return false;
-      // Resend timestamp format: "2026-10-13 02:37:45..." or ISO
       return item.created_at.startsWith(todayUTCString);
     });
 
@@ -78,6 +95,7 @@ export async function GET() {
       resetTime: "00:00 UTC (5:30 AM IST)",
       hoursUntilReset,
       recentActivity,
+      adminTeam,
     });
   } catch (error: any) {
     console.error("Error fetching Resend quota:", error);

@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   Zap,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -86,6 +87,11 @@ export default function NewsletterPage() {
       createdAt: string;
       status: string;
       isTest: boolean;
+    }>;
+    adminTeam?: Array<{
+      name: string;
+      email: string;
+      role: string;
     }>;
   } | null>(null);
   const [loadingQuota, setLoadingQuota] = useState(false);
@@ -377,6 +383,41 @@ export default function NewsletterPage() {
     }
   };
 
+  const executeSendTestToAdmins = async () => {
+    setIsSendingTest(true);
+    try {
+      let currentId = draftId;
+      if (!currentId) {
+        currentId = await handleSaveDraft(true);
+        if (!currentId) {
+          setIsSendingTest(false);
+          return;
+        }
+      } else {
+        await handleSaveDraft(true);
+      }
+
+      const res = await fetch(`/api/admin/newsletter/${currentId}/send`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sendToAllAdmins: true }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        showToast(data.message || "Test email delivered to all admin team members!", "success");
+        setShowTestModal(false);
+        fetchQuota();
+      } else {
+        showToast(data.error || "Failed to send test email to admins", "error");
+      }
+    } catch {
+      showToast("Network error while sending test email to admins", "error");
+    } finally {
+      setIsSendingTest(false);
+    }
+  };
+
   // Individual Subscriber Send Flow
   const handleSendIndividual = async () => {
     const targetEmail = selectedIndividualEmail.trim() || subscriberQuery.trim();
@@ -524,8 +565,7 @@ export default function NewsletterPage() {
             Newsletter & Campaigns
           </h1>
           <p className="text-zinc-400 text-sm">
-            Draft, preview, and blast announcements to your verified audience (
-            <span className="text-amber-400 font-semibold">{activeSubscriberCount} active</span> subscribers).
+            Draft, preview, and blast announcements to your subscribers.
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -560,15 +600,9 @@ export default function NewsletterPage() {
           </button>
 
           {view === "list" && (
-            <>
-              <div className="flex items-center gap-2 bg-zinc-900 border border-white/10 px-3.5 py-2 rounded-xl text-xs text-zinc-400">
-                <Users size={14} className="text-amber-400" />
-                <span>Audience: <strong className="text-white">{activeSubscriberCount}</strong></span>
-              </div>
-              <Button onClick={handleNew} className="gap-2">
-                <Plus size={18} /> New Campaign
-              </Button>
-            </>
+            <Button onClick={handleNew} className="gap-2">
+              <Plus size={18} /> New Campaign
+            </Button>
           )}
         </div>
       </div>
@@ -1292,16 +1326,58 @@ export default function NewsletterPage() {
               </div>
 
               <div className="space-y-4 my-4">
+                {/* Send to Entire Admin Team Box */}
+                <div className="p-3.5 rounded-xl bg-zinc-950/70 border border-amber-500/20 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck size={16} className="text-amber-400" />
+                      <span className="text-xs font-semibold text-white">Send to All Admin Team Members</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                      {quotaData?.adminTeam?.length || 4} Staff Members
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 leading-relaxed">
+                    Sends private test copies to all CSwithBS admins (
+                    <strong className="text-zinc-300 font-mono">
+                      {quotaData?.adminTeam?.map((a: any) => a.email).join(", ") || "all team admins"}
+                    </strong>
+                    ) so your team can review before public broadcast.
+                  </p>
+                  <Button
+                    onClick={executeSendTestToAdmins}
+                    disabled={isSendingTest}
+                    variant="outline"
+                    className="w-full border-amber-500/40 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/70 text-xs py-2 h-auto flex items-center justify-center gap-2 font-semibold"
+                  >
+                    {isSendingTest ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" /> Dispatching to Admins...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={13} /> Send Test to Entire Admin Team ({quotaData?.adminTeam?.length || 4})
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Divider */}
+                <div className="relative my-2 flex items-center justify-center">
+                  <div className="border-t border-white/10 w-full"></div>
+                  <span className="bg-zinc-900 px-2 text-[10px] font-mono uppercase text-zinc-500 absolute">or send to custom email</span>
+                </div>
+
                 <div>
                   <label className="block text-xs font-mono uppercase tracking-wider text-zinc-400 mb-2">
-                    Recipient Email Address
+                    Custom Recipient Email Address
                   </label>
                   <input
                     type="email"
                     value={testEmailAddress}
                     onChange={(e) => setTestEmailAddress(e.target.value)}
                     placeholder="you@email.com"
-                    className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 font-mono"
                   />
                   <div className="flex items-center justify-between text-[11px] text-zinc-500 mt-1.5">
                     <span>Sender: <strong className="font-mono text-zinc-400">CSwithBS &lt;newsletter@cswithbs.com&gt;</strong></span>
