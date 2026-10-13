@@ -1,5 +1,5 @@
-// Official Logo hosted on high-speed global CDN (692x207 Retina PNG rendered at 125x37)
 export const EMAIL_LOGO_URL =
+  process.env.EMAIL_LOGO_URL ||
   "https://res.cloudinary.com/cswithbs/image/upload/v1791785820/cswithbs_logo_email.png";
 
 // Production URL for email links (never localhost, even during dev)
@@ -57,14 +57,7 @@ export function wrapInEmailTemplate({
     return `<a${cleanAttrs}>`;
   });
 
-  // 3. Greeting: Check if content already starts with a greeting
-  const startsWithGreeting = /^\s*<p[^>]*>\s*(Dear|Hello|Hi|Greetings)/i.test(
-    processedContent.trim()
-  );
-  const greetingHtml =
-    !startsWithGreeting && displayName
-      ? `<p style="margin: 0 0 16px 0; font-size: 15px; color: #374151; font-weight: 600;">Dear ${displayName},</p>`
-      : "";
+
 
   return `<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
@@ -112,7 +105,6 @@ export function wrapInEmailTemplate({
           <!-- Main Content (Begins directly with greeting and body content; no subject title in body) -->
           <tr>
             <td class="email-padding" style="padding: 38px 36px 32px 36px;">
-              ${greetingHtml}
               <div class="prose" style="font-size: 15px; line-height: 1.65; color: #374151;">
                 ${processedContent}
               </div>

@@ -1542,7 +1542,7 @@ export default function NewsletterPage() {
                 </div>
                 <div className="flex gap-2 items-center">
                   <span className="text-zinc-500 w-20">From:</span>
-                  <span className="text-zinc-300 font-mono">CSwithBS Newsletter &lt;newsletter@cswithbs.com&gt;</span>
+                  <span className="text-zinc-300 font-mono">CSwithBS &lt;newsletter@cswithbs.com&gt;</span>
                 </div>
                 <div className="flex gap-2 items-center">
                   <span className="text-zinc-500 w-20">Reply-To:</span>

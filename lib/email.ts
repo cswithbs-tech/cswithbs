@@ -13,9 +13,9 @@ export const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 // Official Domain Senders
 export const SENDER_NEWSLETTER =
-  process.env.EMAIL_FROM || "CSwithBS Newsletter <newsletter@cswithbs.com>";
+  process.env.EMAIL_FROM || "CSwithBS <newsletter@cswithbs.com>";
 export const SENDER_SUPPORT =
-  process.env.EMAIL_SUPPORT || "CSwithBS Support <support@cswithbs.com>";
+  process.env.EMAIL_SUPPORT || "CSwithBS <support@cswithbs.com>";
 
 // Support receiving address
 export const SUPPORT_EMAIL = "support@cswithbs.com";

@@ -152,14 +152,8 @@ export async function POST(
         const batchPayload = validAdmins.map((admin: any) => {
           const testHtml = wrapInEmailTemplate({
             title: newsletter.subject,
-            preheader: "[ADMIN TEST PREVIEW] CSwithBS Newsletter",
-            recipientName: admin.name || "Admin Member",
-            contentHtml: `
-              <div style="background: #27272a; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: #fbbf24; border: 1px solid #3f3f46;">
-                ⚠️ <strong>Admin Team Test Preview:</strong> This preview was dispatched to all CSwithBS admin team members for review before subscriber broadcast.
-              </div>
-              ${newsletter.content}
-            `,
+            recipientName: admin.name || "Learner",
+            contentHtml: newsletter.content,
             unsubscribeEmail: admin.email,
             showUnsubscribe: true,
             isNewsletter: true,
@@ -168,7 +162,7 @@ export async function POST(
           return {
             from: SENDER_NEWSLETTER,
             to: admin.email,
-            subject: `[ADMIN PREVIEW] ${newsletter.subject}`,
+            subject: newsletter.subject,
             html: testHtml,
           };
         });
@@ -197,14 +191,8 @@ export async function POST(
       // Case 2: Send to single test email
       const testHtml = wrapInEmailTemplate({
         title: newsletter.subject,
-        preheader: "[TEST PREVIEW] CSwithBS Newsletter",
-        recipientName: (session?.user as any)?.name || "Admin",
-        contentHtml: `
-          <div style="background: #27272a; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 13px; color: #fbbf24; border: 1px solid #3f3f46;">
-            ⚠️ <strong>Admin Test Preview:</strong> This is a test dispatch for newsletter draft "${newsletter.subject}".
-          </div>
-          ${newsletter.content}
-        `,
+        recipientName: (session?.user as any)?.name || "Learner",
+        contentHtml: newsletter.content,
         unsubscribeEmail: testEmail,
         showUnsubscribe: true,
         isNewsletter: true,
@@ -213,7 +201,7 @@ export async function POST(
       const { data, error } = await resend.emails.send({
         from: SENDER_NEWSLETTER,
         to: testEmail,
-        subject: `[TEST PREVIEW] ${newsletter.subject}`,
+        subject: newsletter.subject,
         html: testHtml,
       });
 

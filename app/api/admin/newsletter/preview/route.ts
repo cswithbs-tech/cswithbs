@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
     const html = wrapInEmailTemplate({
       title: subject?.trim() || "Your Subject Line",
-      preheader: "Preview of your CSwithBS Newsletter Campaign",
+      preheader: subject?.trim() || "CSwithBS",
       recipientName: (session?.user as any)?.name || "Student",
       contentHtml:
         content?.trim() ||
