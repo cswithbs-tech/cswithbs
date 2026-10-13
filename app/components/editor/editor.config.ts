@@ -2,6 +2,8 @@ import Blockquote from '@tiptap/extension-blockquote';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
 import StarterKit from '@tiptap/starter-kit';
+import Paragraph from '@tiptap/extension-paragraph';
+import Heading from '@tiptap/extension-heading';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -28,6 +30,7 @@ import { ReactNodeViewRenderer } from '@tiptap/react';
 import Youtube from '@tiptap/extension-youtube';
 import { SearchAndReplace } from '@/app/components/editor/extensions/search-and-replace';
 import { SmartPaste } from '@/app/components/editor/extensions/smart-paste';
+import { DivBlock } from '@/app/components/editor/extensions/div-block';
 
 import CharacterCount from '@tiptap/extension-character-count';
 
@@ -36,9 +39,8 @@ const lowlight = createLowlight(common);
 
 export const editorExtensions = [
   StarterKit.configure({
-    heading: {
-      levels: [1, 2, 3, 4, 5, 6],
-    },
+    heading: false,
+    paragraph: false,
     blockquote: false,
     bulletList: false,
     orderedList: false,
@@ -48,16 +50,60 @@ export const editorExtensions = [
     },
     codeBlock: false,
   }),
+  // Enhanced Paragraph with style and class preservation
+  Paragraph.extend({
+    addAttributes() {
+      return {
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
+        },
+        class: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('class'),
+          renderHTML: (attributes) => attributes.class ? { class: attributes.class } : {},
+        },
+      };
+    },
+  }),
+  // Enhanced Heading with style and class preservation
+  Heading.configure({
+    levels: [1, 2, 3, 4, 5, 6],
+  }).extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
+        },
+        class: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('class'),
+          renderHTML: (attributes) => attributes.class ? { class: attributes.class } : {},
+        },
+      };
+    },
+  }),
+  // Custom Div block preserving card containers and styles
+  DivBlock,
   Blockquote.extend({
     addAttributes() {
       return {
         class: {
           default: null,
-          parseHTML: (element) => element.getAttribute('class'),
+          parseHTML: (element: HTMLElement) => element.getAttribute('class'),
           renderHTML: (attributes) => {
             if (!attributes.class) return {};
             return { class: attributes.class };
           },
+        },
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
         },
       };
     },
@@ -67,11 +113,16 @@ export const editorExtensions = [
       return {
         class: {
           default: null,
-          parseHTML: (element) => element.getAttribute('class'),
+          parseHTML: (element: HTMLElement) => element.getAttribute('class'),
           renderHTML: (attributes) => {
             if (!attributes.class) return {};
             return { class: attributes.class };
           },
+        },
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
         },
       };
     },
@@ -81,11 +132,16 @@ export const editorExtensions = [
       return {
         class: {
           default: null,
-          parseHTML: (element) => element.getAttribute('class'),
+          parseHTML: (element: HTMLElement) => element.getAttribute('class'),
           renderHTML: (attributes) => {
             if (!attributes.class) return {};
             return { class: attributes.class };
           },
+        },
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
         },
       };
     },
@@ -94,6 +150,17 @@ export const editorExtensions = [
   Link.configure({
     openOnClick: false,
     autolink: true,
+  }).extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
+        },
+      };
+    },
   }),
   ImageResizeExtension,
   TextAlign.configure({
@@ -110,10 +177,54 @@ export const editorExtensions = [
   }),
   Table.configure({
     resizable: true,
+  }).extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
+        },
+      };
+    },
   }),
-  TableRow,
-  TableHeader,
-  TableCell,
+  TableRow.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
+        },
+      };
+    },
+  }),
+  TableHeader.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
+        },
+      };
+    },
+  }),
+  TableCell.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
+        },
+      };
+    },
+  }),
   CodeBlockLowlight.configure({
     lowlight,
   }).extend({
@@ -129,7 +240,18 @@ export const editorExtensions = [
   TaskItem.configure({
     nested: true,
   }),
-  TextStyle,
+  TextStyle.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        style: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('style'),
+          renderHTML: (attributes) => attributes.style ? { style: attributes.style } : {},
+        },
+      };
+    },
+  }),
   Color,
   Highlight.configure({
     multicolor: true,

@@ -28,6 +28,7 @@ import {
   Zap,
   RefreshCw,
   ShieldCheck,
+  Code,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -61,6 +62,7 @@ export default function NewsletterPage() {
   const [currentNewsletter, setCurrentNewsletter] = useState<Newsletter | null>(null);
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState(""); // This will be HTML from editor
+  const [editorMode, setEditorMode] = useState<"visual" | "html">("visual");
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
@@ -984,13 +986,83 @@ export default function NewsletterPage() {
                 />
               </div>
 
-              <div className="border border-white/10 rounded-2xl overflow-hidden bg-black shadow-2xl">
-                <Editor
-                  value={content}
-                  onChange={(val: any) => setContent(val)}
-                  placeholder="Write your email body here... You can insert images, code blocks, tables, and links."
-                />
+              {/* Editor Mode Switcher & Tools */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2">
+                <div className="flex items-center gap-3">
+                  <div className="inline-flex rounded-xl p-1 bg-zinc-900 border border-white/10 text-xs shadow-inner">
+                    <button
+                      type="button"
+                      onClick={() => setEditorMode("visual")}
+                      className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                        editorMode === "visual"
+                          ? "bg-amber-500 text-black font-semibold shadow"
+                          : "text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      <Sparkles size={13} /> Visual Editor
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditorMode("html")}
+                      className={`px-3 py-1.5 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                        editorMode === "html"
+                          ? "bg-amber-500 text-black font-semibold shadow"
+                          : "text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      <Code size={13} /> HTML Source Code
+                    </button>
+                  </div>
+                  <span className="text-[11px] text-zinc-500 hidden md:inline">
+                    {editorMode === "visual"
+                      ? "Rich visual editing with preserved email card layouts"
+                      : "Direct HTML code for template styling & tags"}
+                  </span>
+                </div>
+
+                <div className="text-[11px] text-zinc-400 font-mono">
+                  {editorMode === "visual" ? (
+                    <span className="text-emerald-400 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
+                      WYSIWYG Mode
+                    </span>
+                  ) : (
+                    <span className="text-amber-400 flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block"></span>
+                      Direct HTML Editing Active
+                    </span>
+                  )}
+                </div>
               </div>
+
+              {editorMode === "visual" ? (
+                <div className="border border-white/10 rounded-2xl overflow-hidden bg-black shadow-2xl">
+                  <Editor
+                    value={content}
+                    onChange={(val: any) => setContent(val)}
+                    placeholder="Write your email body here... You can insert images, code blocks, tables, and links."
+                  />
+                </div>
+              ) : (
+                <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#0d1117] shadow-2xl">
+                  <div className="bg-zinc-950 px-4 py-2.5 border-b border-white/10 flex items-center justify-between text-xs font-mono text-zinc-400">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                      <span className="text-zinc-300 font-semibold">email-content.html</span>
+                    </div>
+                    <span className="text-[11px] text-zinc-500">
+                      Changes sync automatically when switching back to Visual mode
+                    </span>
+                  </div>
+                  <textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="Write or paste your email HTML here..."
+                    className="w-full h-[650px] bg-transparent text-zinc-200 font-mono text-xs sm:text-sm p-4 focus:outline-none resize-y selection:bg-amber-500/30 leading-relaxed font-normal"
+                    spellCheck={false}
+                  />
+                </div>
+              )}
             </div>
           </motion.div>
         )}
