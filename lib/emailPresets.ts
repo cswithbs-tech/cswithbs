@@ -68,6 +68,76 @@ export const EMAIL_PRESET_TEMPLATES: EmailPresetTemplate[] = [
 </div>`,
   },
   {
+    id: "welcome-community",
+    title: "Welcome — Community Onboarding",
+    badge: "Welcome",
+    description: "A warm, detailed onboarding email introducing the CSwithBS community, platform features, and encouraging first steps.",
+    defaultSubject: "Welcome to CSwithBS! 🎉 Your Learning Journey Starts Here",
+    content: `<p>Dear {{name}},</p>
+
+<p><strong>Welcome to CSwithBS!</strong> 🎉<br>
+We're delighted to have you join our growing community of Computer Science learners!</p>
+
+<p>Whether you're preparing for university examinations, working toward competitive exams like GATE, or strengthening your technical fundamentals, CSwithBS is here to support your learning journey.</p>
+
+<div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 22px; margin: 24px 0;">
+  <h3 style="margin: 0 0 16px 0; font-size: 16px; color: #0f172a;">🚀 Start Exploring CSwithBS</h3>
+  <p style="margin: 0 0 14px 0; color: #475569; font-size: 14px;">Here's what you can discover on our platform:</p>
+
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+    <tr>
+      <td style="padding-bottom: 14px; vertical-align: top; width: 28px; font-size: 18px;">📚</td>
+      <td style="padding-bottom: 14px; vertical-align: top; color: #334155; font-size: 14px; line-height: 1.55;">
+        <strong style="color: #0f172a;">Structured Courses &amp; Study Notes</strong><br>
+        Explore chapter-wise learning resources covering essential Computer Science subjects, including Database Management Systems (DBMS), Operating Systems, Computer Networks, Data Structures &amp; Algorithms (DSA), and more.
+      </td>
+    </tr>
+    <tr>
+      <td style="padding-bottom: 14px; vertical-align: top; width: 28px; font-size: 18px;">💻</td>
+      <td style="padding-bottom: 14px; vertical-align: top; color: #334155; font-size: 14px; line-height: 1.55;">
+        <strong style="color: #0f172a;">Technical Articles &amp; Insights</strong><br>
+        Go beyond textbooks with articles, conceptual explanations, and insights into Computer Science, programming, and emerging technologies.
+      </td>
+    </tr>
+    <tr>
+      <td style="vertical-align: top; width: 28px; font-size: 18px;">🎯</td>
+      <td style="vertical-align: top; color: #334155; font-size: 14px; line-height: 1.55;">
+        <strong style="color: #0f172a;">Exam Preparation &amp; Learning Resources</strong><br>
+        Strengthen your understanding of fundamental concepts with syllabus-oriented resources designed to support academic learning and competitive exam preparation.
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p style="text-align: center; margin: 28px 0;">
+  <a href="https://www.cswithbs.com/courses" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #0f172a; color: #ffffff; font-weight: 600; font-size: 14px; padding: 13px 30px; border-radius: 8px; text-decoration: none; margin-right: 10px;">
+    📖 Browse Courses →
+  </a>
+  <a href="https://www.cswithbs.com/blog" target="_blank" rel="noopener noreferrer" style="display: inline-block; background-color: #0284c7; color: #ffffff; font-weight: 600; font-size: 14px; padding: 13px 30px; border-radius: 8px; text-decoration: none;">
+    ✍️ Read Articles →
+  </a>
+</p>
+
+<div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; border-radius: 8px; padding: 18px; margin: 24px 0;">
+  <h4 style="margin: 0 0 8px 0; font-size: 15px; color: #14532d;">💬 We're Building This For You</h4>
+  <p style="margin: 0; color: #166534; font-size: 14px; line-height: 1.6;">
+    CSwithBS is a community-first platform. Your feedback shapes what we build next. If there's a topic, subject, or feature you'd love to see — we genuinely want to hear from you!
+    <br><br>
+    Feel free to reach out via our <a href="https://www.cswithbs.com/contact" target="_blank" rel="noopener noreferrer" style="color: #15803d; font-weight: 600; text-decoration: underline;">Contact Page</a> at any time. We read every message.
+  </p>
+</div>
+
+<p style="margin-top: 20px; color: #334155; font-size: 14px; line-height: 1.6;">
+  We wish you great success in your studies. Welcome aboard — we're happy you're here! 🙌
+</p>
+
+<div style="margin-top: 28px; padding-top: 18px; border-top: 1px solid #e2e8f0;">
+  <p style="margin: 0 0 4px 0; font-size: 14px; color: #475569;">Warm regards,</p>
+  <p style="margin: 0; font-size: 15px; font-weight: 700; color: #0f172a;">Prof. Buddhadev Sasmal</p>
+  <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b;">CSwithBS &bull; Midnapore City College</p>
+</div>`,
+  },
+  {
     id: "study-notes",
     title: "New Study Notes / Chapter Released",
     badge: "Curriculum",
