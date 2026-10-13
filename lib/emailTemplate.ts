@@ -99,9 +99,16 @@ export function wrapInEmailTemplate({
   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f4f4f7;">
     <tr>
       <td align="center" style="padding: 36px 16px 48px 16px;">
-        <!-- Clean White Card Container -->
-        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);">
+        <!-- Clean White Card Container with Rounded Corners -->
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" class="email-container" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; border-collapse: separate; overflow: hidden; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);">
           
+          <!-- Top Accent Bar: Official CSwithBS Logo Gradient -->
+          <tr>
+            <td style="height: 6px; line-height: 6px; font-size: 1px; background-color: #00bedc; background: linear-gradient(90deg, #00bedc 0%, #5ac8de 30%, #76a2d5 60%, #8c5fa7 100%); border-radius: 16px 16px 0 0; mso-line-height-rule: exactly;">
+              &nbsp;
+            </td>
+          </tr>
+
           <!-- Main Content (Begins directly with greeting and body content; no subject title in body) -->
           <tr>
             <td class="email-padding" style="padding: 38px 36px 32px 36px;">
@@ -111,12 +118,12 @@ export function wrapInEmailTemplate({
             </td>
           </tr>
 
-          <!-- Footer (Minimal, Premium & Industry-Standard) -->
+          <!-- Footer (Pure Black #000000, Rounded Corners, Simple Crisp Text, Rose Links) -->
           <tr>
-            <td class="email-padding" style="padding: 28px 36px 28px 36px; background-color: #fafbfc; border-top: 1px solid #edf0f2; text-align: center;">
+            <td class="email-padding" style="padding: 32px 36px 30px 36px; background-color: #000000; background: #000000; border-radius: 0 0 16px 16px; border-top: 1px solid #1a1a1a; text-align: center;">
               
               <!-- Brand Logo in Footer -->
-              <div style="margin-bottom: 12px;">
+              <div style="margin-bottom: 14px;">
                 <a href="${SITE_URL}" target="_blank" rel="noopener noreferrer" style="text-decoration: none; display: inline-block;">
                   <img 
                     src="${EMAIL_LOGO_URL}" 
@@ -128,40 +135,42 @@ export function wrapInEmailTemplate({
                 </a>
               </div>
 
-              <p style="margin: 0 0 4px 0; font-size: 13px; color: #4b5563; line-height: 1.5; font-weight: 500;">
+              <!-- Simple Crisp Text (White & Gray) -->
+              <p style="margin: 0 0 4px 0; font-size: 13.5px; color: #ffffff; line-height: 1.5; font-weight: 600; letter-spacing: 0.2px;">
                 Curated Computer Science Notes &amp; Learning Resources
               </p>
-              <p style="margin: 0 0 16px 0; font-size: 12px; color: #9ca3af;">
+              <p style="margin: 0 0 18px 0; font-size: 12px; color: #888888;">
                 Prof. Buddhadev Sasmal &bull; Founder &amp; Lead Educator
               </p>
 
-              <!-- Navigation Links -->
-              <div style="margin-bottom: 16px;">
-                <a href="${SITE_URL}/courses" target="_blank" rel="noopener noreferrer" style="color: #6b7280; font-size: 13px; margin: 0 10px; text-decoration: none; font-weight: 500;">Courses</a>
-                <span style="color: #d1d5db;">•</span>
-                <a href="${SITE_URL}/blog" target="_blank" rel="noopener noreferrer" style="color: #6b7280; font-size: 13px; margin: 0 10px; text-decoration: none; font-weight: 500;">Blog</a>
-                <span style="color: #d1d5db;">•</span>
-                <a href="${SITE_URL}/contact" target="_blank" rel="noopener noreferrer" style="color: #6b7280; font-size: 13px; margin: 0 10px; text-decoration: none; font-weight: 500;">Contact</a>
+              <!-- Navigation Links (Exclusive Rose #E2C6B9 Accent Color) -->
+              <div style="margin-bottom: 18px;">
+                <a href="${SITE_URL}/courses" target="_blank" rel="noopener noreferrer" style="color: #E2C6B9; font-size: 13px; margin: 0 10px; text-decoration: none; font-weight: 600; letter-spacing: 0.3px;">Courses</a>
+                <span style="color: #444444;">•</span>
+                <a href="${SITE_URL}/blog" target="_blank" rel="noopener noreferrer" style="color: #E2C6B9; font-size: 13px; margin: 0 10px; text-decoration: none; font-weight: 600; letter-spacing: 0.3px;">Blog</a>
+                <span style="color: #444444;">•</span>
+                <a href="${SITE_URL}/contact" target="_blank" rel="noopener noreferrer" style="color: #E2C6B9; font-size: 13px; margin: 0 10px; text-decoration: none; font-weight: 600; letter-spacing: 0.3px;">Contact</a>
               </div>
 
               <!-- Sleek Single-Line Broadcast & Unsubscribe Notice -->
               ${
                 showUnsubscribe && isNewsletter
-                  ? `<div style="border-top: 1px solid #edf0f2; padding-top: 14px; margin-top: 14px;">
-                      <p style="margin: 0; font-size: 11px; color: #9ca3af; line-height: 1.6;">
+                  ? `<div style="border-top: 1px solid #1a1a1a; padding-top: 14px; margin-top: 16px;">
+                      <p style="margin: 0; font-size: 11px; color: #666666; line-height: 1.6;">
                         You received this automated broadcast from CSwithBS.
-                        <span style="display: inline-block; margin: 0 4px; color: #d1d5db;">•</span>
-                        <a href="${unsubscribeUrl}" target="_blank" rel="noopener noreferrer" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a>
+                        <span style="display: inline-block; margin: 0 4px; color: #333333;">•</span>
+                        <a href="${unsubscribeUrl}" target="_blank" rel="noopener noreferrer" style="color: #E2C6B9; text-decoration: underline;">Unsubscribe</a>
                       </p>
                     </div>`
                   : !isNewsletter
-                  ? `<div style="border-top: 1px solid #edf0f2; padding-top: 14px; margin-top: 14px;">
-                      <p style="margin: 0; font-size: 12px; color: #6b7280; line-height: 1.5;">
-                        Have questions? Reply directly to this email or write to <a href="mailto:support@cswithbs.com" style="color: #0284c7; text-decoration: none; font-weight: 500;">support@cswithbs.com</a>.
+                  ? `<div style="border-top: 1px solid #1a1a1a; padding-top: 14px; margin-top: 16px;">
+                      <p style="margin: 0; font-size: 12px; color: #888888; line-height: 1.5;">
+                        Have questions? Reply directly to this email or write to <a href="mailto:support@cswithbs.com" style="color: #E2C6B9; text-decoration: none; font-weight: 500;">support@cswithbs.com</a>.
                       </p>
                     </div>`
                   : ""
               }
+              <p style="margin: 10px 0 0 0; font-size: 10.5px; color: #444444;">&copy; 2026 CSwithBS. All rights reserved.</p>
             </td>
           </tr>
 
