@@ -25,6 +25,8 @@ import {
   Check,
   Clock,
   CheckCircle2,
+  Zap,
+  RefreshCw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -67,6 +69,27 @@ export default function NewsletterPage() {
   const [showDispatchModal, setShowDispatchModal] = useState(false);
   const [batchLimitOption, setBatchLimitOption] = useState<"safe" | "all" | "custom">("safe");
   const [customBatchLimit, setCustomBatchLimit] = useState<number>(70);
+
+  // Real-time Resend Quota & Logs State
+  const [quotaData, setQuotaData] = useState<{
+    dailyLimit: number;
+    sentToday: number;
+    remainingToday: number;
+    percentUsed: number;
+    resetTime: string;
+    hoursUntilReset: number;
+    recentActivity: Array<{
+      id: string;
+      to: string;
+      from: string;
+      subject: string;
+      createdAt: string;
+      status: string;
+      isTest: boolean;
+    }>;
+  } | null>(null);
+  const [loadingQuota, setLoadingQuota] = useState(false);
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
 
   // Audience Target Selection State ("all" vs "individual")
   const [targetType, setTargetType] = useState<"all" | "individual">("all");
@@ -158,11 +181,27 @@ export default function NewsletterPage() {
     }
   };
 
-  // Fetch List and Subscriber Stats
+  // Fetch List, Subscriber Stats, and Live Resend Quota
   useEffect(() => {
     fetchNewsletters();
     fetchSubscriberCount();
+    fetchQuota();
   }, []);
+
+  const fetchQuota = async () => {
+    setLoadingQuota(true);
+    try {
+      const res = await fetch("/api/admin/newsletter/quota");
+      if (res.ok) {
+        const data = await res.json();
+        setQuotaData(data);
+      }
+    } catch (e) {
+      console.error("Failed to fetch Resend quota:", e);
+    } finally {
+      setLoadingQuota(false);
+    }
+  };
 
   const fetchNewsletters = async () => {
     try {
@@ -327,6 +366,7 @@ export default function NewsletterPage() {
       if (res.ok) {
         showToast(`Test email sent to ${testEmailAddress}!`, "success");
         setShowTestModal(false);
+        fetchQuota();
       } else {
         showToast(data.error || "Failed to send test email", "error");
       }
@@ -375,6 +415,7 @@ export default function NewsletterPage() {
           fetchSingleNewsletter(currentId);
         }
         fetchNewsletters();
+        fetchQuota();
       } else {
         showToast(data.error || "Failed to send email", "error");
       }
@@ -425,12 +466,14 @@ export default function NewsletterPage() {
           fetchSingleNewsletter(draftId);
         }
         fetchNewsletters();
+        fetchQuota();
       } else {
         showToast(data.error || "Failed to blast newsletter", "error");
         if (draftId) {
           fetchSingleNewsletter(draftId);
         }
         fetchNewsletters();
+        fetchQuota();
       }
     } catch (e) {
       showToast("Network error while blasting newsletter", "error");
@@ -465,6 +508,11 @@ export default function NewsletterPage() {
   const remainingCount = Math.max(0, activeSubscriberCount - currentSentCount);
   const isPartiallySent = currentNewsletter?.status === "partially_sent";
   const isFullySent = currentNewsletter?.status === "sent" && remainingCount === 0;
+  const safeBatchCount = Math.min(
+    Math.max(1, (quotaData?.remainingToday ?? 100) - 15),
+    70,
+    remainingCount
+  );
 
   return (
     <div className="p-8 max-w-7xl mx-auto min-h-screen">
@@ -480,17 +528,49 @@ export default function NewsletterPage() {
             <span className="text-amber-400 font-semibold">{activeSubscriberCount} active</span> subscribers).
           </p>
         </div>
-        {view === "list" && (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-zinc-900 border border-white/10 px-3 py-2 rounded-xl text-xs text-zinc-400">
-              <Users size={14} className="text-amber-400" />
-              <span>Audience: <strong className="text-white">{activeSubscriberCount}</strong></span>
-            </div>
-            <Button onClick={handleNew} className="gap-2">
-              <Plus size={18} /> New Campaign
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Live Resend Quota Pill */}
+          <button
+            onClick={() => {
+              fetchQuota();
+              setShowQuotaModal(true);
+            }}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium border transition-all cursor-pointer backdrop-blur-sm ${
+              (quotaData?.remainingToday ?? 100) <= 15
+                ? "bg-rose-500/10 text-rose-300 border-rose-500/30 hover:bg-rose-500/20"
+                : (quotaData?.remainingToday ?? 100) <= 35
+                ? "bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20"
+                : "bg-emerald-500/10 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/20"
+            }`}
+            title="Click to view real-time Resend API quota & dispatch logs"
+          >
+            <Zap size={14} className={
+              (quotaData?.remainingToday ?? 100) <= 15
+                ? "text-rose-400 animate-pulse"
+                : (quotaData?.remainingToday ?? 100) <= 35
+                ? "text-amber-400"
+                : "text-emerald-400"
+            } />
+            <span>
+              Resend Quota: <strong className="font-mono text-white">{quotaData?.sentToday ?? 0}/100</strong>
+            </span>
+            <span className="text-[11px] opacity-80 font-mono">
+              ({quotaData?.remainingToday ?? 100} left)
+            </span>
+          </button>
+
+          {view === "list" && (
+            <>
+              <div className="flex items-center gap-2 bg-zinc-900 border border-white/10 px-3.5 py-2 rounded-xl text-xs text-zinc-400">
+                <Users size={14} className="text-amber-400" />
+                <span>Audience: <strong className="text-white">{activeSubscriberCount}</strong></span>
+              </div>
+              <Button onClick={handleNew} className="gap-2">
+                <Plus size={18} /> New Campaign
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
@@ -929,6 +1009,12 @@ export default function NewsletterPage() {
                   <span className="text-zinc-400">Remaining to Send:</span>
                   <span className="font-mono text-amber-400 font-bold">{remainingCount} subscribers</span>
                 </div>
+                <div className="flex justify-between items-center text-xs pt-1 border-t border-white/5">
+                  <span className="text-zinc-400">Resend Quota Available Today:</span>
+                  <span className="font-mono text-emerald-400 font-semibold flex items-center gap-1">
+                    <Zap size={12} /> {quotaData?.remainingToday ?? 100} / 100 credits left
+                  </span>
+                </div>
 
                 {/* Progress bar */}
                 <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
@@ -968,14 +1054,14 @@ export default function NewsletterPage() {
                       <div className="text-xs">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-white">
-                            Send Safe Batch Today ({Math.min(70, remainingCount)} Subscribers)
+                            Send Safe Batch Today ({safeBatchCount} Subscribers)
                           </span>
                           <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-1.5 py-0.5 rounded font-mono border border-emerald-500/20">
                             Recommended
                           </span>
                         </div>
                         <p className="text-zinc-400 mt-1 leading-relaxed">
-                          Keeps daily sending safely below Resend's 100/day free limit (leaving room for test &amp; welcome emails). You can resume the remaining {Math.max(0, remainingCount - Math.min(70, remainingCount))} tomorrow!
+                          Keeps daily sending safely below Resend's 100/day free limit (leaving 15 credit buffer for test &amp; welcome emails). You can resume the remaining {Math.max(0, remainingCount - safeBatchCount)} tomorrow!
                         </p>
                       </div>
                     </div>
@@ -1067,7 +1153,7 @@ export default function NewsletterPage() {
                     onClick={() => {
                       const limit =
                         batchLimitOption === "safe"
-                          ? Math.min(70, remainingCount)
+                          ? safeBatchCount
                           : batchLimitOption === "custom"
                           ? customBatchLimit
                           : 0; // 0 means all remaining
@@ -1084,7 +1170,7 @@ export default function NewsletterPage() {
                       <span className="flex items-center gap-2">
                         <Send size={16} />
                         {batchLimitOption === "safe"
-                          ? `Dispatch Next ${Math.min(70, remainingCount)} Subscribers`
+                          ? `Dispatch Next ${safeBatchCount} Subscribers`
                           : batchLimitOption === "custom"
                           ? `Dispatch Next ${customBatchLimit} Subscribers`
                           : `Dispatch All ${remainingCount} Subscribers`}
@@ -1217,9 +1303,10 @@ export default function NewsletterPage() {
                     placeholder="you@email.com"
                     className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500"
                   />
-                  <p className="text-[11px] text-zinc-500 mt-1.5">
-                    Sender: <span className="font-mono text-zinc-400">CSwithBS &lt;newsletter@cswithbs.com&gt;</span>
-                  </p>
+                  <div className="flex items-center justify-between text-[11px] text-zinc-500 mt-1.5">
+                    <span>Sender: <strong className="font-mono text-zinc-400">CSwithBS &lt;newsletter@cswithbs.com&gt;</strong></span>
+                    <span className="font-mono text-amber-400">{quotaData?.remainingToday ?? 100} / 100 quota left today</span>
+                  </div>
                 </div>
               </div>
 
@@ -1335,6 +1422,211 @@ export default function NewsletterPage() {
                     />
                   )}
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Real-time Resend Quota & Logs Modal */}
+      <AnimatePresence>
+        {showQuotaModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 bg-black/85 backdrop-blur-md animate-fade-in">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-zinc-950 border border-white/15 rounded-2xl w-full max-w-3xl max-h-[88vh] flex flex-col shadow-2xl overflow-hidden relative"
+            >
+              {/* Modal Header */}
+              <div className="p-5 bg-zinc-900/90 border-b border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                    <Zap size={20} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-white">Resend Live Quota &amp; Activity</h3>
+                      <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-2 py-0.5 rounded-full font-mono border border-emerald-500/20">
+                        Live API Sync
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-400">
+                      Real-time stats queried directly from your Resend mail server.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={fetchQuota}
+                    disabled={loadingQuota}
+                    className="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors border border-white/5 flex items-center gap-1.5 text-xs"
+                    title="Refresh quota from Resend API"
+                  >
+                    <RefreshCw size={14} className={loadingQuota ? "animate-spin text-amber-400" : ""} />
+                    <span className="hidden sm:inline">Refresh</span>
+                  </button>
+                  <button
+                    onClick={() => setShowQuotaModal(false)}
+                    className="p-2 text-zinc-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-5 md:p-6 overflow-y-auto space-y-6 flex-1">
+                {/* 3 Metric Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Metric 1 */}
+                  <div className="bg-zinc-900/70 border border-white/10 rounded-xl p-4">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 block mb-1">
+                      Sent Today (UTC)
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-bold font-mono text-white">
+                        {quotaData?.sentToday ?? 0}
+                      </span>
+                      <span className="text-xs text-zinc-500 font-mono">
+                        / {quotaData?.dailyLimit ?? 100}
+                      </span>
+                    </div>
+                    <div className="mt-2 w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          (quotaData?.percentUsed ?? 0) > 85
+                            ? "bg-rose-500"
+                            : (quotaData?.percentUsed ?? 0) > 60
+                            ? "bg-amber-500"
+                            : "bg-emerald-400"
+                        }`}
+                        style={{ width: `${quotaData?.percentUsed ?? 0}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Metric 2 */}
+                  <div className="bg-zinc-900/70 border border-white/10 rounded-xl p-4">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 block mb-1">
+                      Available Remaining
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className={`text-2xl font-bold font-mono ${
+                        (quotaData?.remainingToday ?? 100) <= 15
+                          ? "text-rose-400"
+                          : (quotaData?.remainingToday ?? 100) <= 35
+                          ? "text-amber-400"
+                          : "text-emerald-400"
+                      }`}>
+                        {quotaData?.remainingToday ?? 100}
+                      </span>
+                      <span className="text-xs text-zinc-500">emails</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-500 mt-1">
+                      Free tier daily allowance
+                    </p>
+                  </div>
+
+                  {/* Metric 3 */}
+                  <div className="bg-zinc-900/70 border border-white/10 rounded-xl p-4">
+                    <span className="text-[11px] font-mono uppercase tracking-wider text-zinc-400 block mb-1">
+                      Daily Reset Window
+                    </span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xl font-bold text-white flex items-center gap-1.5">
+                        <Clock size={16} className="text-amber-400" />
+                        in ~{quotaData?.hoursUntilReset ?? 0}h
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-zinc-400 mt-1">
+                      Resets 5:30 AM IST (00:00 UTC)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Explanation Banner */}
+                <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3.5 text-xs text-zinc-300 flex items-start gap-3">
+                  <Sparkles size={16} className="text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <strong className="text-amber-400">Multi-Day Dispatch Strategy:</strong> Since your verified audience ({activeSubscriberCount} subscribers) is close to Resend's 100/day limit, our system automatically tracks which subscribers receive each campaign in MongoDB. You can send a safe batch today (e.g. 70 subscribers) and easily resume the remaining tomorrow without duplicates!
+                  </div>
+                </div>
+
+                {/* Recent Dispatches & Test Emails Table */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                      <Mail size={15} className="text-amber-400" />
+                      Recent Email Dispatches (Live from Resend)
+                    </h4>
+                    <span className="text-xs text-zinc-500 font-mono">
+                      Showing latest {quotaData?.recentActivity?.length ?? 0} logs
+                    </span>
+                  </div>
+
+                  {(!quotaData?.recentActivity || quotaData.recentActivity.length === 0) ? (
+                    <div className="text-center py-8 text-zinc-500 text-xs border border-white/5 rounded-xl bg-zinc-900/30">
+                      No email dispatches recorded in Resend yet today.
+                    </div>
+                  ) : (
+                    <div className="border border-white/5 rounded-xl overflow-hidden bg-zinc-900/40 divide-y divide-white/5 max-h-[300px] overflow-y-auto">
+                      {quotaData.recentActivity.map((log) => (
+                        <div key={log.id} className="p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:bg-white/[0.02] transition-colors text-xs">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              {log.isTest && (
+                                <span className="bg-purple-500/15 text-purple-300 text-[10px] px-1.5 py-0.5 rounded font-mono font-semibold border border-purple-500/30">
+                                  TEST
+                                </span>
+                              )}
+                              <span className="text-white font-medium truncate">
+                                {log.subject}
+                              </span>
+                            </div>
+                            <div className="text-zinc-400 text-[11px] font-mono truncate">
+                              To: <span className="text-zinc-300">{log.to}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span
+                              className={`uppercase font-mono text-[10px] px-2 py-0.5 rounded font-bold ${
+                                log.status === "delivered"
+                                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                                  : log.status === "bounced" || log.status === "complained"
+                                  ? "bg-rose-500/15 text-rose-400 border border-rose-500/30"
+                                  : "bg-blue-500/15 text-blue-400 border border-blue-500/30"
+                              }`}
+                            >
+                              {log.status}
+                            </span>
+                            <span className="text-[11px] text-zinc-500 font-mono">
+                              {log.createdAt ? new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 bg-zinc-900/60 border-t border-white/10 flex items-center justify-between text-xs text-zinc-400">
+                <span className="flex items-center gap-1.5 font-mono">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-ping"></span>
+                  Connected to Resend API
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowQuotaModal(false)}
+                  className="border-white/10 text-white hover:bg-white/5"
+                >
+                  Close
+                </Button>
               </div>
             </motion.div>
           </div>
