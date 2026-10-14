@@ -36,6 +36,7 @@ import {
   Zap,
   Radio,
 } from "lucide-react";
+import { countryToIso2, iso2ToCountry } from "@/lib/country";
 import { motion } from "framer-motion";
 
 export default function NewDashboardPage() {
@@ -380,42 +381,51 @@ export default function NewDashboardPage() {
                 Top Countries
               </h3>
               <div className="space-y-3">
-                {data?.countryStats?.slice(0, 5).map((c: any, i: number) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <span className="text-zinc-300 flex items-center gap-3">
-                      <div className="relative w-5 h-3.5 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
-                        <img
-                          src={`https://flagcdn.com/w40/${c._id.toLowerCase()}.png`}
-                          alt={c._id}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <span className="truncate max-w-[120px]">
-                        {(c._id && c._id.length === 2
-                          ? new Intl.DisplayNames(["en"], {
-                              type: "region",
-                            }).of(c._id)
-                          : c._id) || c._id}
+                {data?.countryStats?.slice(0, 5).map((c: any, i: number) => {
+                  const rawCode = c.code || (c._id && c._id.length === 2 ? c._id : countryToIso2(c._id));
+                  const isoCode = (rawCode && rawCode !== "UN" ? rawCode : "").toLowerCase();
+                  const countryName = c.name || c.country || (c._id && c._id.length === 2 ? iso2ToCountry(c._id) : c._id) || "Unknown";
+
+                  return (
+                    <div
+                      key={c.code || c._id || i}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <span className="text-zinc-300 flex items-center gap-3">
+                        <div className="relative w-5 h-3.5 shadow-sm rounded-sm overflow-hidden flex-shrink-0 bg-zinc-800 flex items-center justify-center">
+                          {isoCode ? (
+                            <img
+                              src={`https://flagcdn.com/w40/${isoCode}.png`}
+                              alt={countryName}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = "none";
+                              }}
+                            />
+                          ) : (
+                            <Globe size={12} className="text-zinc-500" />
+                          )}
+                        </div>
+                        <span className="truncate max-w-[120px]" title={countryName}>
+                          {countryName}
+                        </span>
                       </span>
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <div className="w-20 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-accent/50 rounded-full"
-                          style={{
-                            width: `${(c.count / (data.countryStats[0].count || 1)) * 100}%`,
-                          }}
-                        ></div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-20 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-accent/50 rounded-full"
+                            style={{
+                              width: `${(c.count / (data.countryStats[0].count || 1)) * 100}%`,
+                            }}
+                          ></div>
+                        </div>
+                        <span className="text-zinc-400 font-mono text-xs w-6 text-right">
+                          {c.count}
+                        </span>
                       </div>
-                      <span className="text-zinc-400 font-mono text-xs w-6 text-right">
-                        {c.count}
-                      </span>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

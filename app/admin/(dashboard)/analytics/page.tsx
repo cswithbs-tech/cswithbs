@@ -38,8 +38,10 @@ import {
   BookOpen,
   GraduationCap,
   Download,
+  Globe,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { countryToIso2, iso2ToCountry } from "@/lib/country";
 
 // --- Types ---
 interface AnalyticsData {
@@ -861,42 +863,51 @@ export default function InsightsPage() {
                     Location Breakdown
                   </h3>
                   <div className="space-y-3">
-                    {data?.countries.slice(0, 10).map((c, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <span className="text-zinc-400 flex items-center gap-3">
-                          <div className="relative w-5 h-3.5 shadow-sm rounded-sm overflow-hidden flex-shrink-0">
-                            <img
-                              src={`https://flagcdn.com/w40/${c._id.toLowerCase()}.png`}
-                              alt={c._id}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <span className="truncate max-w-[150px]">
-                            {c._id && c._id.length === 2
-                              ? new Intl.DisplayNames(["en"], {
-                                  type: "region",
-                                }).of(c._id)
-                              : c._id || "Unknown"}
+                    {data?.countries.slice(0, 10).map((c: any, i: number) => {
+                      const rawCode = c.code || (c._id && c._id.length === 2 ? c._id : countryToIso2(c._id));
+                      const isoCode = (rawCode && rawCode !== "UN" ? rawCode : "").toLowerCase();
+                      const countryName = c.name || c.country || (c._id && c._id.length === 2 ? iso2ToCountry(c._id) : c._id) || "Unknown";
+
+                      return (
+                        <div
+                          key={c.code || c._id || i}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="text-zinc-400 flex items-center gap-3">
+                            <div className="relative w-5 h-3.5 shadow-sm rounded-sm overflow-hidden flex-shrink-0 bg-zinc-800 flex items-center justify-center">
+                              {isoCode ? (
+                                <img
+                                  src={`https://flagcdn.com/w40/${isoCode}.png`}
+                                  alt={countryName}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = "none";
+                                  }}
+                                />
+                              ) : (
+                                <Globe size={12} className="text-zinc-500" />
+                              )}
+                            </div>
+                            <span className="truncate max-w-[150px]" title={countryName}>
+                              {countryName}
+                            </span>
                           </span>
-                        </span>
-                        <div className="flex items-center gap-3">
-                          <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                            <div
-                              className="h-full bg-accent/50 rounded-full"
-                              style={{
-                                width: `${(c.count / (data?.countries[0].count || 1)) * 100}%`,
-                              }}
-                            ></div>
+                          <div className="flex items-center gap-3">
+                            <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-accent/50 rounded-full"
+                                style={{
+                                  width: `${(c.count / (data?.countries[0].count || 1)) * 100}%`,
+                                }}
+                              ></div>
+                            </div>
+                            <span className="text-zinc-200 font-mono w-8 text-right">
+                              {c.count}
+                            </span>
                           </div>
-                          <span className="text-zinc-200 font-mono w-8 text-right">
-                            {c.count}
-                          </span>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 

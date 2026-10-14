@@ -10,6 +10,7 @@ import Subject from '@/models/Subject';
 import Note from '@/models/Note';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { normalizeCountry } from '@/lib/country';
 
 export const dynamic = 'force-dynamic';
 
@@ -158,13 +159,36 @@ export async function GET(request: Request) {
         { $sort: { count: -1 } }
     ]);
 
-    // NEW: Countries
-    const countries = await Visitor.aggregate([
+    // NEW: Countries (normalized & deduplicated)
+    const rawCountries = await Visitor.aggregate([
         { $match: { lastSeen: { $gte: startDate } } },
         { $group: { _id: "$country", count: { $sum: 1 } } },
-        { $sort: { count: -1 } },
-        { $limit: 10 }
     ]);
+
+    const countryMap = new Map<string, { code: string; name: string; count: number }>();
+    for (const raw of (rawCountries || [])) {
+      if (!raw._id || raw._id === "Unknown") continue;
+      const { code, name } = normalizeCountry(raw._id);
+      if (!code || code === "UN") continue;
+
+      const existing = countryMap.get(code);
+      if (existing) {
+        existing.count += raw.count;
+      } else {
+        countryMap.set(code, { code, name, count: raw.count });
+      }
+    }
+
+    const countries = Array.from(countryMap.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10)
+      .map(c => ({
+        _id: c.code,
+        code: c.code,
+        name: c.name,
+        country: c.name,
+        count: c.count
+      }));
 
     // NEW: Live Users (Active in last 15 mins)
     const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);

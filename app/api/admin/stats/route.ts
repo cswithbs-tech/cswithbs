@@ -13,6 +13,7 @@ import Note from '@/models/Note';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import mongoose from 'mongoose';
+import { normalizeCountry } from '@/lib/country';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +46,7 @@ export async function GET() {
       deviceStats,
       browserStats,
       osStats,
-      countryStats,
+      rawCountryStats,
       referrerStats,
       unreadCount,
       totalComments,
@@ -83,9 +84,7 @@ export async function GET() {
           { $sort: { count: -1 } }
       ]),
       Visitor.aggregate([
-          { $group: { _id: "$country", count: { $sum: 1 } } },
-          { $sort: { count: -1 } },
-          { $limit: 10 }
+          { $group: { _id: "$country", count: { $sum: 1 } } }
       ]),
       Visitor.aggregate([
           { $group: { _id: "$referrer", count: { $sum: 1 } } },
@@ -103,6 +102,32 @@ export async function GET() {
       Note.countDocuments({}),
       Note.find().sort({ views: -1 }).limit(5).select('title views subject chapter').lean()
     ]);
+
+    // Normalize and merge duplicate country representations (e.g. "IN" and "India")
+    const countryMap = new Map<string, { code: string; name: string; count: number }>();
+    for (const raw of (rawCountryStats || [])) {
+      if (!raw._id || raw._id === "Unknown") continue;
+      const { code, name } = normalizeCountry(raw._id);
+      if (!code || code === "UN") continue;
+
+      const existing = countryMap.get(code);
+      if (existing) {
+        existing.count += raw.count;
+      } else {
+        countryMap.set(code, { code, name, count: raw.count });
+      }
+    }
+
+    const countryStats = Array.from(countryMap.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10)
+      .map(c => ({
+        _id: c.code,
+        code: c.code,
+        name: c.name,
+        country: c.name,
+        count: c.count
+      }));
 
     // Chart Data (Page Views Last 7 Days)
     const today = new Date();

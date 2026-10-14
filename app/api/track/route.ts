@@ -4,6 +4,7 @@ import Visitor from '@/models/Visitor';
 import PageView from '@/models/PageView';
 import dbConnect from '@/lib/db';
 import { UAParser } from 'ua-parser-js';
+import { iso2ToCountry } from '@/lib/country';
 
 export async function POST(request: Request) {
   try {
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
             // timeout of 1500ms to avoid blocking track request for too long
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 1500);
-            const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,regionName,city,isp,timezone`, {
+            const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,isp,timezone`, {
                 signal: controller.signal
             });
             clearTimeout(timeoutId);
@@ -66,7 +67,7 @@ export async function POST(request: Request) {
             if (geoRes.ok) {
                 const geoData = await geoRes.json();
                 if (geoData.status === 'success') {
-                    country = geoData.country || country;
+                    country = geoData.country || (geoData.countryCode ? iso2ToCountry(geoData.countryCode) : country);
                     city = geoData.city || city;
                     isp = geoData.isp || isp;
                     timezone = geoData.timezone || timezone;
@@ -76,6 +77,11 @@ export async function POST(request: Request) {
         } catch (err) {
             console.error("IP-API fetch failed", err);
         }
+    }
+
+    // Standardize country name to clean English full name (e.g. "India", "United States")
+    if (country && country !== 'Unknown') {
+        country = iso2ToCountry(country);
     }
 
     // 5b. UTM Parameter Extraction
