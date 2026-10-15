@@ -510,6 +510,23 @@ export function EmailEditor({
         </div>
       )}
 
+      {/* ── Scoped Email Editor Styles ──────────────────────── */}
+      <style>{`
+        .email-prose h1 { font-size: 1.85rem; font-weight: 700; margin: 1.25rem 0 0.5rem 0; color: #ffffff; line-height: 1.3; }
+        .email-prose h2 { font-size: 1.45rem; font-weight: 700; margin: 1rem 0 0.4rem 0; color: #ffffff; line-height: 1.35; }
+        .email-prose h3 { font-size: 1.2rem; font-weight: 600; margin: 0.85rem 0 0.35rem 0; color: #f4f4f5; line-height: 1.4; }
+        .email-prose p { margin: 0 0 0.85rem 0; line-height: 1.65; color: #e4e4e7; }
+        .email-prose ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin: 0.75rem 0 !important; }
+        .email-prose ol { list-style-type: decimal !important; padding-left: 1.5rem !important; margin: 0.75rem 0 !important; }
+        .email-prose li { margin: 0.25rem 0; }
+        .email-prose blockquote { border-left: 3px solid #f59e0b; padding-left: 1rem; color: #d4d4d8; font-style: italic; margin: 1rem 0; }
+        .email-prose a { color: #f59e0b; text-decoration: underline; }
+        .email-prose hr { border: none; border-top: 1px solid rgba(255,255,255,0.15); margin: 1.5rem 0; }
+        .email-prose img { max-width: 100%; height: auto; border-radius: 8px; margin: 0.75rem 0; }
+        .email-prose code { background: rgba(255,255,255,0.1); padding: 0.15rem 0.35rem; border-radius: 4px; font-family: monospace; font-size: 0.9em; }
+        .email-prose pre { background: #000000; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.85rem; overflow-x: auto; font-family: monospace; }
+      `}</style>
+
       {/* ── Email Canvas / Document Area ─────────────────────── */}
       <div className="p-4 md:p-8 bg-[#070709] overflow-y-auto">
         <div className="max-w-[620px] mx-auto bg-[#0f1115] border border-white/10 rounded-xl shadow-2xl p-4 md:p-6 transition-all">
