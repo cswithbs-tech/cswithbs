@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/app/components/ui/Button";
-import { Editor } from "@/app/components/editor/Editor";
+import { EmailEditor } from "./components/EmailEditor/EmailEditor";
 import { useToast } from "@/app/context/ToastContext";
 import {
   Loader2,
@@ -1038,13 +1038,11 @@ export default function NewsletterPage() {
               </div>
 
               {editorMode === "visual" ? (
-                <div className="border border-white/10 rounded-2xl overflow-hidden bg-black shadow-2xl">
-                  <Editor
-                    value={content}
-                    onChange={(val: any) => setContent(val)}
-                    placeholder="Write your email body here... You can insert images, code blocks, tables, and links."
-                  />
-                </div>
+                <EmailEditor
+                  value={content}
+                  onChange={(val: string) => setContent(val)}
+                  placeholder="Write your email body here... You can insert images, code blocks, tables, and links."
+                />
               ) : (
                 <div className="border border-white/10 rounded-2xl overflow-hidden bg-[#0d1117] shadow-2xl">
                   <div className="bg-zinc-950 px-4 py-2.5 border-b border-white/10 flex items-center justify-between text-xs font-mono text-zinc-400">

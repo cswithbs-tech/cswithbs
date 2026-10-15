@@ -1,3 +1,17 @@
+/**
+ * ============================================================================
+ * ⚠️ CRITICAL NOTICE FOR DEVELOPERS & AI AGENTS — DO NOT MODIFY FOR EMAILS ⚠️
+ * ============================================================================
+ * This Editor component is the PRIMARY CMS CONTENT EDITOR for:
+ * - Academic Notes & Lessons (/writers-hub/editor)
+ * - Blog Posts & Articles (/writers-hub/editor)
+ *
+ * DO NOT adapt, mutate, or reuse this component for email campaigns / newsletters.
+ * Any email editing MUST be handled in a dedicated, isolated email editor under
+ * app/admin/(dashboard)/newsletter/components/.
+ * ============================================================================
+ */
+
 "use client";
 
 import {
@@ -5,7 +19,7 @@ import {
   EditorContent,
   Editor as TiptapEditor,
 } from "@tiptap/react";
-import { useEffect, useState, useRef, forwardRef } from "react";
+import { useEffect, useState, forwardRef } from "react";
 import { editorExtensions } from "./editor.config";
 import { BubbleMenu } from "./components/BubbleMenu";
 import { LinkModal } from "./components/LinkModal";
@@ -60,7 +74,6 @@ export const Editor = forwardRef<any, EditorProps>(
     const [isYoutubeModalOpen, setIsYoutubeModalOpen] = useState(false);
     const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
     const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
-    const lastEmittedValueRef = useRef<string>(value || "");
 
     useEffect(() => {
       const handleOpenMedia = () => setIsMediaModalOpen(true);
@@ -235,7 +248,6 @@ export const Editor = forwardRef<any, EditorProps>(
       },
       onUpdate: ({ editor }) => {
         const html = editor.getHTML();
-        lastEmittedValueRef.current = html;
         const json = editor.getJSON();
         onChange(html, json);
       },
@@ -247,21 +259,22 @@ export const Editor = forwardRef<any, EditorProps>(
       },
     });
 
-    // Handle external value changes (e.g. initial load, restore draft, template load, or switching from HTML source)
+    // Handle external value changes (e.g. initial load, restore draft, or reset)
     useEffect(() => {
-      if (!editor) return;
-
-      // Avoid re-setting content if the value matches what the editor itself just emitted
-      if (value === lastEmittedValueRef.current) return;
+      if (!editor || !value) return;
 
       const currentContent = editor.getHTML();
+
+      // SMART SYNC: Only initialize content if editor is empty or pristine.
+      // This eliminates cursor jumping issues when parent updates.
       if (value !== currentContent) {
-        lastEmittedValueRef.current = value || "";
-        setTimeout(() => {
-          if (editor && !editor.isDestroyed) {
-            editor.commands.setContent(value || "", { emitUpdate: false });
-          }
-        }, 0);
+        if (editor.isEmpty || currentContent === "<p></p>") {
+          setTimeout(() => {
+            if (editor && !editor.isDestroyed) {
+              editor.commands.setContent(value, { emitUpdate: false });
+            }
+          }, 0);
+        }
       }
     }, [value, editor]);
     // Track the ref if provided
