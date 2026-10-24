@@ -23,7 +23,7 @@
 
 /* Dark Mode Optimization */
 .prose-article strong { color: #f4f4f5; font-weight: 600; }
-.prose-article em { color: var(--accent); font-style: italic; }
+.prose-article em { color: inherit; font-style: italic; }
 
 /* ==========================================================================
    HEADINGS (Distinct Hierarchy)

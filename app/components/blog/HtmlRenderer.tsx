@@ -124,9 +124,10 @@ export const HtmlRenderer = ({
         if (h.querySelector(".anchor-link")) return;
         const anchor = document.createElement("a");
         anchor.className =
-          "anchor-link ml-2 opacity-0 focus:opacity-100 group-hover:opacity-100 transition-opacity text-accent no-underline";
+          "anchor-link ml-2 opacity-0 focus:opacity-100 group-hover:opacity-100 transition-opacity text-accent no-underline select-none";
         anchor.href = `#${h.id}`;
         anchor.innerHTML = "#";
+        anchor.setAttribute("aria-hidden", "true");
         h.classList.add("group", "flex", "items-center");
         h.appendChild(anchor);
       });

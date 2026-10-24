@@ -272,7 +272,8 @@ const NodeRenderer = ({ node }: { node: JSONContent }) => {
           )}
           <a
             href={`#${slug}`}
-            className="anchor-link ml-2 opacity-0 focus:opacity-100 group-hover:opacity-100 transition-opacity text-accent no-underline"
+            className="anchor-link ml-2 opacity-0 focus:opacity-100 group-hover:opacity-100 transition-opacity text-accent no-underline select-none"
+            aria-hidden="true"
           >
             #
           </a>
