@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { useRef } from "react";
+import { ImageDropdown } from "./ImageDropdown";
 
 interface ToolbarMinimalProps {
   editor: Editor | null;
@@ -187,12 +188,12 @@ export const ToolbarMinimal = ({
           <LinkIcon size={18} />
         </ToolbarButton>
 
-        <ToolbarButton
-          onClick={() => window.dispatchEvent(new Event("open-media-modal"))}
-          title="Image"
-        >
-          <ImageIcon size={18} />
-        </ToolbarButton>
+        <ImageDropdown
+          editor={editor}
+          onImageUpload={onImageUpload}
+          size={18}
+          className="p-1.5 rounded-md"
+        />
       </div>
     </div>
   );

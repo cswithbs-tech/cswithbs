@@ -266,55 +266,101 @@
 
 .prose-article ul, .ProseMirror ul {
   list-style-type: disc;
-  margin: 1.5em 0;
-  padding-left: 2em; 
+  margin: 1.25em 0;
+  padding-left: 1.75em; 
 }
 .prose-article ol, .ProseMirror ol {
   list-style-type: decimal;
-  margin: 1.5em 0;
-  padding-left: 2em;
+  margin: 1.25em 0;
+  padding-left: 1.75em;
 }
 
-/* Nested lists */
-.prose-article ul ul, .ProseMirror ul ul {
+/* Level 2 Sub-Lists (Nested 1-level deep) */
+.prose-article ul ul, .ProseMirror ul ul,
+.prose-article ol ul, .ProseMirror ol ul {
   list-style-type: circle;
-  margin: 0.35em 0;
+  margin: 0.25em 0;
+  padding-left: 1.5em;
 }
-.prose-article ul ul ul, .ProseMirror ul ul ul {
-  list-style-type: square;
-  margin: 0.35em 0;
-}
-.prose-article ol ol, .ProseMirror ol ol {
+.prose-article ol ol, .ProseMirror ol ol,
+.prose-article ul ol, .ProseMirror ul ol {
   list-style-type: lower-alpha;
-  margin: 0.35em 0;
+  margin: 0.25em 0;
+  padding-left: 1.5em;
 }
-.prose-article ol ol ol, .ProseMirror ol ol ol {
+
+/* Level 3 Sub-Lists (Nested 2-levels deep) */
+.prose-article ul ul ul, .ProseMirror ul ul ul,
+.prose-article ol ul ul, .ProseMirror ol ul ul,
+.prose-article ul ol ul, .ProseMirror ul ol ul {
+  list-style-type: square;
+  margin: 0.2em 0;
+  padding-left: 1.5em;
+}
+.prose-article ol ol ol, .ProseMirror ol ol ol,
+.prose-article ul ol ol, .ProseMirror ul ol ol,
+.prose-article ol ul ol, .ProseMirror ol ol ol {
   list-style-type: lower-roman;
-  margin: 0.35em 0;
+  margin: 0.2em 0;
+  padding-left: 1.5em;
+}
+
+/* Level 4 Sub-Lists (Nested 3-levels deep) */
+.prose-article ul ul ul ul, .ProseMirror ul ul ul ul {
+  list-style-type: disc;
+  margin: 0.2em 0;
+  padding-left: 1.5em;
+}
+.prose-article ol ol ol ol, .ProseMirror ol ol ol ol {
+  list-style-type: upper-alpha;
+  margin: 0.2em 0;
+  padding-left: 1.5em;
 }
 
 .prose-article li, .ProseMirror li {
   margin-top: 0.35em;
   margin-bottom: 0.35em;
-  padding-left: 0.35em; 
+  padding-left: 0.25em; 
   line-height: 1.6; 
   display: list-item;
 }
 
-.prose-article li::marker, .ProseMirror li::marker {
+/* Level 1 List Markers */
+.prose-article > ul > li::marker,
+.ProseMirror > ul > li::marker,
+.prose-article > ol > li::marker,
+.ProseMirror > ol > li::marker {
   color: var(--accent, #E2C6B9);
+  font-weight: 600;
+}
+
+/* Level 2 Sub-bullet Markers */
+.prose-article li > ul > li::marker,
+.ProseMirror li > ul > li::marker,
+.prose-article li > ol > li::marker,
+.ProseMirror li > ol > li::marker {
+  color: var(--accent, #E2C6B9);
+  opacity: 0.9;
+}
+
+/* Level 3+ Sub-bullet Markers */
+.prose-article li li > ul > li::marker,
+.ProseMirror li li > ul > li::marker,
+.prose-article li li > ol > li::marker,
+.ProseMirror li li > ol > li::marker {
+  color: #a1a1aa;
 }
 
 /* Ensure paragraph inside list item aligns tightly with the bullet */
 .prose-article li > p, .ProseMirror li > p {
-  margin-top: 0.1em !important;
-  margin-bottom: 0.1em !important;
+  margin-top: 0 !important;
+  margin-bottom: 0.12em !important;
 }
 
 .prose-article li > ul, .prose-article li > ol,
 .ProseMirror li > ul, .ProseMirror li > ol {
-  margin-top: 0.25em;
-  margin-bottom: 0.25em;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
 }
 
 /* --- Standard Bullet Variants --- */
@@ -324,6 +370,20 @@
 .prose-article ul.list-circle > li, .ProseMirror ul.list-circle > li { list-style-type: circle; }
 .prose-article ul.list-square, .ProseMirror ul.list-square,
 .prose-article ul.list-square > li, .ProseMirror ul.list-square > li { list-style-type: square; }
+
+/* Dash Variant */
+.prose-article ul.list-dash, .ProseMirror ul.list-dash,
+.prose-article ul.list-dash > li, .ProseMirror ul.list-dash > li {
+  list-style-type: none;
+  position: relative;
+}
+.prose-article ul.list-dash > li::before, .ProseMirror ul.list-dash > li::before {
+  content: "–";
+  position: absolute;
+  left: -1.25em;
+  color: var(--accent);
+  font-weight: 700;
+}
 
 /* --- Bengali List Support --- */
 @counter-style bengali-alpha {

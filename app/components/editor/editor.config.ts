@@ -17,6 +17,7 @@
 import Blockquote from '@tiptap/extension-blockquote';
 import BulletList from '@tiptap/extension-bullet-list';
 import OrderedList from '@tiptap/extension-ordered-list';
+import ListItem from '@tiptap/extension-list-item';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
@@ -58,6 +59,7 @@ export const editorExtensions = [
     blockquote: false,
     bulletList: false,
     orderedList: false,
+    listItem: false,
     codeBlock: false,
     // Explicitly disable link & underline in StarterKit so external Link & Underline
     // do not trigger duplicate extension warnings
@@ -106,6 +108,25 @@ export const editorExtensions = [
             if (!attributes.class) return {};
             return { class: attributes.class };
           },
+        },
+      };
+    },
+  }),
+  ListItem.extend({
+    addKeyboardShortcuts() {
+      return {
+        Enter: () => this.editor.commands.splitListItem(this.name),
+        Tab: () => {
+          if (this.editor.can().sinkListItem(this.name)) {
+            return this.editor.commands.sinkListItem(this.name);
+          }
+          return true; // Trap Tab in list to prevent editor focus loss
+        },
+        'Shift-Tab': () => {
+          if (this.editor.can().liftListItem(this.name)) {
+            return this.editor.commands.liftListItem(this.name);
+          }
+          return true;
         },
       };
     },

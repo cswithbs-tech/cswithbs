@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { ColorSelector } from "./ColorSelector";
+import { ImageDropdown } from "./ImageDropdown";
 
 interface ToolbarProps {
   editor: Editor | null;
@@ -112,19 +113,35 @@ const ListStyleDropdown = ({
 
   const setListStyle = (style: string) => {
     if (type === "bullet") {
-      editor
-        .chain()
-        .focus()
-        .toggleBulletList()
-        .updateAttributes("bulletList", { class: style })
-        .run();
+      if (editor.isActive("bulletList")) {
+        editor
+          .chain()
+          .focus()
+          .updateAttributes("bulletList", { class: style })
+          .run();
+      } else {
+        editor
+          .chain()
+          .focus()
+          .toggleBulletList()
+          .updateAttributes("bulletList", { class: style })
+          .run();
+      }
     } else {
-      editor
-        .chain()
-        .focus()
-        .toggleOrderedList()
-        .updateAttributes("orderedList", { class: style })
-        .run();
+      if (editor.isActive("orderedList")) {
+        editor
+          .chain()
+          .focus()
+          .updateAttributes("orderedList", { class: style })
+          .run();
+      } else {
+        editor
+          .chain()
+          .focus()
+          .toggleOrderedList()
+          .updateAttributes("orderedList", { class: style })
+          .run();
+      }
     }
     setIsOpen(false);
   };
@@ -175,14 +192,16 @@ const ListStyleDropdown = ({
                 <div className="w-4 h-4 flex items-center justify-center">
                   <div className="w-1.5 h-1.5 bg-current rounded-full" />
                 </div>{" "}
-                Disc
+                Disc (Main)
               </button>
               <button
                 onClick={() => setListStyle("list-circle")}
                 className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-white/10 rounded text-gray-300"
               >
-                <div className="w-4 h-4 flex items-center justify-center border border-current rounded-full w-1.5 h-1.5" />{" "}
-                Circle
+                <div className="w-4 h-4 flex items-center justify-center">
+                  <div className="w-1.5 h-1.5 border border-current rounded-full" />
+                </div>{" "}
+                Circle (Sub-bullet)
               </button>
               <button
                 onClick={() => setListStyle("list-square")}
@@ -191,7 +210,14 @@ const ListStyleDropdown = ({
                 <div className="w-4 h-4 flex items-center justify-center">
                   <div className="w-1.5 h-1.5 bg-current" />
                 </div>{" "}
-                Square
+                Square (Sub-bullet)
+              </button>
+              <button
+                onClick={() => setListStyle("list-dash")}
+                className="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-white/10 rounded text-gray-300"
+              >
+                <span className="w-4 text-center font-bold text-yellow-500">–</span>{" "}
+                Dash (Sub-bullet)
               </button>
               <div className="h-px bg-white/10 my-1" />
               <button
@@ -642,10 +668,6 @@ export const Toolbar = ({
 }: ToolbarProps & { onImageUpload?: (file: File) => Promise<string> }) => {
   if (!editor) return null;
 
-  const triggerImageUpload = () => {
-    window.dispatchEvent(new Event("open-media-modal"));
-  };
-
 
 
   const setLink = () => {
@@ -722,7 +744,7 @@ export const Toolbar = ({
               editor.chain().focus().sinkListItem("listItem").run()
             }
             disabled={!editor.can().sinkListItem("listItem")}
-            title="Indent (Nest List)"
+            title="Indent / Sub-bullet (Tab)"
           >
             <Indent size={20} />
           </ToolbarButton>
@@ -731,7 +753,7 @@ export const Toolbar = ({
               editor.chain().focus().liftListItem("listItem").run()
             }
             disabled={!editor.can().liftListItem("listItem")}
-            title="Outdent"
+            title="Outdent / Lift Sub-bullet (Shift+Tab)"
           >
             <Outdent size={20} />
           </ToolbarButton>
@@ -770,9 +792,7 @@ export const Toolbar = ({
           >
             <LinkIcon size={20} />
           </ToolbarButton>
-          <ToolbarButton onClick={triggerImageUpload} title="Image">
-            <ImageIcon size={20} />
-          </ToolbarButton>
+          <ImageDropdown editor={editor} onImageUpload={onImageUpload} />
           <ToolbarButton
             onClick={addYoutubeVideo}
             isActive={editor.isActive("youtube")}
