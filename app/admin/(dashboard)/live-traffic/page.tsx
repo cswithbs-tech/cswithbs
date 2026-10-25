@@ -12,7 +12,9 @@ import {
   MapPin,
   Activity,
   X,
-  Server
+  Server,
+  RotateCw,
+  ExternalLink,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -51,25 +53,24 @@ export default function LiveTrafficPage() {
     scrollRef.current.scrollLeft = scrollLeft - walk;
   };
 
-  useEffect(() => {
-    const fetchTraffic = async () => {
-      try {
-        const res = await fetch("/api/admin/live-traffic");
-        if (res.ok) {
-          const data = await res.json();
-          setVisitors(data.visitors || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch live traffic", err);
-      } finally {
-        setLoading(false);
+  const fetchTraffic = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/live-traffic");
+      if (res.ok) {
+        const data = await res.json();
+        setVisitors(data.visitors || []);
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch live traffic", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Initial fetch on mount - no auto-polling to save CPU
     fetchTraffic();
-    
-    // Auto refresh every 30 seconds
-    const interval = setInterval(fetchTraffic, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   const openJourney = async (visitorId: string) => {
@@ -118,16 +119,40 @@ export default function LiveTrafficPage() {
               </h1>
             </div>
             <p className="text-zinc-500 text-sm ml-11">
-              Detailed view of the 100 most recent visitors. Auto-updates every 30s. Drag the table to scroll horizontally.
+              Detailed view of the 100 most recent visitors. Drag the table to scroll horizontally.
             </p>
           </div>
           
-          {loading && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-full">
-               <div className="w-3 h-3 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-               <span className="text-xs text-zinc-400 font-mono">Syncing...</span>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {loading && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-lg">
+                <div className="w-3 h-3 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs text-zinc-400 font-mono">Syncing...</span>
+              </div>
+            )}
+
+            {/* Manual Refresh Button */}
+            <button
+              onClick={fetchTraffic}
+              disabled={loading}
+              className="flex items-center gap-2 px-3.5 py-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-xl text-xs font-medium text-zinc-300 hover:text-white transition-all cursor-pointer"
+              title="Refresh Live Traffic"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-accent" : ""}`} />
+              <span>Refresh Feed</span>
+            </button>
+
+            {/* Direct Vercel Analytics Link */}
+            <a
+              href="https://vercel.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-xl text-xs font-medium text-accent transition-all"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Vercel Analytics</span>
+            </a>
+          </div>
         </div>
 
         {/* Table Container */}
@@ -231,8 +256,24 @@ export default function LiveTrafficPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-zinc-500">
-                      {loading ? "Loading visitor data..." : "No recent visitors found."}
+                    <td colSpan={7} className="px-4 py-16 text-center text-zinc-500">
+                      <div className="flex flex-col items-center justify-center gap-3 max-w-md mx-auto">
+                        <Globe className="w-8 h-8 text-zinc-600" />
+                        <p className="text-sm font-medium text-zinc-300">
+                          {loading ? "Loading visitor data..." : "No recent visitors recorded in database."}
+                        </p>
+                        <p className="text-xs text-zinc-500">
+                          Tracking is running in lightweight mode to prevent CPU exhaustion. For real-time edge telemetry and raw global traffic, visit Vercel Web Analytics.
+                        </p>
+                        <a
+                          href="https://vercel.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline mt-1 font-medium"
+                        >
+                          Open Vercel Web Analytics <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 )}

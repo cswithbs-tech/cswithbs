@@ -251,23 +251,21 @@ export const AdminSidebar = ({
       )
     : roles === "admin" || roles === "super_admin";
 
-  useEffect(() => {
-    const fetchUnread = async () => {
-      try {
-        const res = await fetch("/api/admin/stats");
-        if (res.ok) {
-          const data = await res.json();
-          setUnreadCount(data.unreadMessages || 0);
-        }
-      } catch (error) {
-        console.error("Failed to fetch notifs", error);
+  const fetchUnread = async () => {
+    try {
+      const res = await fetch("/api/admin/stats");
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.unreadMessages || 0);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch notifs", error);
+    }
+  };
 
+  useEffect(() => {
+    // Fetch unread count once on mount without continuous background polling
     fetchUnread();
-    // Poll every 30 seconds
-    const interval = setInterval(fetchUnread, 30000);
-    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -305,7 +303,7 @@ export const AdminSidebar = ({
           {/* Close Button Mobile */}
           <button
             onClick={onClose}
-            className="lg:hidden text-zinc-400 hover:text-white"
+            className="lg:hidden text-zinc-400 hover:text-white p-1.5 rounded-lg hover:bg-white/10"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -313,7 +311,7 @@ export const AdminSidebar = ({
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="w-6 h-6"
+              className="w-5 h-5"
             >
               <path
                 strokeLinecap="round"

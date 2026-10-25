@@ -6,9 +6,6 @@ import dbConnect from "@/lib/db";
 import Note from "@/models/Note";
 import Collaboration from "@/models/Collaboration";
 import { NewsletterForm } from "@/app/components/NewsletterForm";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import Subscriber from "@/models/Subscriber";
 import { Code, Database, Cpu, Network, BookOpen, ChevronRight, FileText, Users, ArrowRight } from "lucide-react";
 import { ShowcaseCard } from "@/app/components/ui/ShowcaseCard";
 
@@ -99,24 +96,11 @@ async function getLandingData() {
   }
 }
 
-export const revalidate = 60; // Revalidate every minute
+// Enable Incremental Static Regeneration (ISR) edge caching for 2 minutes
+export const revalidate = 120;
 
 export default async function LandingPage() {
   const { latest, subjects, blogs, collaborations } = await getLandingData();
-
-  // Check session for newsletter pre-filling
-  const session = await getServerSession(authOptions);
-  let initialEmail = "";
-  let isSubscribed = false;
-
-  if (session?.user?.email) {
-    initialEmail = session.user.email;
-    await dbConnect();
-    const sub = await Subscriber.findOne({ email: initialEmail });
-    if (sub) {
-      isSubscribed = true;
-    }
-  }
 
   return (
     <div className="bg-[#050505] min-h-screen text-zinc-300 font-sans selection:bg-accent/30 selection:text-white">
@@ -470,10 +454,7 @@ export default async function LandingPage() {
             Subscribe to receive notifications when new course materials, lecture notes, or research papers are published. No spam, ever.
           </p>
           <div className="max-w-md mx-auto">
-            <NewsletterForm
-              initialEmail={initialEmail}
-              isSubscribed={isSubscribed}
-            />
+            <NewsletterForm />
           </div>
         </Container>
         {/* Glow */}

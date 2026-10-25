@@ -8,10 +8,19 @@ export default function ClientTracker() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Generate or retrieve visitor ID
+    // 0. Ignore admin and writers-hub routes completely
+    if (
+      !pathname ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/writers-hub") ||
+      pathname.startsWith("/api")
+    ) {
+      return;
+    }
+
+    // 1. Generate or retrieve persistent visitor ID
     let visitorId = localStorage.getItem("cswithbs_visitor_id");
     if (!visitorId) {
-      // Use crypto.randomUUID if available, else fallback
       visitorId =
         typeof crypto !== "undefined" && crypto.randomUUID
           ? crypto.randomUUID()
@@ -19,10 +28,22 @@ export default function ClientTracker() {
       localStorage.setItem("cswithbs_visitor_id", visitorId);
     }
 
-    // Debounce or just fire? Fire once per navigation.
     const url = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
-    // Send hit to API
+    // 2. Throttle duplicate hits for the same URL in the same session (2 minutes cooldown)
+    try {
+      const cacheKey = `cswithbs_trk_${url}`;
+      const lastTracked = sessionStorage.getItem(cacheKey);
+      const now = Date.now();
+      if (lastTracked && now - parseInt(lastTracked, 10) < 120000) {
+        return;
+      }
+      sessionStorage.setItem(cacheKey, now.toString());
+    } catch (e) {
+      // Ignore storage errors in private browsing
+    }
+
+    // 3. Send lightweight hit to API
     fetch("/api/track", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -31,7 +52,7 @@ export default function ClientTracker() {
         referrer: document.referrer,
         visitorId: visitorId,
       }),
-    }).catch((err) => console.error("Tracking error:", err));
+    }).catch(() => {});
   }, [pathname, searchParams]);
 
   return null;

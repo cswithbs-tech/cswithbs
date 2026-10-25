@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { WritersSidebar } from "@/app/components/WritersSidebar";
-import { AdminAutoRefresher } from "@/app/components/admin/AdminAutoRefresher";
 
 export default function WritersHubLayout({
   children,
@@ -17,9 +16,6 @@ export default function WritersHubLayout({
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
-
-      {/* Auto Refresh Data every 30 seconds */}
-      <AdminAutoRefresher interval={30000} />
 
       <main className="flex-1 lg:ml-64 transition-all duration-300 min-w-0 h-screen overflow-y-scroll">
         {/* Mobile Header */}

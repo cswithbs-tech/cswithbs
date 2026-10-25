@@ -42,23 +42,23 @@ export async function POST(request: Request) {
     const forwardedFor = request.headers.get('x-forwarded-for');
     const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : '127.0.0.1';
 
-    // 5. Advanced Geolocation Resolution (IP-API with Vercel fallback)
+    // 5. Geolocation Resolution: Zero-latency Vercel Edge headers with VPS/Hostinger fallback
     let country = request.headers.get('x-vercel-ip-country') || 'Unknown';
     let city = request.headers.get('x-vercel-ip-city') || 'Unknown';
+    let timezone = request.headers.get('x-vercel-ip-timezone') || 'Unknown';
+    let region = request.headers.get('x-vercel-ip-country-region') || 'Unknown';
     let isp = 'Unknown';
-    let timezone = 'Unknown';
-    let region = 'Unknown';
     
     if (city && city !== 'Unknown') {
         try { city = decodeURIComponent(city); } catch (e) {}
     }
 
-    // Try to fetch high-fidelity data from IP-API if we have a real IP
-    if (ip && ip !== '127.0.0.1' && ip !== '::1') {
+    // On Vercel: Edge headers provide instant location in 0ms, saving 1.5s CPU wait per request.
+    // On Hostinger/VPS (or local dev with real IP): If Vercel headers are absent, fallback to IP-API.
+    if ((!country || country === 'Unknown') && ip && ip !== '127.0.0.1' && ip !== '::1') {
         try {
-            // timeout of 1500ms to avoid blocking track request for too long
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 1500);
+            const timeoutId = setTimeout(() => controller.abort(), 1000);
             const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=status,country,countryCode,regionName,city,isp,timezone`, {
                 signal: controller.signal
             });
@@ -75,7 +75,11 @@ export async function POST(request: Request) {
                 }
             }
         } catch (err) {
-            console.error("IP-API fetch failed", err);
+            // Non-blocking fallback
+        }
+    } else if (country && country !== 'Unknown') {
+        if (isp === 'Unknown') {
+            isp = 'Vercel Edge Network';
         }
     }
 

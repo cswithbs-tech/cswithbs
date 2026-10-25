@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/db';
 import Setting from '@/models/Setting';
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 300; // Cache notification settings at the edge for 5 minutes
 
 export async function GET() {
   await dbConnect();

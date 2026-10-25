@@ -97,6 +97,7 @@ export const WritersSidebar = ({
 
   const roles = (session?.user as any)?.roles || [];
   const userRole = roles.includes("SUPER_ADMIN") ? "SUPER ADMIN" : roles.includes("ADMIN") ? "ADMIN" : roles.includes("WRITER") ? "WRITER" : roles[0] || "WRITER";
+
   const isSuperOrAdmin = (session?.user as any)?.roles?.some((r: string) =>
     ["ADMIN", "SUPER_ADMIN"].includes(r),
   );

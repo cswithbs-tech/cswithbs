@@ -31,9 +31,9 @@ export const NotificationBell = () => {
     setMounted(true);
   }, []);
 
-  // Poll every 60 seconds
+  // Fetch user notifications once on mount without continuous background polling
   const { data, mutate, isLoading } = useSWR("/api/notifications", fetcher, {
-    refreshInterval: 60000,
+    revalidateOnFocus: false,
   });
 
   const notifications: Notification[] = data?.notifications || [];

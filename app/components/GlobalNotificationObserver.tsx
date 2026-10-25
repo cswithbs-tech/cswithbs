@@ -16,10 +16,10 @@ interface NotificationSetting {
 }
 
 export function GlobalNotificationObserver() {
-  // Poll for notifications every 60 seconds
+  // Fetch site announcement once on mount without continuous 60s background polling
   const { data } = useSWR("/api/settings/notification", fetcher, {
-    refreshInterval: 60000,
     revalidateOnFocus: false,
+    revalidateOnReconnect: false,
   });
 
   const [isVisible, setIsVisible] = useState(false);

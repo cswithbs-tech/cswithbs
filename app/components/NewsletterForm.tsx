@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { Button } from './ui/Button';
 import { useToast } from '@/app/context/ToastContext';
 
@@ -12,9 +13,16 @@ interface NewsletterFormProps {
 }
 
 export const NewsletterForm = ({ initialEmail = '', isSubscribed = false, variant = 'default', source = 'homepage' }: NewsletterFormProps) => {
-  const [email, setEmail] = useState(initialEmail);
+  const { data: session } = useSession();
+  const [email, setEmail] = useState(initialEmail || session?.user?.email || '');
   const [loading, setLoading] = useState(false);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    if (!email && session?.user?.email) {
+      setEmail(session.user.email);
+    }
+  }, [session?.user?.email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

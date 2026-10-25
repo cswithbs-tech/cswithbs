@@ -41,6 +41,18 @@ export default async function MaintenanceGate({
     console.error("Failed to check site settings", e);
   }
 
+  // If maintenance mode is NOT active (normal state), return immediately.
+  // This avoids calling dynamic headers() or getServerSession(), unlocking Vercel Edge caching.
+  if (!isMaintenance) {
+    return (
+      <>
+        {showAnnouncement && <AnnouncementBar message={announcementMessage} />}
+        {children}
+      </>
+    );
+  }
+
+  // ONLY when maintenance mode is active:
   // Check Current Path
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
@@ -72,7 +84,7 @@ export default async function MaintenanceGate({
     pathname.startsWith("/api");
 
   // 4. Block access to the public site and Writer's Hub for non-admins if maintenance is active
-  if (isMaintenance && !isInternal) {
+  if (!isInternal) {
     return <MaintenancePage />;
   }
 

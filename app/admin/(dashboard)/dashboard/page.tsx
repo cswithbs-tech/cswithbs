@@ -35,6 +35,8 @@ import {
   Users,
   Zap,
   Radio,
+  RotateCw,
+  ExternalLink,
 } from "lucide-react";
 import { countryToIso2, iso2ToCountry } from "@/lib/country";
 import { motion } from "framer-motion";
@@ -45,37 +47,45 @@ export default function NewDashboardPage() {
   const [latency, setLatency] = useState<number | null>(null);
   const [vercelStatus, setVercelStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchData = async () => {
+    const start = performance.now();
+    try {
+      // Parallel fetch: internal stats + Vercel status
+      const [res, vercelRes] = await Promise.all([
+        fetch("/api/admin/stats"),
+        fetch("https://www.vercel-status.com/api/v2/status.json"),
+      ]);
+
+      const end = performance.now();
+      setLatency(Math.round(end - start));
+
+      if (res.ok) {
+        const json = await res.json();
+        setData(json);
+      }
+
+      if (vercelRes.ok) {
+        const vJson = await vercelRes.json();
+        setVercelStatus(vJson.status?.description || "Unknown");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const start = performance.now();
-      try {
-        // Parallel fetch: internal stats + Vercel status
-        const [res, vercelRes] = await Promise.all([
-          fetch("/api/admin/stats"),
-          fetch("https://www.vercel-status.com/api/v2/status.json"),
-        ]);
-
-        const end = performance.now();
-        setLatency(Math.round(end - start));
-
-        if (res.ok) {
-          const json = await res.json();
-          setData(json);
-        }
-
-        if (vercelRes.ok) {
-          const vJson = await vercelRes.json();
-          setVercelStatus(vJson.status?.description || "Unknown");
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
+
+  const handleManualRefresh = () => {
+    setRefreshing(true);
+    fetchData();
+  };
 
   // Live Uptime Ticker
   const [clientUptime, setClientUptime] = useState<number>(0);
@@ -211,6 +221,18 @@ export default function NewDashboardPage() {
             </span>
             {data?.maintenanceMode ? "Maintenance Mode" : "System Live"}
           </div>
+
+          {/* Manual Refresh Button */}
+          <button
+            onClick={handleManualRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white px-3.5 py-2 rounded-lg text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer"
+            title="Refresh Dashboard Data"
+          >
+            <RotateCw size={14} className={refreshing ? "animate-spin text-accent" : ""} />
+            <span>Refresh</span>
+          </button>
+
           <Link
             href="/admin/analytics"
             className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-zinc-200 transition-colors shadow-[0_0_15px_rgba(255,255,255,0.1)]"
@@ -220,6 +242,33 @@ export default function NewDashboardPage() {
           </Link>
         </div>
       </header>
+
+      {/* Vercel Analytics Info Banner */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-zinc-900/60 border border-zinc-800/80 rounded-xl mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
+            <Activity className="w-4 h-4 text-accent" />
+          </div>
+          <div>
+            <p className="text-xs font-medium text-white flex items-center gap-2">
+              Vercel Edge Analytics Connected
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            </p>
+            <p className="text-[11px] text-zinc-400">
+              In-house tracking is running in lightweight mode to conserve CPU. For comprehensive edge telemetry, global visitor bandwidth, and live page counts, visit Vercel Analytics.
+            </p>
+          </div>
+        </div>
+        <a
+          href="https://vercel.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-accent/10 hover:bg-accent/20 border border-accent/20 rounded-lg text-xs font-medium text-accent shrink-0 transition-colors"
+        >
+          <span>Open Vercel Analytics</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </div>
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
