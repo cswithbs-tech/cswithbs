@@ -9,8 +9,9 @@ import {
   Zap,
   RefreshCw,
   Facebook,
-  Github,
   Linkedin,
+  Twitter,
+  Instagram,
   Mail,
   Clock,
   User,
@@ -88,8 +89,8 @@ export default function SettingsPage() {
           ga_measurement_id: data.ga_measurement_id?.value || "",
           site_title: data.site_title?.value || "CSwithBS",
           site_tagline: data.site_tagline?.value || "",
+          social_facebook: data.social_facebook?.value || "",
           social_twitter: data.social_twitter?.value || "",
-          social_github: data.social_github?.value || "",
           social_linkedin: data.social_linkedin?.value || "",
           social_instagram: data.social_instagram?.value || "",
           admin_email: data.admin_email?.value || "",
@@ -316,59 +317,128 @@ export default function SettingsPage() {
         </div>
 
         {/* --- 1. Social Presence --- */}
-        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40">
-          <div className="mb-6">
+        <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+
+          <div className="mb-6 relative">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <span className="text-amber-500">🌐</span> Social Presence
+              <span className="p-1.5 bg-amber-500/10 text-amber-400 rounded-lg">🌐</span>
+              Social Presence & Official Links
             </h3>
-            <p className="text-zinc-400 text-sm">Connect your brand to social media platforms.</p>
+            <p className="text-zinc-400 text-sm mt-1.5">
+              Manage public social links displayed across the footer. Built-in canonical URLs are embedded in the code; any link added below creates an instant dynamic override without code changes. Leave empty to use the default URL, or type <code className="text-[11px] bg-zinc-800 px-1.5 py-0.5 rounded text-amber-300 font-mono">disabled</code> to hide.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
             {/* Facebook */}
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-2 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                <Facebook size={12} /> Facebook
-              </label>
+            <div className="space-y-1.5 bg-black/30 border border-zinc-800/80 rounded-xl p-3.5 hover:border-zinc-700 transition-colors">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                  <Facebook size={14} className="text-blue-500" /> Facebook
+                </label>
+                {formState.social_facebook?.trim() ? (
+                  <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                    Override Active
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-medium text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full">
+                    Default Active
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
                 value={formState.social_facebook || ""}
                 onChange={(e) => handleChange("social_facebook", e.target.value)}
-                placeholder="https://facebook.com/..."
-                className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
+                placeholder="Default: https://www.facebook.com/share/1ExjhBinXw/"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3.5 py-2 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/60 transition-all font-mono"
               />
             </div>
 
-            {/* GitHub */}
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-2 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                <Github size={12} /> GitHub
-              </label>
+            {/* Twitter / X */}
+            <div className="space-y-1.5 bg-black/30 border border-zinc-800/80 rounded-xl p-3.5 hover:border-zinc-700 transition-colors">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                  <Twitter size={14} className="text-zinc-300" /> X (Twitter)
+                </label>
+                {formState.social_twitter?.trim() ? (
+                  <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                    Override Active
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-medium text-zinc-300 bg-white/10 border border-white/15 px-2 py-0.5 rounded-full">
+                    Default Active
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
-                value={formState.social_github || ""}
-                onChange={(e) => handleChange("social_github", e.target.value)}
-                placeholder="https://github.com/..."
-                className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
+                value={formState.social_twitter || ""}
+                onChange={(e) => handleChange("social_twitter", e.target.value)}
+                placeholder="Default: https://x.com/cswithbs"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3.5 py-2 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/60 transition-all font-mono"
               />
             </div>
 
             {/* LinkedIn */}
-            <div className="space-y-1.5">
-              <label className="flex items-center gap-2 text-xs font-medium text-zinc-500 uppercase tracking-wider">
-                <Linkedin size={12} /> LinkedIn
-              </label>
+            <div className="space-y-1.5 bg-black/30 border border-zinc-800/80 rounded-xl p-3.5 hover:border-zinc-700 transition-colors">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                  <Linkedin size={14} className="text-sky-400" /> LinkedIn
+                </label>
+                {formState.social_linkedin?.trim() ? (
+                  <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                    Active
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-medium text-zinc-500 bg-zinc-800/60 px-2 py-0.5 rounded-full">
+                    Not Configured (Hidden)
+                  </span>
+                )}
+              </div>
               <input
                 type="text"
                 value={formState.social_linkedin || ""}
                 onChange={(e) => handleChange("social_linkedin", e.target.value)}
-                placeholder="https://linkedin.com/in/..."
-                className="w-full bg-black/50 border border-zinc-700 rounded-lg px-4 py-2 text-sm text-zinc-200 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all"
+                placeholder="e.g. https://linkedin.com/in/... (Leave empty to keep hidden)"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3.5 py-2 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/60 transition-all font-mono"
               />
             </div>
 
+            {/* Instagram */}
+            <div className="space-y-1.5 bg-black/30 border border-zinc-800/80 rounded-xl p-3.5 hover:border-zinc-700 transition-colors">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs font-semibold text-zinc-300 uppercase tracking-wider">
+                  <Instagram size={14} className="text-pink-400" /> Instagram
+                </label>
+                {formState.social_instagram?.trim() ? (
+                  <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                    Active
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-medium text-zinc-500 bg-zinc-800/60 px-2 py-0.5 rounded-full">
+                    Not Configured (Hidden)
+                  </span>
+                )}
+              </div>
+              <input
+                type="text"
+                value={formState.social_instagram || ""}
+                onChange={(e) => handleChange("social_instagram", e.target.value)}
+                placeholder="e.g. https://instagram.com/... (Leave empty to keep hidden)"
+                className="w-full bg-black/60 border border-zinc-800 rounded-lg px-3.5 py-2 text-xs text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/60 transition-all font-mono"
+              />
+            </div>
           </div>
-          <AuditTrail keys={["social_facebook", "social_github", "social_linkedin"]} />
+          <AuditTrail
+            keys={[
+              "social_facebook",
+              "social_twitter",
+              "social_linkedin",
+              "social_instagram",
+            ]}
+          />
         </div>
 
         {/* --- 2. Real-time Notification Banner --- */}
