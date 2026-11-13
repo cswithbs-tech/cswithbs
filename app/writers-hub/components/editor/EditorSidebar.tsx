@@ -629,17 +629,22 @@ export function EditorSidebar({
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="resPremiumCheck"
-                  checked={newResPremium}
-                  onChange={(e) => setNewResPremium(e.target.checked)}
-                  className="rounded border-zinc-700 text-accent focus:ring-0 bg-black cursor-pointer"
-                />
-                <label htmlFor="resPremiumCheck" className="text-xs text-zinc-300 cursor-pointer select-none">
-                  Require Student Login / Premium
+              <div className="pt-1 space-y-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    id="resPremiumCheck"
+                    checked={newResPremium}
+                    onChange={(e) => setNewResPremium(e.target.checked)}
+                    className="rounded border-zinc-700 text-accent focus:ring-0 bg-black cursor-pointer"
+                  />
+                  <span className="text-xs font-medium text-zinc-300">
+                    Mark as Premium Only
+                  </span>
                 </label>
+                <p className="text-[10px] text-zinc-500 pl-5">
+                  All study materials require student login by default. Check this only for exclusive/paid resources.
+                </p>
               </div>
 
               {newResUrl && (
