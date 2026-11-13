@@ -34,6 +34,22 @@ export async function POST(request: Request) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Prevent duplicate uploads: check if file with same filename & size already exists
+    const existingMedia = await Media.findOne({
+      filename: file.name,
+      size: buffer.length,
+    }).lean();
+
+    if (existingMedia) {
+      return NextResponse.json({
+        url: existingMedia.url,
+        public_id: existingMedia.publicId,
+        media_id: existingMedia._id,
+        isExisting: true,
+        message: `File "${file.name}" is already in your Media Library. Reusing existing file.`,
+      });
+    }
+
     // Upload to Cloudinary
     // We use a promise wrapper because cloudinary.uploader.upload_stream accepts a callback
     const result = await new Promise<any>((resolve, reject) => {

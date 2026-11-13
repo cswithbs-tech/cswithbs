@@ -11,6 +11,9 @@ import {
   Search,
   Edit2,
   X,
+  FileText,
+  Eye,
+  ExternalLink,
 } from "lucide-react";
 import { useToast } from "@/app/context/ToastContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,6 +28,142 @@ interface MediaItem {
   size: number;
   format: string;
   createdAt: string;
+}
+
+function formatBytes(bytes: number, decimals = 2) {
+  if (!+bytes) return "0 Bytes";
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
+function MediaCardItem({
+  item,
+  onCopy,
+  onRename,
+  onDelete,
+}: {
+  item: MediaItem;
+  onCopy: (url: string) => void;
+  onRename: (item: MediaItem) => void;
+  onDelete: (id: string) => void;
+}) {
+  const isPdf =
+    item.format?.toLowerCase() === "pdf" ||
+    item.filename?.toLowerCase().endsWith(".pdf") ||
+    item.url?.toLowerCase().endsWith(".pdf");
+
+  const [pdfThumbError, setPdfThumbError] = useState(false);
+
+  // Cloudinary page 1 JPEG thumbnail transformation
+  let pdfThumbUrl: string | null = null;
+  if (
+    isPdf &&
+    !pdfThumbError &&
+    item.url.includes("cloudinary.com") &&
+    item.url.includes("/image/upload/")
+  ) {
+    pdfThumbUrl = item.url
+      .replace(/\.pdf(\?.*)?$/i, ".jpg")
+      .replace("/upload/", "/upload/pg_1,w_400,h_400,c_fill/");
+  }
+
+  return (
+    <motion.div
+      key={item._id}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      layout
+      className="group relative bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-all shadow-sm hover:shadow-xl"
+    >
+      {/* Media Preview Box */}
+      <div className="aspect-square relative overflow-hidden bg-black/60 flex items-center justify-center">
+        {isPdf ? (
+          pdfThumbUrl ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={pdfThumbUrl}
+                alt={item.filename}
+                onError={() => setPdfThumbError(true)}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              <div className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded bg-red-600/90 text-white text-[9px] font-bold tracking-wider uppercase shadow-md flex items-center gap-1">
+                <FileText size={10} /> PDF
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center p-4 bg-gradient-to-b from-red-950/30 to-zinc-950 text-center select-none group-hover:from-red-950/50 transition-colors">
+              <div className="w-14 h-14 rounded-2xl bg-red-500/15 border border-red-500/30 text-red-400 flex items-center justify-center mb-2 shadow-lg group-hover:scale-110 transition-transform">
+                <FileText size={28} />
+              </div>
+              <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded bg-red-500/20 text-red-300 border border-red-500/30 mb-1">
+                PDF Document
+              </span>
+              <p className="text-[11px] font-medium text-zinc-300 line-clamp-2 px-1">
+                {item.filename}
+              </p>
+            </div>
+          )
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={item.url}
+            alt={item.filename}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        )}
+
+        {/* Overlay Actions */}
+        <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 p-2 backdrop-blur-[2px]">
+          <button
+            onClick={() => window.open(item.url, "_blank")}
+            className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-colors"
+            title="Preview in new tab"
+          >
+            <Eye size={16} />
+          </button>
+          <button
+            onClick={() => onCopy(item.url)}
+            className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-colors"
+            title="Copy URL"
+          >
+            <Copy size={16} />
+          </button>
+          <button
+            onClick={() => onRename(item)}
+            className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-colors"
+            title="Rename"
+          >
+            <Edit2 size={16} />
+          </button>
+          <button
+            onClick={() => onDelete(item._id)}
+            className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-full text-red-400 backdrop-blur-md transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+
+      {/* Metadata */}
+      <div className="p-3">
+        <p className="text-xs font-medium text-zinc-300 truncate mb-1" title={item.filename}>
+          {item.filename}
+        </p>
+        <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono">
+          <span className="font-semibold text-zinc-400 uppercase">
+            {item.format || (isPdf ? "PDF" : "FILE")}
+          </span>
+          <span>{formatBytes(item.size)}</span>
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
 export default function MediaLibraryPage() {
@@ -61,12 +200,14 @@ export default function MediaLibraryPage() {
 
     setUploading(true);
     let successCount = 0;
+    let existingCount = 0;
 
     for (let i = 0; i < e.target.files.length; i++) {
       const file = e.target.files[i];
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", "general");
+      const isPdfFile = file.name.toLowerCase().endsWith(".pdf");
+      formData.append("folder", isPdfFile ? "resources" : "general");
 
       try {
         const res = await fetch("/api/upload", {
@@ -75,20 +216,29 @@ export default function MediaLibraryPage() {
         });
 
         if (res.ok) {
-          successCount++;
+          const data = await res.json();
+          if (data.isExisting) {
+            existingCount++;
+          } else {
+            successCount++;
+          }
         }
       } catch (error) {
         console.error(`Failed to upload ${file.name}`, error);
       }
     }
 
-    if (successCount > 0) {
-      showToast(`Uploaded ${successCount} files successfully`, "success");
-      fetchMedia(); // Refresh list
+    if (successCount > 0 && existingCount === 0) {
+      showToast(`Uploaded ${successCount} file(s) successfully`, "success");
+    } else if (successCount > 0 && existingCount > 0) {
+      showToast(`Uploaded ${successCount} new file(s), ${existingCount} already existed`, "info");
+    } else if (existingCount > 0) {
+      showToast(`${existingCount} file(s) already exist in your Media Library (no duplicate created)`, "info");
     } else {
       showToast("Failed to upload files", "error");
     }
 
+    fetchMedia(); // Refresh list
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
@@ -146,15 +296,6 @@ export default function MediaLibraryPage() {
     showToast("URL copied to clipboard", "success");
   };
 
-  const formatBytes = (bytes: number, decimals = 2) => {
-    if (!+bytes) return "0 Bytes";
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-  };
-
   const filteredMedia = media.filter(
     (item) =>
       item.filename.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -203,7 +344,7 @@ export default function MediaLibraryPage() {
             type="file"
             ref={fileInputRef}
             className="hidden"
-            accept="image/*"
+            accept="image/*,.pdf,.doc,.docx"
             multiple // Support multiple files
             onChange={handleUpload}
           />
@@ -219,67 +360,22 @@ export default function MediaLibraryPage() {
         <div className="flex flex-col items-center justify-center py-20 text-zinc-500 bg-zinc-900/20 border border-zinc-800 border-dashed rounded-xl">
           <FileImage size={48} className="mb-4 opacity-50" />
           <p className="text-lg font-medium">No media files found</p>
-          <p className="text-sm">Upload an image to get started</p>
+          <p className="text-sm">Upload an image or PDF to get started</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           <AnimatePresence>
             {filteredMedia.map((item) => (
-              <motion.div
+              <MediaCardItem
                 key={item._id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                layout
-                className="group relative bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-zinc-700 transition-all shadow-sm hover:shadow-xl"
-              >
-                {/* Image Preview */}
-                <div className="aspect-square relative overflow-hidden bg-black/50">
-                  <img
-                    src={item.url}
-                    alt={item.filename}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  {/* Overlay Actions */}
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => copyToClipboard(item.url)}
-                      className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-colors"
-                      title="Copy URL"
-                    >
-                      <Copy size={16} />
-                    </button>
-                    <button
-                      onClick={() => { setRenameItem(item); setNewName(item.filename); }}
-                      className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-colors"
-                      title="Rename"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item._id)}
-                      className="p-2 bg-red-500/20 hover:bg-red-500/40 rounded-full text-red-400 backdrop-blur-md transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Metadata */}
-                <div className="p-3">
-                  <p
-                    className="text-xs font-medium text-zinc-300 truncate mb-1"
-                    title={item.filename}
-                  >
-                    {item.filename}
-                  </p>
-                  <div className="flex justify-between items-center text-[10px] text-zinc-500 font-mono">
-                    <span>{item.format?.toUpperCase()}</span>
-                    <span>{formatBytes(item.size)}</span>
-                  </div>
-                </div>
-              </motion.div>
+                item={item}
+                onCopy={copyToClipboard}
+                onRename={(item) => {
+                  setRenameItem(item);
+                  setNewName(item.filename);
+                }}
+                onDelete={handleDelete}
+              />
             ))}
           </AnimatePresence>
         </div>

@@ -23,7 +23,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     const session = await getServerSession(authOptions);
     const user = session?.user as any;
-    if (!session || !user?.roles?.some((r: string) => ["ADMIN", "SUPER_ADMIN"].includes(r))) {
+    const roles = Array.isArray(user?.roles) ? user.roles : (user?.roles ? [user.roles] : []);
+    const isAuthorized = roles.some((r: string) => 
+      ["ADMIN", "SUPER_ADMIN", "WRITER", "admin", "super_admin", "writer"].includes(r)
+    );
+    if (!session || !isAuthorized) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -62,7 +66,11 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   try {
     const session = await getServerSession(authOptions);
     const user = session?.user as any;
-    if (!session || !user?.roles?.some((r: string) => ["ADMIN", "SUPER_ADMIN"].includes(r))) {
+    const roles = Array.isArray(user?.roles) ? user.roles : (user?.roles ? [user.roles] : []);
+    const isAuthorized = roles.some((r: string) => 
+      ["ADMIN", "SUPER_ADMIN", "WRITER", "admin", "super_admin", "writer"].includes(r)
+    );
+    if (!session || !isAuthorized) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

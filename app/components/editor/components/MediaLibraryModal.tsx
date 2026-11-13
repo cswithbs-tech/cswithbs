@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Image as ImageIcon, Upload, Loader2, Search } from "lucide-react";
+import { X, Image as ImageIcon, Upload, Loader2, Search, FileText } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import Image from "next/image";
 
@@ -103,29 +103,68 @@ export const MediaLibraryModal = ({
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {filteredMedia.map((item) => (
-                <div
-                  key={item._id}
-                  onClick={() => {
-                    onSelect(item.url);
-                    onClose();
-                  }}
-                  className="group relative aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 cursor-pointer hover:border-cyan-500/50 hover:shadow-glow transition-all"
-                >
-                  <Image
-                    src={item.url}
-                    alt={item.filename}
-                    fill
-                    unoptimized
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                    <p className="text-[10px] text-white truncate w-full">
-                      {item.filename}
-                    </p>
+              {filteredMedia.map((item) => {
+                const isPdf =
+                  item.format?.toLowerCase() === "pdf" ||
+                  item.filename?.toLowerCase().endsWith(".pdf") ||
+                  item.url?.toLowerCase().endsWith(".pdf");
+
+                const pdfThumbUrl =
+                  isPdf && item.url.includes("cloudinary.com") && item.url.includes("/image/upload/")
+                    ? item.url.replace(/\.pdf(\?.*)?$/i, ".jpg").replace("/upload/", "/upload/pg_1,w_400,h_400,c_fill/")
+                    : null;
+
+                return (
+                  <div
+                    key={item._id}
+                    onClick={() => {
+                      onSelect(item.url);
+                      onClose();
+                    }}
+                    className="group relative aspect-square rounded-xl overflow-hidden bg-white/5 border border-white/10 cursor-pointer hover:border-cyan-500/50 hover:shadow-glow transition-all flex items-center justify-center"
+                  >
+                    {isPdf ? (
+                      pdfThumbUrl ? (
+                        <>
+                          <Image
+                            src={pdfThumbUrl}
+                            alt={item.filename}
+                            fill
+                            unoptimized
+                            className="object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          <div className="absolute top-2 left-2 z-10 px-1.5 py-0.5 rounded bg-red-600/90 text-white text-[9px] font-bold uppercase shadow-sm flex items-center gap-1">
+                            <FileText size={10} /> PDF
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-3 bg-red-950/20 text-center">
+                          <FileText size={24} className="text-red-400 mb-1" />
+                          <span className="text-[9px] font-bold uppercase text-red-300 bg-red-500/20 px-1.5 py-0.5 rounded mb-1">
+                            PDF
+                          </span>
+                          <p className="text-[10px] text-zinc-300 line-clamp-2 px-1">
+                            {item.filename}
+                          </p>
+                        </div>
+                      )
+                    ) : (
+                      <Image
+                        src={item.url}
+                        alt={item.filename}
+                        fill
+                        unoptimized
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2 z-10">
+                      <p className="text-[10px] text-white truncate w-full">
+                        {item.filename}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -135,7 +174,7 @@ export const MediaLibraryModal = ({
             type="file"
             ref={fileInputRef}
             onChange={handleFileChange}
-            accept="image/*"
+            accept="image/*,.pdf"
             className="hidden"
           />
           <button

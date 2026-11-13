@@ -898,6 +898,7 @@ export default function UniversalEditor({
             subjects={subjects}
             loadingSubjects={loadingSubjects}
             chapters={chapters}
+            setChapters={setChapters}
             loadingChapters={loadingChapters}
             users={users}
             isSuperAdmin={isSuperAdmin}

@@ -41,6 +41,7 @@ interface EditorSidebarProps {
   subjects?: any[];
   loadingSubjects?: boolean;
   chapters?: any[];
+  setChapters?: React.Dispatch<React.SetStateAction<any[]>>;
   loadingChapters?: boolean;
 }
 
@@ -66,6 +67,7 @@ export function EditorSidebar({
   subjects = [],
   loadingSubjects = false,
   chapters = [],
+  setChapters,
   loadingChapters = false,
 }: EditorSidebarProps) {
   const { showToast } = useToast();
@@ -114,6 +116,46 @@ export function EditorSidebar({
     setIsDirty(true);
   };
 
+  const syncResourceToChapter = async (resource: any) => {
+    if (!formData.chapter) return;
+    try {
+      const chapterId = formData.chapter;
+      const targetChapter = chapters?.find(
+        (c: any) => (c._id || c.id)?.toString() === chapterId.toString()
+      );
+      const existingResources = targetChapter?.resources || [];
+      const alreadyExists = existingResources.some(
+        (r: any) => r.url === resource.url || (r.title && r.title.toLowerCase() === resource.title.toLowerCase())
+      );
+
+      if (!alreadyExists) {
+        const updatedResources = [...existingResources, resource];
+        const res = await fetch(`/api/writers-hub/chapters/${chapterId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ resources: updatedResources }),
+        });
+        if (res.ok) {
+          const updatedChapter = await res.json();
+          if (targetChapter) {
+            targetChapter.resources = updatedChapter.resources || updatedResources;
+          }
+          if (setChapters) {
+            setChapters((prev: any[]) =>
+              prev.map((c: any) =>
+                (c._id || c.id)?.toString() === chapterId.toString()
+                  ? { ...c, resources: updatedChapter.resources || updatedResources }
+                  : c
+              )
+            );
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to sync resource to chapter", err);
+    }
+  };
+
   const handleUploadCustomResource = async (file: File) => {
     if (!newResTitle.trim()) {
       showToast("Please enter a title for the material", "error");
@@ -128,22 +170,49 @@ export function EditorSidebar({
       const json = await res.json();
       if (!res.ok || !json.url) throw new Error(json.error || "Upload failed");
 
+      // Check if already attached to this note
+      if (
+        (formData.resources || []).some(
+          (r: any) =>
+            r.url === json.url ||
+            (r.title && r.title.toLowerCase() === newResTitle.trim().toLowerCase())
+        )
+      ) {
+        showToast("This material is already attached to this note", "info");
+        setIsUploadingRes(false);
+        return;
+      }
+
       const fileType = file.name.toLowerCase().endsWith(".pdf") ? "PDF" : "Document";
-      const updated = [
-        ...(formData.resources || []),
-        {
-          title: newResTitle.trim(),
-          type: fileType,
-          url: json.url,
-          isPremium: newResPremium,
-        },
-      ];
+      const newResource = {
+        title: newResTitle.trim(),
+        type: fileType,
+        url: json.url,
+        isPremium: newResPremium,
+      };
+
+      const updated = [...(formData.resources || []), newResource];
       setFormData((prev: any) => ({ ...prev, resources: updated }));
       setIsDirty(true);
+
+      // Two-way sync: Add to Chapter in MongoDB so it shows on Curriculum page and is available for other notes
+      await syncResourceToChapter(newResource);
+
       setNewResTitle("");
       setNewResUrl("");
       setShowAddResource(false);
-      showToast("PDF material attached to this note!", "success");
+
+      if (json.isExisting) {
+        showToast(
+          "Reused existing file from Media Library & synced to curriculum!",
+          "info"
+        );
+      } else {
+        showToast(
+          "PDF material attached to note & synced to curriculum!",
+          "success"
+        );
+      }
     } catch (err: any) {
       showToast(err.message || "Failed to upload file", "error");
     } finally {
@@ -151,26 +220,41 @@ export function EditorSidebar({
     }
   };
 
-  const handleAddUrlResource = () => {
+  const handleAddUrlResource = async () => {
     if (!newResTitle.trim() || !newResUrl.trim()) {
       showToast("Title and URL are required", "error");
       return;
     }
-    const updated = [
-      ...(formData.resources || []),
-      {
-        title: newResTitle.trim(),
-        type: newResType,
-        url: newResUrl.trim(),
-        isPremium: newResPremium,
-      },
-    ];
+
+    if (
+      (formData.resources || []).some(
+        (r: any) =>
+          r.url === newResUrl.trim() ||
+          (r.title && r.title.toLowerCase() === newResTitle.trim().toLowerCase())
+      )
+    ) {
+      showToast("This material is already attached to this note", "info");
+      return;
+    }
+
+    const newResource = {
+      title: newResTitle.trim(),
+      type: newResType,
+      url: newResUrl.trim(),
+      isPremium: newResPremium,
+    };
+
+    const updated = [...(formData.resources || []), newResource];
     setFormData((prev: any) => ({ ...prev, resources: updated }));
     setIsDirty(true);
+
+    // Two-way sync to Chapter
+    await syncResourceToChapter(newResource);
+
     setNewResTitle("");
     setNewResUrl("");
     setShowAddResource(false);
-    showToast("Material attached to this note!", "success");
+    showToast("Material attached to note & synced to curriculum!", "success");
   };
 
   const handleCreateCategory = async () => {
