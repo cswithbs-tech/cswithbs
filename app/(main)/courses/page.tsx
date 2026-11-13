@@ -30,7 +30,7 @@ async function getCoursesPageData() {
   await dbConnect();
 
   // Industry standard: Sort by recently created/updated so fresh content is always visible at the top
-  const subjects = await Subject.find().sort({ createdAt: -1 }).lean();
+  const subjects = await Subject.find({ status: { $ne: "draft" } }).sort({ createdAt: -1 }).lean();
 
   let totalChapters = 0;
   let totalNotes = 0;

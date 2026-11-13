@@ -19,7 +19,7 @@ export default function WritersHubDashboard() {
   const userRole = (session?.user as any)?.roles?.[0] || "WRITER";
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
+    <div className="max-w-6xl mx-auto space-y-8 font-sans">
       {/* Header section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-zinc-900/40 p-8 rounded-2xl border border-white/5 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[80px] pointer-events-none"></div>
@@ -43,9 +43,10 @@ export default function WritersHubDashboard() {
       </div>
 
       <div className={`grid grid-cols-1 ${["ADMIN", "SUPER_ADMIN"].some(r => (session?.user as any)?.roles?.includes(r)) ? "md:grid-cols-2" : ""} gap-6`}>
-
         {/* Quick Access: Academic Notes (Admins Only) */}
-        {["ADMIN", "SUPER_ADMIN"].some(r => (session?.user as any)?.roles?.includes(r)) && (
+        {["ADMIN", "SUPER_ADMIN"].some((r) =>
+          (session?.user as any)?.roles?.includes(r)
+        ) && (
           <div className="group bg-[#0A0A0A] border border-white/5 rounded-xl p-6 hover:border-accent/30 hover:bg-zinc-900/50 transition-all">
             <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
               <BookOpen className="w-6 h-6 text-accent" />

@@ -105,9 +105,13 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user, trigger, session }: any) {
             // Initial Sign In
             if (user) {
+                token.id = user.id;
+                token.name = user.name;
+                token.email = user.email;
+                token.image = user.image;
+                token.picture = user.image;
                 token.roles = user.roles;
                 token.isPremium = (user as any).isPremium;
-                token.id = user.id;
                 token.isCourseRestricted = (user as any).isCourseRestricted;
                 token.university = (user as any).university;
                 token.semester = (user as any).semester;
@@ -115,11 +119,23 @@ export const authOptions: NextAuthOptions = {
                 token.degree = (user as any).degree;
             }
 
+            // Client update() called
+            if (trigger === "update" && session) {
+                if (session.name) token.name = session.name;
+                if (session.image !== undefined) {
+                    token.image = session.image;
+                    token.picture = session.image;
+                }
+            }
+
             // Sync with DB on every check
             if (token.email) {
                  await dbConnect();
                  const dbUser = await User.findOne({ email: token.email });
                  if (dbUser) {
+                     token.name = dbUser.name;
+                     token.image = dbUser.image || "";
+                     token.picture = dbUser.image || "";
                      token.roles = dbUser.roles;
                      token.isPremium = dbUser.isPremium;
                      token.id = dbUser._id.toString();
@@ -139,6 +155,8 @@ export const authOptions: NextAuthOptions = {
         async session({ session, token }: any) {
              if (session?.user) {
                 const legacyRole = token.role ? [typeof token.role === 'string' ? token.role.toUpperCase() : ''] : [];
+                if (token.name) session.user.name = token.name;
+                session.user.image = token.image || token.picture || session.user.image || "";
                 (session.user as any).roles = token.roles || legacyRole;
                 (session.user as any).isPremium = token.isPremium || false;
                 (session.user as any).id = token.id;

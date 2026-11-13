@@ -21,6 +21,14 @@ export interface INote extends Document {
   scheduledPublishDate?: Date;
   isFreePreview: boolean;
   isRestricted?: boolean; // Manual override for Data Wall access control
+  resources?: {
+    _id?: string;
+    title: string;
+    type: "PDF" | "Image" | "Link" | "Document";
+    url: string;
+    isPremium: boolean;
+    createdAt?: Date;
+  }[];
   // SEO Metadata
   seoTitle?: string;
   seoDescription?: string;
@@ -61,6 +69,15 @@ const NoteSchema: Schema = new Schema(
     scheduledPublishDate: { type: Date },
     isFreePreview: { type: Boolean, default: false },
     isRestricted: { type: Boolean, default: undefined }, // null/undefined means fallback to tag logic
+    resources: [
+      {
+        title: { type: String, required: true },
+        type: { type: String, enum: ["PDF", "Image", "Link", "Document"], default: "PDF" },
+        url: { type: String, required: true },
+        isPremium: { type: Boolean, default: false },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
     seoTitle: { type: String },
     seoDescription: { type: String },
     canonicalUrl: { type: String },

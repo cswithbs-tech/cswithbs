@@ -33,7 +33,7 @@ async function getLandingData() {
       .populate("subject", "name slug")
       .lean();
 
-    let subjects = await Subject.find().sort({ name: 1 }).limit(4).lean();
+    let subjects = await Subject.find({ status: { $ne: "draft" } }).sort({ name: 1 }).limit(4).lean();
     
     let featuredBlogs = await Post.find(publishedFilter)
       .sort({ featured: -1, createdAt: -1 })

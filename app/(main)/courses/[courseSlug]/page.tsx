@@ -131,21 +131,27 @@ export default async function CourseIndexPage({
   const { subject, chapters, totalNotes } = courseData;
   const accentColor = subject.color || "#E2C6B9";
 
+  // Check draft course access (only privileged staff can preview drafts)
+  const user = session?.user as any;
+  const roles = user?.roles || [];
+  const isPrivileged = roles.some((r: string) => 
+    ["ADMIN", "SUPER_ADMIN", "WRITER", "admin", "super_admin", "writer"].includes(r)
+  );
+
+  if (subject.status === "draft" && !isPrivileged) {
+    notFound();
+  }
+
   // First note for "Start Learning" button
   const firstNote = chapters.find((c: any) => c.notes?.length > 0)?.notes?.[0];
 
   // Determine if this course is restricted for the current user
-  const user = session?.user as any;
   const hasCompleteProfile = user?.university && user?.semester && user?.year;
   let isRestricted = false;
 
   if (!user || user.isCourseRestricted) {
     isRestricted = true;
   } else if (!hasCompleteProfile) {
-    const roles = user.roles || [];
-    const isPrivileged = roles.some((r: string) => 
-      ["ADMIN", "SUPER_ADMIN", "WRITER", "admin", "super_admin", "writer"].includes(r)
-    );
     
     if (!isPrivileged) {
       if (subject.isRestricted === true) {

@@ -20,23 +20,62 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
-    const skip = (page - 1) * limit;
+    const limitParam = searchParams.get('limit');
+    const rolesParam = searchParams.get('roles') || searchParams.get('role');
+    const sortBy = searchParams.get('sortBy') || (rolesParam ? 'name' : 'createdAt');
+    const orderParam = searchParams.get('order');
+    const order = orderParam === 'asc' ? 1 : orderParam === 'desc' ? -1 : (sortBy === 'name' ? 1 : -1);
 
     await dbConnect();
-    
-    const totalUsers = await User.countDocuments();
-    const totalPages = Math.ceil(totalUsers / limit);
 
-    const users = await User.find({}, '-password')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
+    const dbQuery: any = {};
+    if (rolesParam) {
+      const rolesArray = rolesParam.split(',').map((r: string) => r.trim()).filter(Boolean);
+      if (rolesArray.length > 0) {
+        const rolesRegex = rolesArray.map((r: string) => new RegExp(`^${r}$`, 'i'));
+        dbQuery.$or = [
+          { roles: { $in: rolesRegex } },
+          { role: { $in: rolesRegex } }
+        ];
+      }
+    }
+
+    const search = searchParams.get('search') || searchParams.get('query');
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      const searchCondition = [{ name: searchRegex }, { email: searchRegex }];
+      if (dbQuery.$or) {
+        dbQuery.$and = [
+          { $or: dbQuery.$or },
+          { $or: searchCondition }
+        ];
+        delete dbQuery.$or;
+      } else {
+        dbQuery.$or = searchCondition;
+      }
+    }
+
+    const totalUsers = await User.countDocuments(dbQuery);
+
+    let queryBuilder = User.find(dbQuery, '-password').sort({ [sortBy]: order });
+
+    if (limitParam === 'all' || limitParam === '0') {
+      // Return all matching without pagination
+    } else {
+      const limit = parseInt(limitParam || '10');
+      const skip = (page - 1) * limit;
+      queryBuilder = queryBuilder.skip(skip).limit(limit);
+    }
+
+    const users = await queryBuilder.lean();
+    const limit = limitParam === 'all' || limitParam === '0' ? totalUsers : parseInt(limitParam || '10');
+    const totalPages = limit > 0 ? Math.ceil(totalUsers / limit) : 1;
 
     return NextResponse.json({
         users,
         totalPages,
-        currentPage: page
+        currentPage: page,
+        totalUsers
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

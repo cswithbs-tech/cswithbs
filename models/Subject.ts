@@ -10,6 +10,7 @@ export interface ISubject extends Document {
   alignments?: string[];
   coverImage?: string;
   isRestricted?: boolean;
+  status?: "published" | "draft" | "archived";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,6 +26,11 @@ const SubjectSchema: Schema = new Schema(
     alignments: { type: [String], default: [] },
     coverImage: { type: String, default: "" },
     isRestricted: { type: Boolean, default: undefined }, // null/undefined means fallback to tag/level logic
+    status: {
+      type: String,
+      enum: ["published", "draft", "archived"],
+      default: "published",
+    },
   },
   { timestamps: true }
 );

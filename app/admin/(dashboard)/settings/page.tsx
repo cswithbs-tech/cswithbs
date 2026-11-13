@@ -56,6 +56,7 @@ export default function SettingsPage() {
 
   const isSuperAdmin = (session?.user as any)?.roles?.includes('SUPER_ADMIN');
 
+
   useEffect(() => {
     if (status === "loading") return;
 
@@ -651,6 +652,7 @@ export default function SettingsPage() {
           </div>
           <AuditTrail keys={["comments_enabled", "auto_close_days", "registration_enabled"]} />
         </div>
+
 
         {/* --- 5. Technical & SEO --- */}
         {isSuperAdmin && (

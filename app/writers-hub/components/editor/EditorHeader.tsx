@@ -10,6 +10,8 @@ import {
   Clock,
   X,
   CalendarClock,
+  MoreVertical,
+  FileEdit,
 } from "lucide-react";
 import { Button } from "@/app/components/ui/Button";
 import { ConfirmDialog } from "@/app/components/ui/ConfirmDialog";
@@ -33,6 +35,7 @@ interface EditorHeaderProps {
   showHistory: boolean;
   contentType?: "post" | "note";
   isSuperAdmin?: boolean;
+  onOpenAiModal?: () => void;
 }
 
 export function EditorHeader({
@@ -50,9 +53,24 @@ export function EditorHeader({
   router,
   contentType = "post",
   isSuperAdmin = false,
+  onOpenAiModal,
 }: EditorHeaderProps) {
   const [showSchedulePopover, setShowSchedulePopover] = useState(false);
   const [showConflictConfirm, setShowConflictConfirm] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showMoreMenu) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showMoreMenu]);
   // Helper to format date for datetime-local input (Local Time: YYYY-MM-DDTHH:mm)
   const toLocalISOString = (date: Date) => {
     const pad = (n: number) => n.toString().padStart(2, "0");
@@ -86,10 +104,10 @@ export function EditorHeader({
       switch (status) {
         case "published":
           return {
-            primaryText: "Update Published",
+            primaryText: "Update",
             primaryAction: "published",
-            secondaryText: "Revert to Draft",
-            secondaryAction: "draft",
+            secondaryText: null,
+            secondaryAction: null,
           };
         case "scheduled":
           return {
@@ -342,6 +360,37 @@ export function EditorHeader({
             </div>
           )}
         </div>
+
+        {isSuperAdmin && status === "published" && (
+          <div className="relative" ref={moreMenuRef}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowMoreMenu((prev) => !prev)}
+              disabled={isSubmitting}
+              className="text-zinc-400 hover:text-white px-2"
+              title="More options"
+            >
+              <MoreVertical size={18} />
+            </Button>
+
+            {showMoreMenu && (
+              <div className="absolute top-full right-0 mt-2 w-52 bg-[#121212] border border-white/10 rounded-xl py-1.5 shadow-2xl shadow-black/60 z-50">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    setShowUnpublishConfirm(true);
+                  }}
+                  className="w-full px-3.5 py-2 text-left text-xs font-medium text-amber-400 hover:bg-white/5 flex items-center gap-2 transition-colors"
+                >
+                  <FileEdit size={14} />
+                  Switch to Draft (Unpublish)
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <ConfirmDialog
@@ -356,6 +405,20 @@ export function EditorHeader({
         variant="warning"
         confirmText="Publish Now"
         cancelText="Keep Scheduled"
+      />
+
+      <ConfirmDialog
+        isOpen={showUnpublishConfirm}
+        onClose={() => setShowUnpublishConfirm(false)}
+        onConfirm={() => {
+          onSubmitStatus("draft");
+          setShowUnpublishConfirm(false);
+        }}
+        title={`Switch ${contentType === "note" ? "note" : "post"} to draft?`}
+        description="This will unpublish the live item and remove it from public view until you publish it again."
+        variant="warning"
+        confirmText="Switch to Draft"
+        cancelText="Keep Published"
       />
     </div>
   );

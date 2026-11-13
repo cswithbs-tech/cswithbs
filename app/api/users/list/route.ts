@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
     // Fetch simplified users for mapping dropdowns
     const users = await User.find({})
-      .select("_id name email username image")
+      .select("_id name email username image roles role")
       .sort({ name: 1 })
       .lean();
       

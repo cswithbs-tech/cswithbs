@@ -16,6 +16,7 @@ interface Subject {
   level?: string;
   alignments?: string[];
   coverImage?: string;
+  status?: "published" | "draft" | "archived";
 }
 
 export default function CurriculumPage() {
@@ -32,7 +33,14 @@ export default function CurriculumPage() {
   
   // Subject Creation State
   const [showSubjectForm, setShowSubjectForm] = useState(false);
-  const [subjectForm, setSubjectForm] = useState({ name: "", description: "", level: "All Levels", alignments: "", coverImage: "" });
+  const [subjectForm, setSubjectForm] = useState({
+    name: "",
+    description: "",
+    level: "All Levels",
+    alignments: "",
+    coverImage: "",
+    status: "published" as "published" | "draft",
+  });
   const [creatingSubject, setCreatingSubject] = useState(false);
 
   // Deletion States
@@ -67,7 +75,7 @@ export default function CurriculumPage() {
       if (!res.ok) throw new Error(data.error || "Failed to create subject");
       
       setSubjects((prev) => [...prev, data]);
-      setSubjectForm({ name: "", description: "", level: "All Levels", alignments: "", coverImage: "" });
+      setSubjectForm({ name: "", description: "", level: "All Levels", alignments: "", coverImage: "", status: "published" });
       setShowSubjectForm(false);
       showToast("Subject created!", "success");
     } catch (err: any) {
@@ -172,6 +180,19 @@ export default function CurriculumPage() {
                   </select>
                 </div>
                 <div>
+                  <label className="text-xs text-zinc-500 block mb-1.5">Visibility Status</label>
+                  <select
+                    value={subjectForm.status}
+                    onChange={(e) => setSubjectForm((p) => ({ ...p, status: e.target.value as "published" | "draft" }))}
+                    className="w-full bg-black/40 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50 transition-colors font-medium"
+                  >
+                    <option value="published">🟢 Published (Visible on Site)</option>
+                    <option value="draft">🟡 Draft / Hidden (Private to Admins)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
                   <label className="text-xs text-zinc-500 block mb-1.5">Alignments (Tags)</label>
                   <input
                     type="text"
@@ -181,16 +202,16 @@ export default function CurriculumPage() {
                     className="w-full bg-black/40 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-accent/50 transition-colors"
                   />
                 </div>
-              </div>
-              <div>
-                <label className="text-xs text-zinc-500 block mb-1.5">Cover Image URL</label>
-                <input
-                  type="text"
-                  value={subjectForm.coverImage}
-                  onChange={(e) => setSubjectForm((p) => ({ ...p, coverImage: e.target.value }))}
-                  placeholder="https://..."
-                  className="w-full bg-black/40 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-accent/50 transition-colors"
-                />
+                <div>
+                  <label className="text-xs text-zinc-500 block mb-1.5">Cover Image URL</label>
+                  <input
+                    type="text"
+                    value={subjectForm.coverImage}
+                    onChange={(e) => setSubjectForm((p) => ({ ...p, coverImage: e.target.value }))}
+                    placeholder="https://..."
+                    className="w-full bg-black/40 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-accent/50 transition-colors"
+                  />
+                </div>
               </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button
@@ -247,7 +268,16 @@ export default function CurriculumPage() {
                       </div>
                     )}
                     
-                    <div className="flex flex-wrap gap-1.5 mt-2">
+                    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                      {subject.status === "draft" ? (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                          🟡 Draft
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          🟢 Live
+                        </span>
+                      )}
                       {subject.level && subject.level !== "All Levels" && (
                         <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent border border-accent/20">
                           {subject.level}

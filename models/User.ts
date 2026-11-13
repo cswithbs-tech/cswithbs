@@ -5,7 +5,7 @@ const UserSchema = new Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String }, // Optional because of OAuth
-    image: { type: String, default: 'https://placehold.co/100x100/111/FFF?text=User' },
+    image: { type: String, default: "" },
     roles: { 
       type: [String], 
       enum: ['USER', 'PREMIUM', 'WRITER', 'ADMIN', 'SUPER_ADMIN'], 

@@ -28,7 +28,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 
   // Fetch Courses (Subjects)
-  const subjects = await Subject.find({}).select('slug updatedAt').lean();
+  const subjects = await Subject.find({ status: { $ne: "draft" } }).select('slug updatedAt').lean();
 
   const courseEntries: MetadataRoute.Sitemap = subjects.map((subject: any) => ({
     url: `${BASE_URL}/courses/${subject.slug}`,

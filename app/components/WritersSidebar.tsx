@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { signOut, useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import {
   BookOpen,
   FileText,
@@ -94,6 +95,14 @@ export const WritersSidebar = ({
 }: WritersSidebarProps) => {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [session?.user?.image]);
+
+  const rawImage = session?.user?.image;
+  const userAvatarUrl = !imgError && rawImage && !rawImage.includes("placehold.co") ? rawImage : null;
 
   const roles = (session?.user as any)?.roles || [];
   const userRole = roles.includes("SUPER_ADMIN") ? "SUPER ADMIN" : roles.includes("ADMIN") ? "ADMIN" : roles.includes("WRITER") ? "WRITER" : roles[0] || "WRITER";
@@ -207,17 +216,26 @@ export const WritersSidebar = ({
               {/* Avatar */}
               <Link
                 href={`/profile/${(session?.user as any)?.id}`}
-                className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-sm font-medium text-white overflow-hidden shrink-0"
+                className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-bold text-white overflow-hidden shrink-0 relative group"
               >
-                {session?.user?.image ? (
+                {userAvatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={session.user.image}
-                    alt="User"
+                    src={userAvatarUrl}
+                    alt={session?.user?.name || "User"}
                     className="w-full h-full object-cover"
+                    onError={() => setImgError(true)}
                   />
                 ) : (
-                  <span>WH</span>
+                  <span className="font-bold uppercase text-xs">
+                    {session?.user?.name
+                      ? session.user.name
+                          .split(" ")
+                          .map((n: string) => n[0])
+                          .slice(0, 2)
+                          .join("")
+                      : "WH"}
+                  </span>
                 )}
               </Link>
 

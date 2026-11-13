@@ -1,6 +1,20 @@
 "use client";
 
-import { X, ImageIcon, Search, Plus, HelpCircle, Loader2 } from "lucide-react";
+import {
+  X,
+  ImageIcon,
+  Search,
+  Plus,
+  HelpCircle,
+  Loader2,
+  FileText,
+  Trash2,
+  Paperclip,
+  Download,
+  ExternalLink,
+  BookOpen,
+  Upload,
+} from "lucide-react";
 import { TableOfContents } from "@/app/components/editor/components/TableOfContents";
 import { useState } from "react";
 import { useToast } from "@/app/context/ToastContext";
@@ -59,6 +73,105 @@ export function EditorSidebar({
   const [newCatName, setNewCatName] = useState("");
   const [newCatGenre, setNewCatGenre] = useState("");
   const [isCreatingCat, setIsCreatingCat] = useState(false);
+
+  // PDF & Study Material Attachments State (for Notes)
+  const [showAddResource, setShowAddResource] = useState(false);
+  const [newResTitle, setNewResTitle] = useState("");
+  const [newResUrl, setNewResUrl] = useState("");
+  const [newResType, setNewResType] = useState<"PDF" | "Document" | "Link">("PDF");
+  const [newResPremium, setNewResPremium] = useState(false);
+  const [isUploadingRes, setIsUploadingRes] = useState(false);
+
+  const currentChapter = chapters?.find(
+    (c: any) => (c._id || c.id)?.toString() === formData.chapter?.toString()
+  );
+  const availableChapterResources = (currentChapter?.resources || []).filter(
+    (chRes: any) =>
+      !(formData.resources || []).some(
+        (r: any) => r.url === chRes.url || r.title === chRes.title
+      )
+  );
+
+  const handleAttachFromChapter = (chRes: any) => {
+    const updated = [
+      ...(formData.resources || []),
+      {
+        title: chRes.title,
+        type: chRes.type || "PDF",
+        url: chRes.url,
+        isPremium: Boolean(chRes.isPremium),
+      },
+    ];
+    setFormData((prev: any) => ({ ...prev, resources: updated }));
+    setIsDirty(true);
+    showToast(`Attached "${chRes.title}" to this note!`, "success");
+  };
+
+  const handleRemoveResource = (index: number) => {
+    const updated = [...(formData.resources || [])];
+    updated.splice(index, 1);
+    setFormData((prev: any) => ({ ...prev, resources: updated }));
+    setIsDirty(true);
+  };
+
+  const handleUploadCustomResource = async (file: File) => {
+    if (!newResTitle.trim()) {
+      showToast("Please enter a title for the material", "error");
+      return;
+    }
+    setIsUploadingRes(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "resources");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json();
+      if (!res.ok || !json.url) throw new Error(json.error || "Upload failed");
+
+      const fileType = file.name.toLowerCase().endsWith(".pdf") ? "PDF" : "Document";
+      const updated = [
+        ...(formData.resources || []),
+        {
+          title: newResTitle.trim(),
+          type: fileType,
+          url: json.url,
+          isPremium: newResPremium,
+        },
+      ];
+      setFormData((prev: any) => ({ ...prev, resources: updated }));
+      setIsDirty(true);
+      setNewResTitle("");
+      setNewResUrl("");
+      setShowAddResource(false);
+      showToast("PDF material attached to this note!", "success");
+    } catch (err: any) {
+      showToast(err.message || "Failed to upload file", "error");
+    } finally {
+      setIsUploadingRes(false);
+    }
+  };
+
+  const handleAddUrlResource = () => {
+    if (!newResTitle.trim() || !newResUrl.trim()) {
+      showToast("Title and URL are required", "error");
+      return;
+    }
+    const updated = [
+      ...(formData.resources || []),
+      {
+        title: newResTitle.trim(),
+        type: newResType,
+        url: newResUrl.trim(),
+        isPremium: newResPremium,
+      },
+    ];
+    setFormData((prev: any) => ({ ...prev, resources: updated }));
+    setIsDirty(true);
+    setNewResTitle("");
+    setNewResUrl("");
+    setShowAddResource(false);
+    showToast("Material attached to this note!", "success");
+  };
 
   const handleCreateCategory = async () => {
     if (!newCatName || !newCatGenre) {
@@ -215,8 +328,8 @@ export function EditorSidebar({
               </>
             )}
 
-            {/* Author Assignment - Super Admin Only (Hidden for Notes) */}
-            {isSuperAdmin && contentType !== 'note' && (
+            {/* Author Assignment - Super Admin & Admin */}
+            {isSuperAdmin && (
               <div>
                 <label className="block text-[13px] font-medium text-zinc-300 mb-1.5">
                   Author (Admin)
@@ -230,10 +343,16 @@ export function EditorSidebar({
                   <option value="" disabled>
                     Select Author
                   </option>
+                  {formData.author && !users.some((u) => (u._id || u.id)?.toString() === formData.author?.toString()) && (
+                    <option value={formData.author}>
+                      Current Assigned Author
+                    </option>
+                  )}
                   {users.map((user) => {
                     const uRoles = Array.isArray(user.roles) ? user.roles : (user.roles ? [user.roles] : (user.role ? [user.role] : []));
+                    const uId = (user._id || user.id)?.toString();
                     return (
-                      <option key={user._id} value={user._id}>
+                      <option key={uId} value={uId}>
                         {user.name} ({uRoles.length > 0 ? uRoles.join(', ') : 'USER'})
                       </option>
                     );
@@ -371,6 +490,171 @@ export function EditorSidebar({
         </div>
         )}
       </div>
+
+      {contentType === "note" && (
+        <div className="bg-card border border-white/5 rounded-xl p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-bold text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
+              <BookOpen size={14} className="text-accent" />
+              Study Materials (PDF)
+            </label>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 text-zinc-400 border border-white/10">
+              {formData.resources?.length || 0} attached
+            </span>
+          </div>
+
+          {/* List of currently attached resources */}
+          {formData.resources && formData.resources.length > 0 ? (
+            <div className="space-y-2">
+              {formData.resources.map((res: any, idx: number) => (
+                <div
+                  key={idx}
+                  className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02] border border-white/5 hover:border-white/10 text-xs text-white group/item transition-colors"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                    <div className="w-6 h-6 rounded bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0">
+                      <FileText size={12} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate text-[12px]">{res.title}</p>
+                      <p className="text-[10px] text-zinc-500 font-mono">
+                        {res.type || "PDF"} {res.isPremium && "• Premium"}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveResource(idx)}
+                    className="text-zinc-500 hover:text-red-400 p-1 rounded hover:bg-white/5 transition-colors shrink-0"
+                    title="Remove from this note"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-zinc-500 italic py-2">
+              No PDFs attached to this note yet. Only attach materials specific to this lesson.
+            </p>
+          )}
+
+          {/* Quick attach from Module resources */}
+          {availableChapterResources.length > 0 && (
+            <div className="pt-2 border-t border-white/5 space-y-2">
+              <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1">
+                <Paperclip size={11} className="text-accent" />
+                Available from Module:
+              </p>
+              <div className="space-y-1.5">
+                {availableChapterResources.map((chRes: any, i: number) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handleAttachFromChapter(chRes)}
+                    className="w-full text-left p-2 rounded-lg bg-accent/5 hover:bg-accent/15 border border-accent/20 hover:border-accent/40 text-xs text-zinc-200 hover:text-white flex items-center justify-between transition-all group"
+                  >
+                    <span className="truncate pr-2 font-medium">
+                      + Attach &quot;{chRes.title}&quot;
+                    </span>
+                    <span className="text-[9px] font-mono text-accent uppercase font-bold shrink-0">
+                      {chRes.type || "PDF"}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Add / Upload Custom Resource Modal/Form */}
+          {!showAddResource ? (
+            <button
+              type="button"
+              onClick={() => setShowAddResource(true)}
+              className="w-full py-2 px-3 rounded-lg border border-dashed border-zinc-700 hover:border-accent/50 text-xs font-semibold text-zinc-400 hover:text-accent hover:bg-accent/5 flex items-center justify-center gap-1.5 transition-all"
+            >
+              <Plus size={14} /> Attach New PDF / Document
+            </button>
+          ) : (
+            <div className="p-3 rounded-xl bg-zinc-900/90 border border-white/10 space-y-3 animate-in fade-in slide-in-from-top-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-white">Attach New Material</span>
+                <button
+                  type="button"
+                  onClick={() => setShowAddResource(false)}
+                  className="text-zinc-500 hover:text-white"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div>
+                <label className="text-[11px] text-zinc-400 block mb-1">Title *</label>
+                <input
+                  type="text"
+                  value={newResTitle}
+                  onChange={(e) => setNewResTitle(e.target.value)}
+                  placeholder="e.g. BS Sir's Unit-1 Q&A PDF"
+                  className="w-full bg-[#121212] border border-white/10 rounded-md px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] text-zinc-400 block mb-1">Upload PDF File</label>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  disabled={isUploadingRes}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleUploadCustomResource(f);
+                  }}
+                  className="w-full text-[11px] text-zinc-400 file:mr-2 file:py-1 file:px-2.5 file:rounded file:border-0 file:text-[11px] file:font-semibold file:bg-accent file:text-black hover:file:bg-accent/90 cursor-pointer"
+                />
+                {isUploadingRes && (
+                  <p className="text-[10px] text-accent mt-1 flex items-center gap-1 animate-pulse">
+                    <Loader2 size={10} className="animate-spin" /> Uploading to Cloudinary...
+                  </p>
+                )}
+              </div>
+
+              <div className="pt-1">
+                <label className="text-[11px] text-zinc-400 block mb-1">Or paste URL</label>
+                <input
+                  type="text"
+                  value={newResUrl}
+                  onChange={(e) => setNewResUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="w-full bg-[#121212] border border-white/10 rounded-md px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-accent"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="resPremiumCheck"
+                  checked={newResPremium}
+                  onChange={(e) => setNewResPremium(e.target.checked)}
+                  className="rounded border-zinc-700 text-accent focus:ring-0 bg-black cursor-pointer"
+                />
+                <label htmlFor="resPremiumCheck" className="text-xs text-zinc-300 cursor-pointer select-none">
+                  Require Student Login / Premium
+                </label>
+              </div>
+
+              {newResUrl && (
+                <button
+                  type="button"
+                  onClick={handleAddUrlResource}
+                  className="w-full py-1.5 bg-accent text-black text-xs font-bold rounded hover:bg-accent/90 transition-colors"
+                >
+                  Save URL Attachment
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {contentType !== 'note' && (
       <div className="bg-card border border-white/5 rounded-xl p-6">

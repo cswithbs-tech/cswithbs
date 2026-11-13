@@ -12,6 +12,10 @@ import {
   Tag,
   CheckCircle2,
   BookOpen,
+  Download,
+  ExternalLink,
+  Lock,
+  FileText,
 } from "lucide-react";
 import dbConnect from "@/lib/db";
 import Subject from "@/models/Subject";
@@ -143,6 +147,9 @@ export default async function LessonPage({
   let isRestrictedForUser = false;
   
   if (!session?.user) {
+    if (subject?.status === "draft") {
+      notFound();
+    }
     isRestrictedForUser = true;
   } else {
     const user = session.user as any;
@@ -151,6 +158,10 @@ export default async function LessonPage({
     const isPrivileged = roles.some((r: string) => 
       ["ADMIN", "SUPER_ADMIN", "WRITER", "admin", "super_admin", "writer"].includes(r)
     );
+
+    if (subject?.status === "draft" && !isPrivileged) {
+      notFound();
+    }
 
     if (user.isCourseRestricted) {
       isRestrictedForUser = true;
@@ -272,6 +283,113 @@ export default async function LessonPage({
               pageTitle={currentNote.title}
             />
           </DataWall>
+        )}
+
+        {/* ── Attached Study Materials (PDF & Downloads) ─────────────── */}
+        {currentNote.resources && currentNote.resources.length > 0 && (
+          <div className="mt-14 mb-4 p-6 md:p-8 rounded-2xl bg-zinc-950/80 border border-white/10 shadow-2xl relative overflow-hidden">
+            {/* Subtle ambient accent glow */}
+            <div 
+              className="absolute -top-24 -right-24 w-64 h-64 rounded-full blur-[80px] pointer-events-none opacity-20"
+              style={{ backgroundColor: accentColor }}
+            />
+
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-5 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
+                  style={{
+                    backgroundColor: `${accentColor}15`,
+                    borderColor: `${accentColor}30`,
+                    color: accentColor,
+                  }}
+                >
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    Study Materials & Downloads
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/10 text-zinc-300 font-semibold border border-white/10">
+                      {currentNote.resources.length} {currentNote.resources.length === 1 ? "file" : "files"}
+                    </span>
+                  </h3>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Download lesson notes, questions & answers, and revision guides for this topic
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative z-10 grid grid-cols-1 gap-3">
+              {currentNote.resources.map((res: any, idx: number) => {
+                const isLocked = res.isPremium && !session;
+
+                return (
+                  <div
+                    key={idx}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/15 hover:bg-white/[0.04] transition-all group"
+                  >
+                    <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="text-sm font-bold text-white truncate flex items-center gap-2">
+                          {res.title}
+                          {res.isPremium && (
+                            <span className="text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded border border-amber-500/30 uppercase font-bold tracking-wider">
+                              Premium
+                            </span>
+                          )}
+                        </h4>
+                        <div className="flex items-center gap-2 text-[11px] text-zinc-500 font-mono mt-0.5">
+                          <span className="text-red-400/90 font-bold uppercase">{res.type || "PDF"}</span>
+                          <span>•</span>
+                          <span>Offline Revision Document</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2.5 shrink-0 self-end sm:self-center">
+                      {isLocked ? (
+                        <Link
+                          href="/login"
+                          className="px-4 py-2 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 flex items-center gap-1.5 transition-all"
+                        >
+                          <Lock className="w-3.5 h-3.5" />
+                          Login to Download
+                        </Link>
+                      ) : (
+                        <>
+                          <a
+                            href={res.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-2 rounded-xl text-xs font-medium text-zinc-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-1.5 transition-all"
+                            title="Preview in new tab"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
+                            <span>Preview</span>
+                          </a>
+                          <a
+                            href={res.url}
+                            download={res.title || "Study-Material"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-accent hover:bg-accent/90 shadow-md shadow-accent/10 flex items-center gap-1.5 transition-all"
+                            title="Direct Download"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>Download PDF</span>
+                          </a>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {/* ── Bottom section ────────────────────────────────────── */}

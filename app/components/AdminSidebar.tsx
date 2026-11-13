@@ -243,6 +243,14 @@ export const AdminSidebar = ({
   const pathname = usePathname();
   const { data: session } = useSession();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [imgError, setImgError] = useState(false);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [session?.user?.image]);
+
+  const rawImage = session?.user?.image;
+  const userAvatarUrl = !imgError && rawImage && !rawImage.includes("placehold.co") ? rawImage : null;
 
   const roles = (session?.user as any)?.roles || [];
   const isSuperOrAdmin = Array.isArray(roles)
@@ -427,15 +435,24 @@ export const AdminSidebar = ({
                 href={`/profile/${(session?.user as any)?.id}`}
                 className="h-10 w-10 rounded-full bg-zinc-900 flex-shrink-0 flex items-center justify-center text-xs font-bold text-white overflow-hidden relative shadow-sm ring-1 ring-white/10"
               >
-                {session?.user?.image ? (
+                {userAvatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={session.user.image}
-                    alt="User"
+                    src={userAvatarUrl}
+                    alt={session?.user?.name || "User"}
                     className="w-full h-full object-cover"
+                    onError={() => setImgError(true)}
                   />
                 ) : (
-                  <span>AD</span>
+                  <span className="font-bold uppercase text-xs">
+                    {session?.user?.name
+                      ? session.user.name
+                          .split(" ")
+                          .map((n: string) => n[0])
+                          .slice(0, 2)
+                          .join("")
+                      : "AD"}
+                  </span>
                 )}
               </Link>
 

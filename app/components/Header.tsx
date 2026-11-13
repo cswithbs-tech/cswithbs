@@ -21,14 +21,21 @@ import { useSession, signOut } from "next-auth/react";
 import { NotificationBell } from "./NotificationBell";
 
 export const Header = () => {
-  const { data: session } = useSession();
-  const [userImage, setUserImage] = useState<string | null | undefined>(null);
+  const { data: session, status, update } = useSession();
+  const [imgError, setImgError] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [session?.user?.image]);
+
+  const rawImage = session?.user?.image;
+  const userImage = !imgError && rawImage && !rawImage.includes("placehold.co") ? rawImage : null;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -43,24 +50,19 @@ export const Header = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (session?.user?.image) {
-      setUserImage(session.user.image);
-    }
-  }, [session]);
-
+  // Background sync in case profile was updated externally
   useEffect(() => {
     if (session?.user) {
       fetch("/api/user/profile/me")
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
-          if (data?.image) {
-            setUserImage(data.image);
+          if (data?.image && data.image !== session.user?.image) {
+            update({ image: data.image, name: data.name });
           }
         })
-        .catch((err) => console.error("Header image sync error", err));
+        .catch(() => {});
     }
-  }, [session]);
+  }, [session?.user?.email]);
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -181,7 +183,12 @@ export const Header = () => {
 
           {/* CTA / User Menu */}
           <div className="hidden md:flex items-center gap-4">
-            {session ? (
+            {status === "loading" ? (
+              <div className="flex items-center gap-3 pl-4 border-l border-white/10">
+                <div className="h-9 w-9 rounded-full bg-zinc-800/80 border border-white/10 animate-pulse" />
+                <div className="w-20 h-4 bg-zinc-800/80 rounded animate-pulse" />
+              </div>
+            ) : session ? (
               <div className="flex items-center gap-2">
                 <NotificationBell />
                 <div className="relative" ref={dropdownRef}>
@@ -193,12 +200,19 @@ export const Header = () => {
                     {userImage ? (
                       <img
                         src={userImage}
-                        alt="User"
+                        alt={session.user?.name || "User"}
                         className="w-full h-full object-cover"
+                        onError={() => setImgError(true)}
                       />
                     ) : (
-                      <div className="h-full w-full flex items-center justify-center text-sm text-white font-bold uppercase">
-                        {session.user?.name?.charAt(0)}
+                      <div className="h-full w-full flex items-center justify-center text-xs text-white font-bold uppercase bg-gradient-to-br from-zinc-800 to-zinc-900">
+                        {session.user?.name
+                          ? session.user.name
+                              .split(" ")
+                              .map((n: string) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                          : "U"}
                       </div>
                     )}
                   </div>
@@ -354,7 +368,15 @@ export const Header = () => {
       >
         <div className="flex flex-col h-full p-8 pt-24 max-w-sm mx-auto w-full">
           {/* Profile Section at the Top */}
-          {session ? (
+          {status === "loading" ? (
+            <div className="flex items-center gap-4 mb-8 p-2">
+              <div className="w-12 h-12 rounded-full bg-zinc-800/80 border border-white/10 animate-pulse shrink-0" />
+              <div className="space-y-2 flex-1">
+                <div className="w-16 h-2.5 bg-zinc-800/80 rounded animate-pulse" />
+                <div className="w-28 h-4 bg-zinc-800/80 rounded animate-pulse" />
+              </div>
+            </div>
+          ) : session ? (
             <div 
               className="w-full flex flex-col mb-12"
               style={{
@@ -371,12 +393,19 @@ export const Header = () => {
                   {userImage ? (
                     <img
                       src={userImage}
-                      alt="User"
+                      alt={session.user?.name || "User"}
                       className="w-full h-full object-cover"
+                      onError={() => setImgError(true)}
                     />
                   ) : (
-                    <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-lg font-bold text-white uppercase">
-                      {session.user?.name?.charAt(0)}
+                    <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-sm font-bold text-white uppercase">
+                      {session.user?.name
+                        ? session.user.name
+                            .split(" ")
+                            .map((n: string) => n[0])
+                            .slice(0, 2)
+                            .join("")
+                        : "U"}
                     </div>
                   )}
                 </div>

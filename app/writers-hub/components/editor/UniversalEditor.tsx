@@ -53,7 +53,7 @@ export default function UniversalEditor({
   const [users, setUsers] = useState<any[]>([]);
   useEffect(() => {
     if (isSuperAdmin && users.length === 0) {
-      fetch("/api/users?limit=100")
+      fetch("/api/users?roles=ADMIN,SUPER_ADMIN,WRITER&limit=all&sortBy=name&order=asc")
         .then((res) => res.json())
         .then((data) => {
           if (data.users && Array.isArray(data.users)) {
@@ -61,6 +61,7 @@ export default function UniversalEditor({
               const uRoles = Array.isArray(u.roles) ? u.roles : (u.roles ? [u.roles] : (u.role ? [u.role] : []));
               return uRoles.some((r: string) => ['ADMIN', 'SUPER_ADMIN', 'WRITER', 'admin', 'super_admin', 'writer'].includes(r));
             });
+            validUsers.sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
             setUsers(validUsers);
           }
         })
@@ -110,7 +111,6 @@ export default function UniversalEditor({
 
   const [showGuide, setShowGuide] = useState(false);
   const [showRevisions, setShowRevisions] = useState(false);
-
   const handleRevisionRestore = (revision: any) => {
     setFormData((prev) => ({
       ...prev,
@@ -149,7 +149,7 @@ export default function UniversalEditor({
     chapter: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('chapter') || "" : "",
     order: 0,
     language: "English",
-    author: "",
+    author: (!isEdit && !initialData && (session?.user as any)?.id) ? (session?.user as any)?.id : "",
     tags: "",
     image: "",
     status: "draft",
@@ -162,6 +162,7 @@ export default function UniversalEditor({
     noindex: false,
     scheduledPublishDate: "",
     contentJson: null as any,
+    resources: [] as any[],
   }));
 
   const hasInitializedRef = useRef(false);
@@ -208,8 +209,37 @@ export default function UniversalEditor({
             })()
           : "",
         contentJson: initialData.contentJson || null,
+        resources: initialData.resources || [],
       });
       setIsDirty(false);
+    }
+
+    // Check if an AI Draft was dispatched from AI Studio Hub
+    if (!initialData && typeof window !== "undefined") {
+      const aiDraftRaw = sessionStorage.getItem("cswithbs_ai_draft");
+      if (aiDraftRaw) {
+        try {
+          const aiDraft = JSON.parse(aiDraftRaw);
+          sessionStorage.removeItem("cswithbs_ai_draft");
+          setFormData((prev) => ({
+            ...prev,
+            title: aiDraft.title || prev.title,
+            slug: aiDraft.slug || prev.slug,
+            excerpt: aiDraft.excerpt || prev.excerpt,
+            content: aiDraft.content || prev.content,
+            tags: Array.isArray(aiDraft.tags) ? aiDraft.tags.join(", ") : (aiDraft.tags || prev.tags),
+            subject: aiDraft.subjectId || prev.subject,
+            chapter: aiDraft.chapterId || prev.chapter,
+            order: typeof aiDraft.order === "number" ? aiDraft.order : prev.order,
+            seoTitle: aiDraft.title || prev.seoTitle,
+            seoDescription: aiDraft.excerpt || prev.seoDescription,
+          }));
+          setIsDirty(true);
+          showToast("✨ AI Studio draft loaded into editor!", "success");
+        } catch (e) {
+          console.warn("Could not load AI draft from session storage", e);
+        }
+      }
     }
 
     if (storageKey) {
@@ -460,7 +490,18 @@ export default function UniversalEditor({
   };
 
   const handleSubmit = async (targetStatus?: string, dataOverride?: any) => {
-    const currentData = dataOverride || formData;
+    debouncedSetContent.cancel();
+    const baseData = dataOverride || formData;
+    const latestContent =
+      !dataOverride && editorInstance ? editorInstance.getHTML() : baseData.content;
+    const latestContentJson =
+      !dataOverride && editorInstance ? editorInstance.getJSON() : baseData.contentJson;
+    const currentData = {
+      ...baseData,
+      content: latestContent,
+      contentJson: latestContentJson,
+    };
+
     if (!currentData.title) {
       showToast("Title is missing", "error");
       return;
@@ -505,6 +546,7 @@ export default function UniversalEditor({
         scheduledPublishDate: currentData.scheduledPublishDate
           ? new Date(currentData.scheduledPublishDate).toISOString()
           : undefined,
+        resources: currentData.resources || [],
       };
       const res = await fetch(url, {
         method: method,
@@ -513,14 +555,25 @@ export default function UniversalEditor({
       });
       if (res.ok) {
         const data = await res.json();
+        const wasPublished = currentData.status === "published" && isEdit;
         setIsDirty(false);
-        setFormData((prev) => ({ ...prev, status: finalStatus }));
+        setFormData((prev) => ({
+          ...prev,
+          content: latestContent,
+          contentJson: latestContentJson,
+          status: finalStatus,
+        }));
         const storageKey = `${contentType}_draft_${isEdit ? initialData?._id : tempDraftId || "new"}`;
         localStorage.removeItem(storageKey);
-        const listPath = contentType === 'note' ? '/writers-hub/notes' : '/writers-hub/posts';
         const editPath = `/writers-hub/editor?id=${data._id}&type=${contentType}`;
+        const statusVerb =
+          finalStatus === "published"
+            ? wasPublished
+              ? "Updated"
+              : "Published"
+            : "Saved";
         showToast(
-          `${contentType === 'note' ? 'Note' : 'Post'} ${finalStatus === "published" ? "Published" : "Saved"} successfully!`,
+          `${contentType === 'note' ? 'Note' : 'Post'} ${statusVerb} successfully!`,
           "success",
         );
         if (!isEdit && data._id) {
@@ -538,6 +591,20 @@ export default function UniversalEditor({
       setIsSubmitting(false);
     }
   };
+
+  const handleSubmitRef = useRef(handleSubmit);
+  handleSubmitRef.current = handleSubmit;
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        handleSubmitRef.current();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const openMediaModal = (field: "image" | "ogImage" | "content") => {
     setTargetImageField(field);
@@ -808,7 +875,7 @@ export default function UniversalEditor({
                 saveStatus={
                   isSubmitting ? "saving" : isDirty ? "unsaved" : "saved"
                 }
-                onSave={() => handleSubmit("draft")}
+                onSave={() => handleSubmit()}
                 onToggleZenMode={() => setIsZenMode(false)}
                 isZenMode={true}
                 title={formData.title}

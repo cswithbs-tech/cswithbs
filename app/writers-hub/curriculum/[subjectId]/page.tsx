@@ -35,7 +35,15 @@ export default function SubjectCurriculumPage() {
 
   // States for Subject Settings (Update)
   const [showSubjectSettings, setShowSubjectSettings] = useState(false);
-  const [subjectForm, setSubjectForm] = useState({ name: "", description: "", level: "All Levels", alignments: "", coverImage: "", isRestricted: undefined as boolean | undefined });
+  const [subjectForm, setSubjectForm] = useState({
+    name: "",
+    description: "",
+    level: "All Levels",
+    alignments: "",
+    coverImage: "",
+    isRestricted: undefined as boolean | undefined,
+    status: "published" as "published" | "draft",
+  });
   const [updatingSubject, setUpdatingSubject] = useState(false);
 
   // States for Chapter Creation
@@ -57,34 +65,37 @@ export default function SubjectCurriculumPage() {
   const [resourceFile, setResourceFile] = useState<File | null>(null);
   const [uploadingResource, setUploadingResource] = useState(false);
 
-  useEffect(() => {
+  const loadCurriculum = () => {
     if (!subjectId) return;
-
     Promise.all([
-      fetch("/api/writers-hub/subjects").then(res => res.json()),
-      fetch(`/api/writers-hub/chapters?subject=${subjectId}`).then(res => res.json()),
-      fetch(`/api/writers-hub/notes?subject=${subjectId}&limit=1000`).then(res => res.json())
+      fetch("/api/writers-hub/subjects").then((res) => res.json()),
+      fetch(`/api/writers-hub/chapters?subject=${subjectId}`).then((res) => res.json()),
+      fetch(`/api/writers-hub/notes?subject=${subjectId}&limit=1000`).then((res) => res.json()),
     ])
-    .then(([subjectsData, chaptersData, notesData]) => {
-      const allSubjects = subjectsData.subjects || subjectsData || [];
-      const foundSubject = allSubjects.find((s: any) => s._id === subjectId);
-      
-      if (!foundSubject) {
-        showToast("Subject not found", "error");
-        router.push("/writers-hub/curriculum");
-        return;
-      }
-      setSubject(foundSubject);
-      
-      setChapters(chaptersData.chapters || chaptersData || []);
-      setNotes(notesData.notes || []);
-    })
-    .catch(err => {
-      console.error(err);
-      showToast("Error loading curriculum", "error");
-    })
-    .finally(() => setLoading(false));
-  }, [subjectId, router, showToast]);
+      .then(([subjectsData, chaptersData, notesData]) => {
+        const allSubjects = subjectsData.subjects || subjectsData || [];
+        const foundSubject = allSubjects.find((s: any) => s._id === subjectId);
+
+        if (!foundSubject) {
+          showToast("Subject not found", "error");
+          router.push("/writers-hub/curriculum");
+          return;
+        }
+        setSubject(foundSubject);
+
+        setChapters(chaptersData.chapters || chaptersData || []);
+        setNotes(notesData.notes || []);
+      })
+      .catch((err) => {
+        console.error(err);
+        showToast("Error loading curriculum", "error");
+      })
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadCurriculum();
+  }, [subjectId]);
 
   const openSubjectSettings = () => {
     setSubjectForm({
@@ -93,7 +104,8 @@ export default function SubjectCurriculumPage() {
       level: subject.level || "All Levels",
       alignments: subject.alignments ? subject.alignments.join(", ") : "",
       coverImage: subject.coverImage || "",
-      isRestricted: subject.isRestricted
+      isRestricted: subject.isRestricted,
+      status: subject.status === "draft" ? "draft" : "published",
     });
     setShowSubjectSettings(true);
   };
@@ -316,7 +328,16 @@ export default function SubjectCurriculumPage() {
         )}
         <div className="relative z-20 p-8 flex flex-col md:flex-row gap-6 justify-between items-start md:items-end">
           <div className="max-w-2xl">
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
+              {subject.status === "draft" ? (
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase tracking-wider">
+                  🟡 Draft / Hidden
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
+                  🟢 Published
+                </span>
+              )}
               {subject.level && subject.level !== "All Levels" && (
                 <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-accent/20 text-accent border border-accent/30 uppercase tracking-wider">
                   {subject.level}
@@ -670,6 +691,19 @@ export default function SubjectCurriculumPage() {
                   </select>
                 </div>
                 <div>
+                  <label className="text-xs text-zinc-500 block mb-1.5">Course Visibility</label>
+                  <select
+                    value={subjectForm.status || "published"}
+                    onChange={(e) => setSubjectForm((p) => ({ ...p, status: e.target.value as "published" | "draft" }))}
+                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50 font-medium"
+                  >
+                    <option value="published">🟢 Published (Live on Site)</option>
+                    <option value="draft">🟡 Draft / Hidden (Private to Admins)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
                   <label className="text-xs text-zinc-500 block mb-1.5">Course Access</label>
                   <select
                     value={subjectForm.isRestricted === undefined ? "default" : subjectForm.isRestricted ? "restricted" : "open"}
@@ -687,16 +721,16 @@ export default function SubjectCurriculumPage() {
                     <option value="restricted">Restricted (Require Profile)</option>
                   </select>
                 </div>
-              </div>
-              <div>
-                <label className="text-xs text-zinc-500 block mb-1.5">Tags / Alignments</label>
-                <input
-                  type="text"
-                  value={subjectForm.alignments}
-                  onChange={(e) => setSubjectForm((p) => ({ ...p, alignments: e.target.value }))}
-                  placeholder="Comma separated"
-                  className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50"
-                />
+                <div>
+                  <label className="text-xs text-zinc-500 block mb-1.5">Tags / Alignments</label>
+                  <input
+                    type="text"
+                    value={subjectForm.alignments}
+                    onChange={(e) => setSubjectForm((p) => ({ ...p, alignments: e.target.value }))}
+                    placeholder="Comma separated"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-accent/50"
+                  />
+                </div>
               </div>
               <div>
                 <label className="text-xs text-zinc-500 block mb-1.5">Cover Image URL</label>
